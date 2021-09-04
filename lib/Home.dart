@@ -35,9 +35,24 @@ class _LoadingState extends State<Loading> {
         arguments: {stateData, indicatorData, dataForMsg, dataForId});
   }
 
+  // hostChecker() async {
+  //   if (!await canLaunch('http://localhost:8111/state')) {
+  //     ScaffoldMessenger.of(context)
+  //       ..removeCurrentSnackBar()
+  //       ..showSnackBar(SnackBar(
+  //         content: BlinkText(
+  //           'Unable to connect to game server.',
+  //           endColor: Colors.red,
+  //         ),
+  //         duration: Duration(seconds: 10),
+  //       ));
+  //   }
+  // }
+
   @override
   void initState() {
     setupToolData();
+
     super.initState();
   }
 
@@ -385,6 +400,21 @@ class _HomeState extends State<Home> {
     });
   }
 
+  hostChecker() async {
+    if (await canLaunch('http://localhost:8111')) {
+    } else {
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: BlinkText(
+            'Unable to connect to game server.',
+            endColor: Colors.red,
+          ),
+          duration: Duration(seconds: 10),
+        ));
+    }
+  }
+
   @override
   void initState() {
     initSystemTray();
@@ -396,7 +426,10 @@ class _HomeState extends State<Home> {
     const oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) => updateStateIndicator());
     const averageTimer = Duration(milliseconds: 4000);
-    Timer.periodic(averageTimer, (Timer t) => averageTAS());
+    Timer.periodic(averageTimer, (Timer t) {
+      averageTAS();
+      hostChecker();
+    });
 
     WidgetsBinding.instance!.addPostFrameCallback((_) {
       stateData = ModalRoute.of(context)?.settings.arguments as ToolDataState;

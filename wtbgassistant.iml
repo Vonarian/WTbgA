@@ -51,6 +51,9 @@
       <excludeFolder url="file://$MODULE_DIR$/libwinmedia.dart/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/libwinmedia.dart/build" />
       <excludeFolder url="file://$MODULE_DIR$/libwinmedia.dart/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/windows/build" />
+      <excludeFolder url="file://$MODULE_DIR$/windows/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/windows/.pub" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Dart SDK" level="project" />
