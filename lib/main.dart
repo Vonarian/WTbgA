@@ -1,7 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/material.dart';
 import 'package:libwinmedia/libwinmedia.dart';
@@ -38,9 +37,4 @@ void main() async {
       '/info': (context) => InfoPage()
     },
   ));
-  doWhenWindowReady(() {
-    final win = appWindow;
-    win.title = "War Thunder Background Assistant";
-    win.show();
-  });
 }

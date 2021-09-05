@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:blinking_text/blinking_text.dart';
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/foundation.dart';
@@ -13,11 +12,14 @@ import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 import 'package:system_tray/system_tray.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'damage_event.dart';
 import 'indicatorReceiver.dart';
 import 'main.dart';
 import 'stateReceiver.dart';
+
+final windowManager = WindowManager.instance;
 
 class Loading extends StatefulWidget {
   @override
@@ -52,7 +54,6 @@ class _LoadingState extends State<Loading> {
   @override
   void initState() {
     setupToolData();
-
     super.initState();
   }
 
@@ -109,7 +110,7 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with WindowListener {
   // static Route<String> dialogBuilder(BuildContext context) {
   //   TextEditingController userInputController = TextEditingController();
   //   // print(userInputController.text);
@@ -331,6 +332,7 @@ class _HomeState extends State<Home> {
   @override
   void dispose() {
     super.dispose();
+    windowManager.addListener(this);
     _timer?.cancel();
     idData.removeListener((overheatCheck));
   }
@@ -355,7 +357,7 @@ class _HomeState extends State<Home> {
         MenuItem(
           label: 'Show',
           onClicked: () {
-            appWindow.show();
+            // appWindow.show();
           },
         ),
         MenuSeparator(),
@@ -377,7 +379,7 @@ class _HomeState extends State<Home> {
         MenuItem(
           label: 'Exit',
           onClicked: () {
-            appWindow.close();
+            // appWindow.close();
           },
         ),
       ],
@@ -420,6 +422,7 @@ class _HomeState extends State<Home> {
     initSystemTray();
     updateMsgId();
     updateStateIndicator();
+    windowManager.addListener(this);
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) => updateMsgId());
@@ -835,12 +838,12 @@ class _HomeState extends State<Home> {
     );
   }
 
-  final buttonColors = WindowButtonColors(
-      iconNormal: const Color(0xFF805306),
-      mouseOver: const Color(0xFFF6A00C),
-      mouseDown: const Color(0xFF805306),
-      iconMouseOver: const Color(0xFF805306),
-      iconMouseDown: const Color(0xFFFFD500));
+  // final buttonColors = WindowButtonColors(
+  //     iconNormal: const Color(0xFF805306),
+  //     mouseOver: const Color(0xFFF6A00C),
+  //     mouseDown: const Color(0xFF805306),
+  //     iconMouseOver: const Color(0xFF805306),
+  //     iconMouseDown: const Color(0xFFFFD500));
   late dynamic stateData;
   late dynamic indicatorData;
   late dynamic msgData;
@@ -873,11 +876,19 @@ class _HomeState extends State<Home> {
               backgroundColor: Colors.transparent,
               resizeToAvoidBottomInset: true,
               appBar: AppBar(
-                  leading: MinimizeWindowButton(
-                    colors: buttonColors,
-                    onPressed: () {
-                      appWindow.hide();
+                  elevation: 1,
+                  leading: IconButton(
+                    alignment: Alignment.topCenter,
+                    hoverColor: Colors.blueAccent,
+                    color: Colors.red,
+                    iconSize: 40,
+                    mouseCursor: MouseCursor.uncontrolled,
+                    onPressed: () async {
+                      windowManager.hide();
+                      await Future.delayed(Duration(seconds: 2));
+                      windowManager.show();
                     },
+                    icon: Icon(Icons.minimize_rounded),
                   ),
                   actions: [
                     IconButton(
@@ -890,16 +901,6 @@ class _HomeState extends State<Home> {
                         Navigator.pushReplacementNamed(context, '/info');
                       },
                     ),
-                    // IconButton(
-                    //     onPressed: () async {
-                    //       String? text = await Navigator.of(context)
-                    //           .push(dialogBuilder(context));
-                    //       print(text);
-                    //       setState(() {
-                    //         late String? text1 = text;
-                    //       });
-                    //     },
-                    //     icon: Icon(Icons.access_time))
                   ],
                   backgroundColor: Colors.transparent,
                   centerTitle: true,

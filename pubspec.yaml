@@ -37,7 +37,10 @@ dependencies:
   url_launcher: ^6.0.9
   simple_timer: ^2.0.0
   path: ^1.8.0
-  bitsdojo_window: ^0.1.1+1
+  window_manager:
+    git:
+      url: https://github.com/leanflutter/window_manager.git
+      ref: main
   system_tray:
     git:
       url: https://github.com/antler119/system_tray.git
