@@ -149,6 +149,7 @@ class _HomeState extends State<Home> with WindowListener {
   var player = Player(id: 0);
 
   void userRedLine() {
+    if (mounted) return;
     if (stateData.ias >= int.parse(text1.value!) &&
         isUserInputNew &&
         stateData.flap > 0) {
@@ -528,7 +529,6 @@ class _HomeState extends State<Home> with WindowListener {
       isUserInputNew = true;
     });
     const redLineTimer = Duration(milliseconds: 1500);
-    if (mounted) return;
     Timer.periodic(redLineTimer, (Timer t) => userRedLine());
     Future.delayed(Duration(milliseconds: 250), () {
       widget1Opacity = 1;
