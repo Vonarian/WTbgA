@@ -7,7 +7,9 @@ import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 import 'package:system_tray/system_tray.dart';
@@ -419,6 +421,7 @@ class _HomeState extends State<Home> with WindowListener {
 
   @override
   void initState() {
+    keyRegister();
     initSystemTray();
     updateMsgId();
     updateStateIndicator();
@@ -476,6 +479,23 @@ class _HomeState extends State<Home> with WindowListener {
 
 // dialogBuilderBuilder() =>
 // void Function(String text) onSubmit
+  keyRegister() async {
+    HotKeyManager.instance.register(
+      HotKey(
+        KeyCode.digit1,
+        modifiers: [KeyModifier.alt],
+      ),
+      keyDownHandler: (_) async {
+        bool isVisible = await windowManager.isVisible();
+        if (isVisible) {
+          windowManager.hide();
+        } else {
+          windowManager.show();
+        }
+      },
+    );
+  }
+
   fuelIndicator() {
     if (stateData.minFuel != null) {
       fuelPercent = (stateData.minFuel / stateData.maxFuel) * 100;

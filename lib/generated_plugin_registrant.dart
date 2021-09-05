@@ -4,6 +4,7 @@
 
 // ignore_for_file: lines_longer_than_80_chars
 
+import 'package:hotkey_manager/hotkey_manager_plugin_web.dart';
 import 'package:url_launcher_web/url_launcher_web.dart';
 import 'package:window_manager/window_manager_plugin_web.dart';
 
@@ -11,6 +12,7 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 // ignore: public_member_api_docs
 void registerPlugins(Registrar registrar) {
+  HotkeyManagerPlugin.registerWith(registrar);
   UrlLauncherPlugin.registerWith(registrar);
   WindowManagerPlugin.registerWith(registrar);
   registrar.registerMessageHandler();

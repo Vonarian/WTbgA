@@ -44,7 +44,10 @@ dependencies:
   system_tray:
     git:
       url: https://github.com/antler119/system_tray.git
-
+  hotkey_manager:
+    git:
+      url: https://github.com/leanflutter/hotkey_manager.git
+      ref: main
   libwinmedia:
     git:
       url: https://github.com/libwinmedia/libwinmedia.dart.git

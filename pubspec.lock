@@ -275,6 +275,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.0"
+  hotkey_manager:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: "2b2b160d6a8e1fd2b01785a6b1e85d6b849d9fb7"
+      url: "https://github.com/leanflutter/hotkey_manager.git"
+    source: git
+    version: "0.1.0"
   http:
     dependency: "direct main"
     description:
@@ -599,6 +608,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.2"
+  uuid:
+    dependency: transitive
+    description:
+      name: uuid
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.4"
   vector_math:
     dependency: transitive
     description:
