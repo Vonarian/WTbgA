@@ -307,9 +307,26 @@ class _HomeState extends State<Home> with WindowListener {
     });
   }
 
-  int? firstSpeed;
-  int? secondSpeed;
-  int counter = 0;
+  void flapChecker() {
+    if (((indicatorData.flap1 != indicatorData.flap2) ||
+        msgData == 'Asymmetric flap extension' && isDamageIDNew)) {
+      Toast toast = new Toast(
+          type: ToastType.imageAndText02,
+          title: '😳Flap WARNING!!',
+          subtitle: 'Flaps are not opened equally, be careful',
+          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+      service!.show(toast);
+      toast.dispose();
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
+      isDamageIDNew = false;
+      player.play();
+    }
+  }
+
   void highAcceleration() {
     if ((secondSpeed! - firstSpeed!) / 2 >= 10) {
       while (counter < 2) {
@@ -458,7 +475,10 @@ class _HomeState extends State<Home> with WindowListener {
     windowManager.addListener(this);
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
-    Timer.periodic(twoSec, (Timer t) => updateMsgId());
+    Timer.periodic(twoSec, (Timer t) {
+      updateMsgId();
+      flapChecker();
+    });
     const oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) => updateStateIndicator());
     const averageTimer = Duration(milliseconds: 4000);
@@ -913,7 +933,9 @@ class _HomeState extends State<Home> with WindowListener {
   bool isEngineDeathNotifOn = true;
   bool isWaterNotifOn = true;
   double widget1Opacity = 0.0;
-
+  int? firstSpeed;
+  int? secondSpeed;
+  int counter = 0;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
