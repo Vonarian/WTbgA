@@ -163,7 +163,11 @@ class _HomeState extends State<Home> with WindowListener {
           image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
       service!.show(toast);
       toast.dispose();
-
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
       isDamageIDNew = false;
       player.play();
     }
@@ -179,7 +183,11 @@ class _HomeState extends State<Home> with WindowListener {
           image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
       service!.show(toast);
       toast.dispose();
-
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
       isDamageIDNew = false;
       player.play();
     }
@@ -198,6 +206,11 @@ class _HomeState extends State<Home> with WindowListener {
           subtitle: 'Engine is overheating!',
           image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
       service!.show(toast);
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
       toast.dispose();
       isDamageIDNew = false;
       player.play();
@@ -214,7 +227,11 @@ class _HomeState extends State<Home> with WindowListener {
           image: File('C:/src/wtbginfonfo/assets/WARNING.png'));
       service!.show(toast);
       toast.dispose();
-
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
       isDamageIDNew = false;
       player.play();
     }
@@ -230,7 +247,11 @@ class _HomeState extends State<Home> with WindowListener {
           image: File('C:/src/wtbginfonfo/assets/WARNING.png'));
       service!.show(toast);
       toast.dispose();
-
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
       isDamageIDNew = false;
       player.play();
     }
@@ -245,7 +266,11 @@ class _HomeState extends State<Home> with WindowListener {
           image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
       service!.show(toast);
       toast.dispose();
-
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
       isDamageIDNew = false;
       player.play();
     }
@@ -295,6 +320,11 @@ class _HomeState extends State<Home> with WindowListener {
             image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
         service!.show(toast);
         toast.dispose();
+        service?.stream.listen((event) {
+          if (event is ToastActivated) {
+            windowManager.show();
+          }
+        });
         isDamageIDNew = false;
         player.play();
         counter++;
@@ -482,7 +512,7 @@ class _HomeState extends State<Home> with WindowListener {
   keyRegister() async {
     HotKeyManager.instance.register(
       HotKey(
-        KeyCode.digit1,
+        KeyCode.digit5,
         modifiers: [KeyModifier.alt],
       ),
       keyDownHandler: (_) async {
@@ -494,6 +524,13 @@ class _HomeState extends State<Home> with WindowListener {
         }
       },
     );
+    HotKeyManager.instance.register(
+        HotKey(
+          KeyCode.delete,
+          modifiers: [KeyModifier.alt],
+        ), keyDownHandler: (_) {
+      windowManager.terminate();
+    });
   }
 
   fuelIndicator() {
@@ -904,11 +941,9 @@ class _HomeState extends State<Home> with WindowListener {
                     iconSize: 40,
                     mouseCursor: MouseCursor.uncontrolled,
                     onPressed: () async {
-                      windowManager.hide();
-                      await Future.delayed(Duration(seconds: 2));
-                      windowManager.show();
+                      WindowManager.instance.terminate();
                     },
-                    icon: Icon(Icons.minimize_rounded),
+                    icon: Icon(Icons.close),
                   ),
                   actions: [
                     IconButton(

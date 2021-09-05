@@ -51,7 +51,9 @@ dependencies:
   libwinmedia:
     git:
       url: https://github.com/libwinmedia/libwinmedia.dart.git
-   #  just_audio_platform_interface: ^4.0.0
+#  adaptive_theme:
+
+    #  just_audio_platform_interface: ^4.0.0
 #  just_audio: ^0.9.10
   #  bitsdojo_window:
   #  animations: ^2.0.1
