@@ -113,42 +113,67 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with WindowListener {
-  // static Route<String> dialogBuilder(BuildContext context) {
-  //   TextEditingController userInputController = TextEditingController();
-  //   // print(userInputController.text);
-  //   return DialogRoute(
-  //     context: context,
-  //     builder: (BuildContext context) => AlertDialog(
-  //       actions: [
-  //         ElevatedButton(
-  //             onPressed: () {
-  //               Navigator.pop(context);
-  //             },
-  //             child: Text('Cancel')),
-  //         ElevatedButton(
-  //             onPressed: () {
-  //               ScaffoldMessenger.of(context)
-  //                 ..removeCurrentSnackBar()
-  //                 ..showSnackBar(SnackBar(
-  //                     content: Text(
-  //                         'You will after ${userInputController.text} seconds. ')));
-  //               Navigator.of(context).pop(userInputController.text);
-  //             },
-  //             child: Text('Start')),
-  //       ],
-  //       title: Text('Timer'),
-  //       content: TextField(
-  //         // onSubmitted: onSubmit,
-  //         onChanged: (value) {},
-  //         controller: userInputController,
-  //         decoration: InputDecoration(hintText: "Enter the time in seconds"),
-  //       ),
-  //     ),
-  //   );
-  // }
+  static Route<String> dialogBuilder(BuildContext context) {
+    TextEditingController userInputController = TextEditingController();
+    return DialogRoute(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        actions: [
+          ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel')),
+          ElevatedButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context)
+                  ..removeCurrentSnackBar()
+                  ..showSnackBar(SnackBar(
+                      content: Text(
+                          'You will be notified if IAS reaches red line speed of ${userInputController.text} km/h . ')));
+                Navigator.of(context).pop(userInputController.text);
+              },
+              child: Text('Notify')),
+        ],
+        title: Text('Red line notifier (Enter red line flap speed). '),
+        content: TextField(
+          // onSubmitted: onSubmit,
+          onChanged: (value) {},
+          controller: userInputController,
+          decoration: InputDecoration(hintText: "Enter the IAS in km/h"),
+        ),
+      ),
+    );
+  }
+
   var player = Player(id: 0);
 
-  // void handleTimeout() {}
+  void userRedLine() {
+    if (stateData.ias >= int.parse(text1.value!) &&
+        isUserInputNew &&
+        stateData.flap > 0) {
+      Toast toast = new Toast(
+          type: ToastType.imageAndText02,
+          title: '😳Flap WARNING!',
+          subtitle: 'Be careful, flaps are open and IAS has reached red line.!',
+          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+      service!.show(toast);
+      toast.dispose();
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
+      player.play();
+      isUserInputNew = false;
+    }
+    if (stateData.ias < int.parse(text1.value!)) {
+      setState(() {
+        isUserInputNew = true;
+      });
+    }
+  }
+
   Future<void> overheatCheck() async {
     await Damage.getDamage();
     if (isOilNotifOn &&
@@ -381,9 +406,9 @@ class _HomeState extends State<Home> with WindowListener {
   @override
   void dispose() {
     super.dispose();
-    windowManager.addListener(this);
     _timer?.cancel();
     idData.removeListener((overheatCheck));
+    text1.removeListener((userRedLine));
   }
 
   Future<void> initSystemTray() async {
@@ -486,7 +511,7 @@ class _HomeState extends State<Home> with WindowListener {
       averageTAS();
       hostChecker();
     });
-
+    windowManager.addListener(this);
     WidgetsBinding.instance!.addPostFrameCallback((_) {
       stateData = ModalRoute.of(context)?.settings.arguments as ToolDataState;
       indicatorData =
@@ -499,6 +524,12 @@ class _HomeState extends State<Home> with WindowListener {
       overheatCheck();
       run = false;
     });
+    text1.addListener(() {
+      isUserInputNew = true;
+    });
+    const redLineTimer = Duration(milliseconds: 1500);
+    if (mounted) return;
+    Timer.periodic(redLineTimer, (Timer t) => userRedLine());
     Future.delayed(Duration(milliseconds: 250), () {
       widget1Opacity = 1;
     });
@@ -924,6 +955,8 @@ class _HomeState extends State<Home> with WindowListener {
   late dynamic stateData;
   late dynamic indicatorData;
   late dynamic msgData;
+  bool isUserInputNew = false;
+  ValueNotifier<String?> text1 = ValueNotifier('2000');
   double? fuelPercent;
   bool isFullNotifOn = true;
   bool isDamageIDNew = false;
@@ -936,6 +969,7 @@ class _HomeState extends State<Home> with WindowListener {
   int? firstSpeed;
   int? secondSpeed;
   int counter = 0;
+  bool runRedLine = false;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -976,6 +1010,20 @@ class _HomeState extends State<Home> with WindowListener {
                       ),
                       onPressed: () {
                         Navigator.pushReplacementNamed(context, '/info');
+                      },
+                    ),
+                    IconButton(
+                      tooltip: 'Enter red line speed for ',
+                      icon: Icon(
+                        Icons.warning_amber_outlined,
+                        color: Colors.cyanAccent,
+                      ),
+                      onPressed: () async {
+                        String? text = await Navigator.of(context)
+                            .push(dialogBuilder(context));
+                        setState(() {
+                          text1.value = text;
+                        });
                       },
                     ),
                   ],
