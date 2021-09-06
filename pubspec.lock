@@ -440,6 +440,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.0"
+  response:
+    dependency: "direct main"
+    description:
+      name: response
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0"
   responsive_framework:
     dependency: "direct main"
     description:

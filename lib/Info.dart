@@ -26,8 +26,7 @@ class _InfoPageState extends State<InfoPage> {
         ),
       ),
       body: Center(
-        child: Flex(
-          direction: Axis.vertical,
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             containerBuilder('Oil Temp',
@@ -82,18 +81,20 @@ class _InfoPageState extends State<InfoPage> {
                 offset: Offset(0, 3),
               )
             ]),
-        child: TextButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context)
-              ..removeCurrentSnackBar()
-              ..showSnackBar(SnackBar(
-                content: Text(buttonText),
-                duration: Duration(seconds: 5),
-              ));
-          },
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 27, color: Colors.pink),
+        child: Expanded(
+          child: TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context)
+                ..removeCurrentSnackBar()
+                ..showSnackBar(SnackBar(
+                  content: Text(buttonText),
+                  duration: Duration(seconds: 5),
+                ));
+            },
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 27, color: Colors.pink),
+            ),
           ),
         ),
       ),

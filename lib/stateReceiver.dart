@@ -13,6 +13,7 @@ class ToolDataState {
   int? flap;
   int? minFuel;
   int? maxFuel;
+  int? gear;
   double? climb;
   bool valid;
   ToolDataState(
@@ -25,7 +26,8 @@ class ToolDataState {
       this.maxFuel,
       this.minFuel,
       required this.valid,
-      this.climb});
+      this.climb,
+      this.gear});
 
   static Future<ToolDataState> getState() async {
     try {
@@ -43,6 +45,7 @@ class ToolDataState {
         minFuel: data['Mfuel, kg'],
         valid: data['valid'],
         climb: data['Vy, m/s'],
+        gear: data['gear, %'],
       );
     } catch (e, stackTrace) {
       log('Encountered error: $e', stackTrace: stackTrace);

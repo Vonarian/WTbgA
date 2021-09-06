@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
+import 'package:response/response.dart';
 import 'package:wtbgassistant/Info.dart';
 
 import 'Home.dart';
 
 ToastService? service;
+final response = ResponseUI.instance;
 
 void main() async {
   // Must add this line.
@@ -32,14 +34,20 @@ void main() async {
     companyName: 'VonarianTheGreat',
     productName: 'WarThunder Background Assistant',
   );
-  runApp(MaterialApp(
-    title: "WarThunderbgAssistant",
-    debugShowCheckedModeBanner: false,
-    initialRoute: '/',
-    routes: {
-      '/': (context) => Loading(),
-      '/home': (context) => Home(),
-      '/info': (context) => InfoPage()
-    },
-  ));
+  runApp(
+    Response(
+      originalScreenHeight: 1920,
+      originalScreenWidth: 1080,
+      child: MaterialApp(
+        title: "WarThunderbgAssistant",
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/',
+        routes: {
+          '/': (context) => Loading(),
+          '/home': (context) => Home(),
+          '/info': (context) => InfoPage()
+        },
+      ),
+    ),
+  );
 }
