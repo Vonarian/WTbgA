@@ -149,7 +149,7 @@ class _HomeState extends State<Home> with WindowListener {
   var player = Player(id: 0);
 
   void userRedLine() {
-    if (mounted) return;
+    if (!mounted) return;
     if (stateData.ias >= int.parse(text1.value!) &&
         isUserInputNew &&
         stateData.flap > 0) {
@@ -738,11 +738,12 @@ class _HomeState extends State<Home> with WindowListener {
       child: TextButton.icon(
           icon: Icon(Icons.arrow_upward),
           onPressed: () {},
-          label: (stateData.ias < 180 &&
-                      stateData.climb != null &&
-                      stateData.climb < 60 &&
-                      indicatorData.vertical >= -135 &&
-                      indicatorData.vertical <= -50) ||
+          label: indicatorData.vertical != null &&
+                      (stateData.ias < 180 &&
+                          stateData.climb != null &&
+                          stateData.climb < 60 &&
+                          indicatorData.vertical >= -135 &&
+                          indicatorData.vertical <= -50) ||
                   (stateData.ias < 180 &&
                           stateData.climb != null &&
                           stateData.climb < 10) &&
