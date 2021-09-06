@@ -672,10 +672,8 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                   )
                 : stateData.minFuel != null &&
-                        fuelPercent! < 25.00 &&
-                        (stateData.height != 32 &&
-                            stateData.minFuel != 0 &&
-                            stateData.flap != 0)
+                        fuelPercent! < 15.00 &&
+                        (stateData.height != 32 && stateData.minFuel != 0)
                     ? TextButton.icon(
                         icon: Icon(Icons.speed),
                         onPressed: () {},
@@ -739,7 +737,8 @@ class _HomeState extends State<Home> with WindowListener {
           icon: Icon(Icons.arrow_upward),
           onPressed: () {},
           label: indicatorData.vertical != null &&
-                      (stateData.ias < 180 &&
+                      stateData.ias != null &&
+                      (stateData.ias < 250 &&
                           stateData.climb != null &&
                           stateData.climb < 60 &&
                           indicatorData.vertical >= -135 &&
@@ -760,19 +759,7 @@ class _HomeState extends State<Home> with WindowListener {
                       fontWeight: FontWeight.bold),
                   endColor: Colors.red,
                 ))
-              : stateData.climb != null &&
-                          (stateData.climb > 0 &&
-                              indicatorData.vertical <= -130 &&
-                              indicatorData.vertical >= -60) ||
-                      (stateData.climb > 0 &&
-                              (stateData.climb != null &&
-                                  stateData.climb < 0 &&
-                                  indicatorData.vertical >= -130 &&
-                                  indicatorData.vertical <= -60) ||
-                          (stateData.ias < 180 &&
-                                  stateData.climb != null &&
-                                  stateData.climb < 25) ==
-                              false)
+              : stateData.climb != null && stateData.climb != 0.0
                   ? Expanded(
                       child: Text(
                       'Absolute Climb rate = ${stateData.climb} m/s',
