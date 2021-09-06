@@ -12,6 +12,7 @@ class ToolDataIndicator {
   double? engine;
   double? flap1;
   double? flap2;
+  double? vertical;
   ToolDataIndicator(
       {this.name,
       this.throttle,
@@ -19,7 +20,8 @@ class ToolDataIndicator {
       this.compass,
       this.engine,
       this.flap1,
-      this.flap2});
+      this.flap2,
+      this.vertical});
 
   static Future<ToolDataIndicator> getIndicator() async {
     try {
@@ -36,7 +38,8 @@ class ToolDataIndicator {
               ? indicatorData['water_temperature_hour']
               : indicatorData['water_temperature'],
           flap1: indicatorData['flaps1'],
-          flap2: indicatorData['flaps2']);
+          flap2: indicatorData['flaps2'],
+          vertical: indicatorData['aviahorizon_pitch']);
     } catch (e, stackTrace) {
       log('Encountered error: $e', stackTrace: stackTrace);
       rethrow;

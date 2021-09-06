@@ -175,8 +175,29 @@ class _HomeState extends State<Home> with WindowListener {
     }
   }
 
-  Future<void> overheatCheck() async {
+  Future<void> vehicleStateCheck() async {
     await Damage.getDamage();
+    if (isOilNotifOn &&
+        stateData.oil != 15 &&
+        isFullNotifOn &&
+        isDamageIDNew &&
+        msgData == "Engine died: no fuel" &&
+        isDamageMsgNew) {
+      Toast toast = new Toast(
+          type: ToastType.imageAndText02,
+          title: '😳Engine WARNING!',
+          subtitle: 'Engine ran out of fuel and died!',
+          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+      service!.show(toast);
+      toast.dispose();
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
+      isDamageIDNew = false;
+      player.play();
+    }
     if (isOilNotifOn &&
         stateData.oil != 15 &&
         isFullNotifOn &&
@@ -354,7 +375,9 @@ class _HomeState extends State<Home> with WindowListener {
   }
 
   void highAcceleration() {
-    if ((secondSpeed! - firstSpeed!) / 2 >= 10) {
+    if (!mounted) return;
+    double? avgTAS = ((secondSpeed! - firstSpeed!) / 2);
+    if (avgTAS >= 10) {
       while (counter < 2) {
         Toast toast = new Toast(
             type: ToastType.imageAndText02,
@@ -382,11 +405,10 @@ class _HomeState extends State<Home> with WindowListener {
     }
   }
 
-  Future<void> averageTAS() async {
-    if (stateData.tas != null &&
-        stateData.tas != 0 &&
-        stateData.tas >= 450 &&
-        stateData.flap > 0) {
+  Future<void> averageTasForStall() async {
+    if (!mounted) return;
+
+    if (stateData.tas != null) {
       setState(() {
         firstSpeed = stateData.tas;
       });
@@ -394,6 +416,24 @@ class _HomeState extends State<Home> with WindowListener {
         setState(() {
           secondSpeed = stateData.tas;
         });
+        return avgTAS = ((secondSpeed! - firstSpeed!) / 2);
+      });
+      Future.delayed(
+          const Duration(milliseconds: 2500), () => highAcceleration());
+    }
+  }
+
+  Future<void> averageTAS() async {
+    if (!mounted) return;
+    if (stateData.tas != null && stateData.tas >= 450 && stateData.flap > 0) {
+      setState(() {
+        firstSpeed = stateData.tas;
+      });
+      Future.delayed(const Duration(seconds: 2), () {
+        setState(() {
+          secondSpeed = stateData.tas;
+        });
+        return avgTAS = ((secondSpeed! - firstSpeed!) / 2);
       });
       Future.delayed(
           const Duration(milliseconds: 2500), () => highAcceleration());
@@ -408,7 +448,7 @@ class _HomeState extends State<Home> with WindowListener {
   void dispose() {
     super.dispose();
     _timer?.cancel();
-    idData.removeListener((overheatCheck));
+    idData.removeListener((vehicleStateCheck));
     text1.removeListener((userRedLine));
   }
 
@@ -507,9 +547,10 @@ class _HomeState extends State<Home> with WindowListener {
     });
     const oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) => updateStateIndicator());
-    const averageTimer = Duration(milliseconds: 4000);
+    const averageTimer = Duration(milliseconds: 2000);
     Timer.periodic(averageTimer, (Timer t) {
       averageTAS();
+      averageTasForStall();
       hostChecker();
     });
     windowManager.addListener(this);
@@ -522,11 +563,14 @@ class _HomeState extends State<Home> with WindowListener {
       setState(() {
         isDamageIDNew = true;
       });
-      overheatCheck();
+      vehicleStateCheck();
       run = false;
     });
     text1.addListener(() {
       isUserInputNew = true;
+    });
+    msgDataNotifier.addListener(() {
+      isDamageMsgNew = true;
     });
     const redLineTimer = Duration(milliseconds: 1500);
     Timer.periodic(redLineTimer, (Timer t) => userRedLine());
@@ -611,7 +655,7 @@ class _HomeState extends State<Home> with WindowListener {
                     offset: Offset(0, 3),
                   )
                 ]),
-            child: stateData.minFuel != null && fuelPercent! >= 25.00
+            child: stateData.minFuel != null && fuelPercent! >= 15.00
                 ? TextButton.icon(
                     icon: Icon(Icons.speed),
                     onPressed: () {},
@@ -663,6 +707,92 @@ class _HomeState extends State<Home> with WindowListener {
                           ),
                         ),
                       )));
+  }
+
+  climbRate() {
+    ToolDataState.getState();
+    averageTasForStall();
+    return Flexible(
+        child: Container(
+      height: 60,
+      decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromRGBO(10, 123, 10, 0.403921568627451),
+              Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: const BorderRadius.all(
+            Radius.circular(20.0),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.pink.withOpacity(0.2),
+              spreadRadius: 4,
+              blurRadius: 10,
+              offset: Offset(0, 3),
+            )
+          ]),
+      child: TextButton.icon(
+          icon: Icon(Icons.arrow_upward),
+          onPressed: () {},
+          label: (stateData.ias < 180 &&
+                      stateData.climb != null &&
+                      stateData.climb < 60 &&
+                      indicatorData.vertical >= -135 &&
+                      indicatorData.vertical <= -50) ||
+                  (stateData.ias < 180 &&
+                          stateData.climb != null &&
+                          stateData.climb < 10) &&
+                      stateData.ias != 0 &&
+                      stateData.height > 250
+              ? Expanded(
+                  child: BlinkText(
+                  'Absolute Climb rate = ${stateData.climb} m/s (Possible stall!)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold),
+                  endColor: Colors.red,
+                ))
+              : stateData.climb != null &&
+                          (stateData.climb > 0 &&
+                              indicatorData.vertical <= -130 &&
+                              indicatorData.vertical >= -60) ||
+                      (stateData.climb > 0 &&
+                              (stateData.climb != null &&
+                                  stateData.climb < 0 &&
+                                  indicatorData.vertical >= -130 &&
+                                  indicatorData.vertical <= -60) ||
+                          (stateData.ias < 180 &&
+                                  stateData.climb != null &&
+                                  stateData.climb < 25) ==
+                              false)
+                  ? Expanded(
+                      child: Text(
+                      'Absolute Climb rate = ${stateData.climb} m/s',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold),
+                    ))
+                  : Expanded(
+                      child: Text(
+                      'No Data',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold),
+                    ))),
+    ));
   }
 
   iasText() {
@@ -955,11 +1085,13 @@ class _HomeState extends State<Home> with WindowListener {
   late dynamic stateData;
   late dynamic indicatorData;
   late dynamic msgData;
+  ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   bool isUserInputNew = false;
   ValueNotifier<String?> text1 = ValueNotifier('2000');
   double? fuelPercent;
   bool isFullNotifOn = true;
   bool isDamageIDNew = false;
+  bool isDamageMsgNew = false;
   bool run = true;
   bool isEngineNotifOn = true;
   bool isOilNotifOn = true;
@@ -968,317 +1100,310 @@ class _HomeState extends State<Home> with WindowListener {
   double widget1Opacity = 0.0;
   int? firstSpeed;
   int? secondSpeed;
+  double? avgTAS;
   int counter = 0;
   bool runRedLine = false;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Stack(fit: StackFit.expand, children: <Widget>[
-        ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
-          child: Image.asset(
-            "assets/event_korean_war.jpg",
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            fit: BoxFit.cover,
-          ),
-        ),
-        Stack(
-          children: [
-            Scaffold(
-              backgroundColor: Colors.transparent,
-              resizeToAvoidBottomInset: true,
-              appBar: AppBar(
-                  elevation: 1,
-                  leading: IconButton(
-                    alignment: Alignment.topCenter,
-                    hoverColor: Colors.blueAccent,
-                    color: Colors.red,
-                    iconSize: 40,
-                    mouseCursor: MouseCursor.uncontrolled,
-                    onPressed: () async {
-                      WindowManager.instance.terminate();
-                    },
-                    icon: Icon(Icons.close),
-                  ),
-                  actions: [
-                    IconButton(
-                      tooltip: 'Go to information page',
-                      icon: Icon(
-                        Icons.info,
-                        color: Colors.cyanAccent,
-                      ),
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/info');
-                      },
-                    ),
-                    IconButton(
-                      tooltip: 'Enter red line speed for ',
-                      icon: Icon(
-                        Icons.warning_amber_outlined,
-                        color: Colors.cyanAccent,
-                      ),
-                      onPressed: () async {
-                        String? text = await Navigator.of(context)
-                            .push(dialogBuilder(context));
-                        setState(() {
-                          text1.value = text;
-                        });
-                      },
-                    ),
-                  ],
-                  backgroundColor: Colors.transparent,
-                  centerTitle: true,
-                  title: indicatorData.name != 'NULL'
-                      ? Text("You're flying ${indicatorData.name}")
-                      : (stateData.height == 32 &&
-                              stateData.minFuel == 0 &&
-                              stateData.flap == 0)
-                          ? Text("You're in Hangar...")
-                          : Text('No vehicle data available / Not flying.')),
-              body: AnimatedOpacity(
-                duration: Duration(seconds: 5),
-                opacity: widget1Opacity,
-                child: Flex(
-                  direction: Axis.vertical,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Flexible(
-                      child: Container(
-                          height: 60,
-                          decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.pink.withOpacity(0.2),
-                                  spreadRadius: 4,
-                                  blurRadius: 10,
-                                  offset: Offset(0, 3),
-                                )
-                              ]),
-                          child: TextButton.icon(
-                            icon: Icon(Icons.height),
-                            onPressed: () {},
-                            label: stateData.height != null
-                                ? Expanded(
-                                    child: Text(
-                                      'Altitude: ${stateData.height} meters ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  )
-                                : Expanded(
-                                    child: Text(
-                                      'No data available ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                          )),
-                    ),
-                    engineThrottleText(),
-                    fuelIndicator(),
-                    iasText(),
-                    Flexible(
-                      child: Container(
-                          height: 60,
-                          decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.pink.withOpacity(0.2),
-                                  spreadRadius: 4,
-                                  blurRadius: 10,
-                                  offset: Offset(0, 3),
-                                )
-                              ]),
-                          child: indicatorData.compass == '0' ||
-                                  indicatorData.compass == null
-                              ? TextButton.icon(
-                                  icon: Icon(Icons.gps_fixed),
-                                  onPressed: () {},
-                                  label: Expanded(
-                                    child: Text(
-                                      'No data  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                )
-                              : TextButton.icon(
-                                  icon: Icon(Icons.gps_fixed),
-                                  onPressed: () {},
-                                  label: Expanded(
-                                    child: Text(
-                                      'Compass = ${indicatorData.compass?.toStringAsFixed(0)} degrees ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                )),
-                    ),
-                    engineTempText(),
-                    oilTempText(),
-                    Flexible(
-                      fit: FlexFit.loose,
-                      child: Container(
-                          height: 60,
-                          decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.pink.withOpacity(0.2),
-                                  spreadRadius: 4,
-                                  blurRadius: 10,
-                                  offset: Offset(0, 3),
-                                )
-                              ]),
-                          child:
-                              stateData.water == null || stateData.water == 15
-                                  ? TextButton.icon(
-                                      icon: Icon(Icons.water),
-                                      onPressed: () {
-                                        isWaterNotifOn = !isWaterNotifOn;
-                                        ScaffoldMessenger.of(context)
-                                          ..removeCurrentSnackBar()
-                                          ..showSnackBar(SnackBar(
-                                              content: isWaterNotifOn
-                                                  ? Text(
-                                                      'Water Notifications are now enabled')
-                                                  : Text(
-                                                      'Water Notifications are now disabled')));
-                                      },
-                                      label: Expanded(
-                                        child: Text(
-                                          'Not water-cooled / No data available!  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              letterSpacing: 2,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    )
-                                  : TextButton.icon(
-                                      icon: Icon(Icons.water),
-                                      onPressed: () {
-                                        isWaterNotifOn = !isWaterNotifOn;
-                                        ScaffoldMessenger.of(context)
-                                          ..removeCurrentSnackBar()
-                                          ..showSnackBar(SnackBar(
-                                              content: isWaterNotifOn
-                                                  ? Text(
-                                                      'Water Notifications are now enabled')
-                                                  : Text(
-                                                      'Water Notifications are now disabled')));
-                                      },
-                                      label: Expanded(
-                                        child: Text(
-                                          'Water Temp = ${stateData.water!} degrees  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              letterSpacing: 2,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    )),
-                    )
-                  ],
-                ),
-              ),
-              floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
-                      MediaQuery.of(context).size.width >= 450
-                  ? FloatingActionButton(
-                      backgroundColor: Colors.red,
-                      tooltip: isFullNotifOn
-                          ? 'Toggle overheat notifier(On)'
-                          : 'Toggle overheat notifier(Off)',
-                      child: isFullNotifOn
-                          ? Icon(
-                              Icons.notifications,
-                              color: Colors.green[400],
-                            )
-                          : Icon(
-                              Icons.notifications_off,
-                              color: Colors.black,
-                            ),
-                      onPressed: () {
-                        setState(() {
-                          isFullNotifOn = !isFullNotifOn;
-                        });
-                        ScaffoldMessenger.of(context)
-                          ..removeCurrentSnackBar()
-                          ..showSnackBar(SnackBar(
-                              content: isFullNotifOn
-                                  ? Text(
-                                      'Notifications are now enabled',
-                                      style: TextStyle(color: Colors.green),
-                                    )
-                                  : Text(
-                                      'Notifications are now disabled',
-                                      style: TextStyle(color: Colors.red),
-                                    )));
-                      })
-                  : null,
+      child: Stack(
+        children: [
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
+            child: Image.asset(
+              "assets/event_korean_war.jpg",
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              fit: BoxFit.cover,
             ),
-          ],
-        ),
-      ]),
+          ),
+          Scaffold(
+            backgroundColor: Colors.transparent,
+            resizeToAvoidBottomInset: true,
+            appBar: AppBar(
+                elevation: 1,
+                leading: IconButton(
+                  alignment: Alignment.topCenter,
+                  hoverColor: Colors.blueAccent,
+                  color: Colors.red,
+                  iconSize: 40,
+                  mouseCursor: MouseCursor.uncontrolled,
+                  onPressed: () async {
+                    WindowManager.instance.terminate();
+                  },
+                  icon: Icon(Icons.close),
+                ),
+                actions: [
+                  IconButton(
+                    tooltip: 'Go to information page',
+                    icon: Icon(
+                      Icons.info,
+                      color: Colors.cyanAccent,
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/info');
+                    },
+                  ),
+                  IconButton(
+                    tooltip: 'Enter red line speed for ',
+                    icon: Icon(
+                      Icons.warning_amber_outlined,
+                      color: Colors.cyanAccent,
+                    ),
+                    onPressed: () async {
+                      String? text = await Navigator.of(context)
+                          .push(dialogBuilder(context));
+                      setState(() {
+                        text1.value = text;
+                      });
+                    },
+                  ),
+                ],
+                backgroundColor: Colors.transparent,
+                centerTitle: true,
+                title: indicatorData.name != 'NULL'
+                    ? Text("You're flying ${indicatorData.name}")
+                    : (stateData.height == 32 &&
+                            stateData.minFuel == 0 &&
+                            stateData.flap == 0)
+                        ? Text("You're in Hangar...")
+                        : Text('No vehicle data available / Not flying.')),
+            body: AnimatedOpacity(
+              duration: Duration(seconds: 5),
+              opacity: widget1Opacity,
+              child: Flex(
+                direction: Axis.vertical,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Flexible(
+                    child: Container(
+                        height: 60,
+                        decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                              ],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(20.0),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.pink.withOpacity(0.2),
+                                spreadRadius: 4,
+                                blurRadius: 10,
+                                offset: Offset(0, 3),
+                              )
+                            ]),
+                        child: TextButton.icon(
+                          icon: Icon(Icons.height),
+                          onPressed: () {},
+                          label: stateData.height != null
+                              ? Expanded(
+                                  child: Text(
+                                    'Altitude: ${stateData.height} meters ',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        letterSpacing: 2,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                )
+                              : Expanded(
+                                  child: Text(
+                                    'No data available ',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        letterSpacing: 2,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                        )),
+                  ),
+                  engineThrottleText(),
+                  fuelIndicator(),
+                  iasText(),
+                  climbRate(),
+                  Flexible(
+                    child: Container(
+                        height: 60,
+                        decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                              ],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(20.0),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.pink.withOpacity(0.2),
+                                spreadRadius: 4,
+                                blurRadius: 10,
+                                offset: Offset(0, 3),
+                              )
+                            ]),
+                        child: indicatorData.compass == '0' ||
+                                indicatorData.compass == null
+                            ? TextButton.icon(
+                                icon: Icon(Icons.gps_fixed),
+                                onPressed: () {},
+                                label: Expanded(
+                                  child: Text(
+                                    'No data  ',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        letterSpacing: 2,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              )
+                            : TextButton.icon(
+                                icon: Icon(Icons.gps_fixed),
+                                onPressed: () {},
+                                label: Expanded(
+                                  child: Text(
+                                    'Compass = ${indicatorData.compass?.toStringAsFixed(0)} degrees ',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        letterSpacing: 2,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              )),
+                  ),
+                  engineTempText(),
+                  oilTempText(),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: Container(
+                        height: 60,
+                        decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                              ],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(20.0),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.pink.withOpacity(0.2),
+                                spreadRadius: 4,
+                                blurRadius: 10,
+                                offset: Offset(0, 3),
+                              )
+                            ]),
+                        child: stateData.water == null || stateData.water == 15
+                            ? TextButton.icon(
+                                icon: Icon(Icons.water),
+                                onPressed: () {
+                                  isWaterNotifOn = !isWaterNotifOn;
+                                  ScaffoldMessenger.of(context)
+                                    ..removeCurrentSnackBar()
+                                    ..showSnackBar(SnackBar(
+                                        content: isWaterNotifOn
+                                            ? Text(
+                                                'Water Notifications are now enabled')
+                                            : Text(
+                                                'Water Notifications are now disabled')));
+                                },
+                                label: Expanded(
+                                  child: Text(
+                                    'Not water-cooled / No data available!  ',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        letterSpacing: 2,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              )
+                            : TextButton.icon(
+                                icon: Icon(Icons.water),
+                                onPressed: () {
+                                  isWaterNotifOn = !isWaterNotifOn;
+                                  ScaffoldMessenger.of(context)
+                                    ..removeCurrentSnackBar()
+                                    ..showSnackBar(SnackBar(
+                                        content: isWaterNotifOn
+                                            ? Text(
+                                                'Water Notifications are now enabled')
+                                            : Text(
+                                                'Water Notifications are now disabled')));
+                                },
+                                label: Expanded(
+                                  child: Text(
+                                    'Water Temp = ${stateData.water!} degrees  ',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        letterSpacing: 2,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              )),
+                  )
+                ],
+              ),
+            ),
+            floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
+                    MediaQuery.of(context).size.width >= 450
+                ? FloatingActionButton(
+                    backgroundColor: Colors.red,
+                    tooltip: isFullNotifOn
+                        ? 'Toggle overheat notifier(On)'
+                        : 'Toggle overheat notifier(Off)',
+                    child: isFullNotifOn
+                        ? Icon(
+                            Icons.notifications,
+                            color: Colors.green[400],
+                          )
+                        : Icon(
+                            Icons.notifications_off,
+                            color: Colors.black,
+                          ),
+                    onPressed: () {
+                      setState(() {
+                        isFullNotifOn = !isFullNotifOn;
+                      });
+                      ScaffoldMessenger.of(context)
+                        ..removeCurrentSnackBar()
+                        ..showSnackBar(SnackBar(
+                            content: isFullNotifOn
+                                ? Text(
+                                    'Notifications are now enabled',
+                                    style: TextStyle(color: Colors.green),
+                                  )
+                                : Text(
+                                    'Notifications are now disabled',
+                                    style: TextStyle(color: Colors.red),
+                                  )));
+                    })
+                : null,
+          ),
+        ],
+      ),
     );
   }
 }
