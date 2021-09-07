@@ -16,6 +16,7 @@ class ToolDataState {
   int? gear;
   double? climb;
   bool valid;
+  double? load;
   ToolDataState(
       {required this.ias,
       required this.tas,
@@ -27,7 +28,8 @@ class ToolDataState {
       this.minFuel,
       required this.valid,
       this.climb,
-      this.gear});
+      this.gear,
+      this.load});
 
   static Future<ToolDataState> getState() async {
     try {
@@ -35,18 +37,18 @@ class ToolDataState {
       Response? response = await get(Uri.parse('http://localhost:8111/state'));
       Map<String, dynamic>? data = jsonDecode(response.body);
       return ToolDataState(
-        ias: data!['IAS, km/h'],
-        tas: data['TAS, km/h'],
-        oil: data['oil temp 1, C'],
-        water: data['water temp 1, C'],
-        height: data['H, m'],
-        flap: data['flaps, %'],
-        maxFuel: data['Mfuel0, kg'],
-        minFuel: data['Mfuel, kg'],
-        valid: data['valid'],
-        climb: data['Vy, m/s'],
-        gear: data['gear, %'],
-      );
+          ias: data!['IAS, km/h'],
+          tas: data['TAS, km/h'],
+          oil: data['oil temp 1, C'],
+          water: data['water temp 1, C'],
+          height: data['H, m'],
+          flap: data['flaps, %'],
+          maxFuel: data['Mfuel0, kg'],
+          minFuel: data['Mfuel, kg'],
+          valid: data['valid'],
+          climb: data['Vy, m/s'],
+          gear: data['gear, %'],
+          load: data['Ny']);
     } catch (e, stackTrace) {
       log('Encountered error: $e', stackTrace: stackTrace);
       rethrow;

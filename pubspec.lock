@@ -84,7 +84,7 @@ packages:
       name: build_runner
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.1"
+    version: "2.1.2"
   build_runner_core:
     dependency: transitive
     description:
@@ -98,7 +98,7 @@ packages:
       name: built_collection
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "5.1.0"
+    version: "5.1.1"
   built_value:
     dependency: transitive
     description:
@@ -280,7 +280,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "2b2b160d6a8e1fd2b01785a6b1e85d6b849d9fb7"
+      resolved-ref: "3f22ed989a9772904d6d99ac62c34b5221d84c52"
       url: "https://github.com/leanflutter/hotkey_manager.git"
     source: git
     version: "0.1.0"
@@ -345,7 +345,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: c99f05a9d197c09ca135ba3e7473de598d25c699
+      resolved-ref: "3325765993649fb9fa2ecee203929413f644b775"
       url: "https://github.com/libwinmedia/libwinmedia.dart.git"
     source: git
     version: "0.0.1"
@@ -437,13 +437,6 @@ packages:
     dependency: transitive
     description:
       name: pubspec_parse
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.0"
-  response:
-    dependency: "direct main"
-    description:
-      name: response
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.0"
@@ -579,21 +572,21 @@ packages:
       name: url_launcher
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "6.0.9"
+    version: "6.0.10"
   url_launcher_linux:
     dependency: transitive
     description:
       name: url_launcher_linux
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.1"
+    version: "2.0.2"
   url_launcher_macos:
     dependency: transitive
     description:
       name: url_launcher_macos
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.1"
+    version: "2.0.2"
   url_launcher_platform_interface:
     dependency: transitive
     description:
@@ -648,7 +641,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "4076b733d682f0529be5240327687f271cc8a824"
+      resolved-ref: "4e0371966bd83df429790dfd5cfdd2232e3fc23b"
       url: "https://github.com/leanflutter/window_manager.git"
     source: git
     version: "0.0.3"

@@ -65,43 +65,48 @@ class _LoadingState extends State<Loading> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.red,
-        title: Text(
-          'Loading WTbgI',
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              color: Colors.cyanAccent),
+    return Stack(children: [
+      ImageFiltered(
+          child: Image.asset('assets/event_korean_war.jpg'),
+          imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0)),
+      Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.red,
+          title: Text(
+            'Loading WTbgI',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.cyanAccent),
+          ),
+        ),
+        body: Center(
+          child: SpinKitChasingDots(
+            color: Colors.redAccent,
+            size: 80.0,
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            setupToolData();
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  "If you didn't go to the next screen, click on More Info"),
+              action: SnackBarAction(
+                label: 'More Info',
+                onPressed: () async {
+                  _launchURL();
+                },
+              ),
+              duration: Duration(seconds: 5),
+            ));
+          },
+          backgroundColor: Colors.red,
+          child: Icon(Icons.refresh),
         ),
       ),
-      body: Center(
-        child: SpinKitChasingDots(
-          color: Colors.redAccent,
-          size: 80.0,
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          setupToolData();
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content:
-                Text("If you didn't go to the next screen, click on More Info"),
-            action: SnackBarAction(
-              label: 'More Info',
-              onPressed: () async {
-                _launchURL();
-              },
-            ),
-            duration: Duration(seconds: 5),
-          ));
-        },
-        backgroundColor: Colors.red,
-        child: Icon(Icons.refresh),
-      ),
-    );
+    ]);
   }
 }
 
@@ -146,6 +151,38 @@ class _HomeState extends State<Home> with WindowListener {
     );
   }
 
+  static Route<String> dialogBuilderOverG(BuildContext context) {
+    TextEditingController userInputOverG = TextEditingController();
+    return DialogRoute(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              content: TextField(
+                onChanged: (value) {},
+                controller: userInputOverG,
+                decoration:
+                    InputDecoration(hintText: 'Enter the G load number'),
+              ),
+              title: Text('Red line notifier (Enter red line G load speed). '),
+              actions: [
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Cancel')),
+                ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context)
+                        ..removeCurrentSnackBar()
+                        ..showSnackBar(SnackBar(
+                            content: Text(
+                                'You will be notified if G load reaches red line load of ${userInputOverG.text}. ')));
+                      Navigator.of(context).pop(userInputOverG.text);
+                    },
+                    child: Text('Notify'))
+              ],
+            ));
+  }
+
   static Route<String> dialogBuilderIasGear(BuildContext context) {
     TextEditingController userInputIasGear = TextEditingController();
     return DialogRoute(
@@ -178,10 +215,14 @@ class _HomeState extends State<Home> with WindowListener {
   }
 
   var player = Player(id: 0);
-
+  var warningLogo = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'WARNING.png'
+  ]);
   void userRedLineFlap() {
     if (!mounted) return;
-    if (stateData.ias != null) {
+    if (stateData.ias != null && textForIasFlap.value != null) {
       if (stateData.ias >= int.parse(textForIasFlap.value!) &&
           isUserIasFlapNew &&
           stateData.flap > 0) {
@@ -190,7 +231,7 @@ class _HomeState extends State<Home> with WindowListener {
             title: '😳Flap WARNING!',
             subtitle:
                 'Be careful, flaps are open and IAS has reached red line!',
-            image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+            image: new File(warningLogo));
         service!.show(toast);
         toast.dispose();
         service?.stream.listen((event) {
@@ -211,16 +252,16 @@ class _HomeState extends State<Home> with WindowListener {
 
   void userRedLineGear() {
     if (!mounted) return;
-    if (stateData.ias != null) {
+    if (stateData.ias != null && textForIasGear.value != null) {
       if (stateData.ias >= int.parse(textForIasGear.value!) &&
           isUserIasGearNew &&
           stateData.gear > 0) {
         Toast toast = new Toast(
             type: ToastType.imageAndText02,
-            title: '😳Flap WARNING!',
+            title: '😳Gear WARNING!',
             subtitle:
                 'Be careful, gears are open and IAS has reached red line!',
-            image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+            image: new File(warningLogo));
         service!.show(toast);
         toast.dispose();
         service?.stream.listen((event) {
@@ -228,14 +269,44 @@ class _HomeState extends State<Home> with WindowListener {
             windowManager.show();
           }
         });
-        player.play();
+        gearUpPlayer.play();
         isUserIasGearNew = false;
+      }
+      if (stateData.ias >= int.parse(textForIasGear.value!) &&
+          stateData.gear > 0) {
+        gearUpPlayer.play();
       }
       if (stateData.ias < int.parse(textForIasGear.value!)) {
         setState(() {
           isUserIasGearNew = true;
         });
       }
+    }
+  }
+
+  var pullUpPlayer = Player(id: 3);
+  var gearUpPlayer = Player(id: 2);
+  var overGPlayer = Player(id: 1);
+  Future<void> pullUpChecker() async {
+    if (!mounted) return;
+    if (indicatorData.vertical != null &&
+        (stateData.ias > 400 &&
+            stateData.climb != null &&
+            stateData.climb < -60 &&
+            indicatorData.vertical <= 135 &&
+            indicatorData.vertical >= 50) &&
+        stateData.height < 2200) {
+      pullUpPlayer.play();
+    }
+  }
+
+  Future<void> loadChecker() async {
+    if (!mounted) return;
+    if (textForGLoad.value != null &&
+        isUserGLoadNew &&
+        stateData.load != null &&
+        stateData.load >= int.parse(textForGLoad.value!)) {
+      overGPlayer.play();
     }
   }
 
@@ -251,7 +322,7 @@ class _HomeState extends State<Home> with WindowListener {
           type: ToastType.imageAndText02,
           title: '😳Engine WARNING!',
           subtitle: 'Engine ran out of fuel and died!',
-          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+          image: new File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -271,7 +342,7 @@ class _HomeState extends State<Home> with WindowListener {
           type: ToastType.imageAndText02,
           title: '😳OIL WARNING!',
           subtitle: 'Oil is overheating!',
-          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+          image: new File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -291,7 +362,7 @@ class _HomeState extends State<Home> with WindowListener {
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
           subtitle: 'Engine is overheating!',
-          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+          image: new File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -311,7 +382,7 @@ class _HomeState extends State<Home> with WindowListener {
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
           subtitle: 'Engine is overheating!',
-          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+          image: new File(warningLogo));
       service!.show(toast);
       service?.stream.listen((event) {
         if (event is ToastActivated) {
@@ -331,7 +402,7 @@ class _HomeState extends State<Home> with WindowListener {
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
           subtitle: 'Engine died!! ',
-          image: File('C:/src/wtbginfonfo/assets/WARNING.png'));
+          image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -351,7 +422,7 @@ class _HomeState extends State<Home> with WindowListener {
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
           subtitle: 'Engine died!! ',
-          image: File('C:/src/wtbginfonfo/assets/WARNING.png'));
+          image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -370,7 +441,7 @@ class _HomeState extends State<Home> with WindowListener {
           type: ToastType.imageAndText02,
           title: '😳WARNING!!',
           subtitle: 'Your vehicle is possibly destroyed / Not repairable😒',
-          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+          image: new File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -421,7 +492,7 @@ class _HomeState extends State<Home> with WindowListener {
           type: ToastType.imageAndText02,
           title: '😳Flap WARNING!!',
           subtitle: 'Flaps are not opened equally, be careful',
-          image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+          image: new File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -436,6 +507,9 @@ class _HomeState extends State<Home> with WindowListener {
 
   void highAcceleration() {
     if (!mounted) return;
+    if (secondSpeed != null) {
+      return;
+    }
     double? avgTAS = ((secondSpeed! - firstSpeed!) / 2);
     if (avgTAS >= 10) {
       while (counter < 2) {
@@ -443,7 +517,7 @@ class _HomeState extends State<Home> with WindowListener {
             type: ToastType.imageAndText02,
             title: '😳WARNING!!',
             subtitle: 'Very high acceleration, be careful',
-            image: new File('C:/src/wtbginfonfo/assets/WARNING.png'));
+            image: new File(warningLogo));
         service!.show(toast);
         toast.dispose();
         service?.stream.listen((event) {
@@ -634,10 +708,15 @@ class _HomeState extends State<Home> with WindowListener {
     textForIasGear.addListener(() {
       isUserIasGearNew = true;
     });
+    textForGLoad.addListener(() {
+      isUserGLoadNew = true;
+    });
     const redLineTimer = Duration(milliseconds: 1500);
     Timer.periodic(redLineTimer, (Timer t) {
       userRedLineFlap();
       userRedLineGear();
+      loadChecker();
+      pullUpChecker();
     });
     Future.delayed(Duration(milliseconds: 250), () {
       widget1Opacity = 1;
@@ -698,7 +777,7 @@ class _HomeState extends State<Home> with WindowListener {
       fuelPercent = (stateData.minFuel / stateData.maxFuel) * 100;
     }
     return Flexible(
-        child: response.screenHeight! >= 1000 && response.screenWidth! >= 500
+        child: MediaQuery.of(context).size.height >= 235
             ? Container(
                 height: 60,
                 decoration: BoxDecoration(
@@ -715,7 +794,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -787,7 +866,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -848,7 +927,7 @@ class _HomeState extends State<Home> with WindowListener {
   waterTempText() {
     return Flexible(
         fit: FlexFit.loose,
-        child: response.screenWidth! >= 500 && response.screenHeight! >= 1000
+        child: MediaQuery.of(context).size.height >= 235
             ? Container(
                 height: 60,
                 decoration: BoxDecoration(
@@ -865,7 +944,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -938,7 +1017,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -999,7 +1078,7 @@ class _HomeState extends State<Home> with WindowListener {
 
   altitudeText() {
     return Flexible(
-        child: response.screenWidth! >= 500 && response.screenHeight! >= 1000
+        child: MediaQuery.of(context).size.height >= 235
             ? Container(
                 height: 60,
                 decoration: BoxDecoration(
@@ -1016,7 +1095,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -1065,7 +1144,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -1104,7 +1183,7 @@ class _HomeState extends State<Home> with WindowListener {
     ToolDataState.getState();
     averageTasForStall();
     return Flexible(
-        child: response.screenHeight! >= 1000 && response.screenWidth! >= 500
+        child: MediaQuery.of(context).size.height >= 235
             ? Container(
                 height: 60,
                 decoration: BoxDecoration(
@@ -1121,7 +1200,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -1132,13 +1211,15 @@ class _HomeState extends State<Home> with WindowListener {
                     onPressed: () {},
                     label: indicatorData.vertical != null &&
                                 stateData.ias != null &&
+                                stateData.climb != null &&
                                 (stateData.ias < 250 &&
                                     stateData.climb != null &&
                                     stateData.climb != null &&
                                     stateData.climb < 60 &&
                                     indicatorData.vertical >= -135 &&
                                     indicatorData.vertical <= -50) ||
-                            (stateData.ias < 180 &&
+                            (stateData.ias != null &&
+                                    stateData.ias < 180 &&
                                     stateData.climb != null &&
                                     stateData.climb < 10) &&
                                 stateData.ias != 0 &&
@@ -1192,7 +1273,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -1209,7 +1290,8 @@ class _HomeState extends State<Home> with WindowListener {
                                     stateData.climb < 60 &&
                                     indicatorData.vertical >= -135 &&
                                     indicatorData.vertical <= -50) ||
-                            (stateData.ias < 180 &&
+                            (stateData.ias != null &&
+                                    stateData.ias < 180 &&
                                     stateData.climb != null &&
                                     stateData.climb < 10) &&
                                 stateData.ias != 0 &&
@@ -1251,7 +1333,7 @@ class _HomeState extends State<Home> with WindowListener {
 
   iasText() {
     return Flexible(
-        child: response.screenWidth! >= 500 && response.screenHeight! >= 1000
+        child: MediaQuery.of(context).size.height >= 235
             ? Container(
                 height: 60,
                 decoration: BoxDecoration(
@@ -1268,7 +1350,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -1339,7 +1421,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -1398,7 +1480,7 @@ class _HomeState extends State<Home> with WindowListener {
 
   compassText() {
     return Flexible(
-        child: response.screenHeight! >= 1000 && response.screenWidth! >= 500
+        child: MediaQuery.of(context).size.height >= 235
             ? Container(
                 height: 60,
                 decoration: BoxDecoration(
@@ -1415,7 +1497,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -1469,7 +1551,7 @@ class _HomeState extends State<Home> with WindowListener {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.pink.withOpacity(0.2),
+                        color: Colors.pink.withOpacity(boxShadowOpacity),
                         spreadRadius: 4,
                         blurRadius: 10,
                         offset: Offset(0, 3),
@@ -1514,8 +1596,7 @@ class _HomeState extends State<Home> with WindowListener {
         valueListenable: idData,
         builder: (BuildContext context, value, Widget? child) {
           return Flexible(
-              child: response.screenWidth! >= 500 &&
-                      response.screenHeight! >= 1000
+              child: MediaQuery.of(context).size.height >= 235
                   ? Container(
                       height: 60,
                       decoration: BoxDecoration(
@@ -1532,7 +1613,7 @@ class _HomeState extends State<Home> with WindowListener {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.withOpacity(0.2),
+                              color: Colors.red.withOpacity(boxShadowOpacity),
                               spreadRadius: 4,
                               blurRadius: 7,
                               offset: Offset(0, 3),
@@ -1603,7 +1684,7 @@ class _HomeState extends State<Home> with WindowListener {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.withOpacity(0.2),
+                              color: Colors.red.withOpacity(boxShadowOpacity),
                               spreadRadius: 4,
                               blurRadius: 7,
                               offset: Offset(0, 3),
@@ -1666,131 +1747,7 @@ class _HomeState extends State<Home> with WindowListener {
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
         return Flexible(
-            child:
-                response.screenHeight! >= 1000 && response.screenWidth! >= 500
-                    ? Container(
-                        height: 60,
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(20.0),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.red.withOpacity(0.2),
-                                spreadRadius: 4,
-                                blurRadius: 7,
-                                offset: Offset(0, 3),
-                              )
-                            ]),
-                        child: TextButton.icon(
-                          icon: Icon(Icons.airplanemode_active),
-                          label: response.screenWidth! >= 720 && response.screenHeight! >= 1280
-                              ? Expanded(
-                                  child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
-                                      ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              letterSpacing: 2,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold))
-                                      : Text('No data.  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              letterSpacing: 2,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold)))
-                              : Expanded(
-                                  child: indicatorData.throttle != 'null' &&
-                                          indicatorData.throttle != 'nul'
-                                      ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 13,
-                                              letterSpacing: 2,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold))
-                                      : Text('No data.  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(fontSize: 13, letterSpacing: 2, color: Colors.black, fontWeight: FontWeight.bold))),
-                          onPressed: () {},
-                        ))
-                    : Container(
-                        height: 45,
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(20.0),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.red.withOpacity(0.2),
-                                spreadRadius: 4,
-                                blurRadius: 7,
-                                offset: Offset(0, 3),
-                              )
-                            ]),
-                        child: TextButton.icon(
-                          icon: Icon(Icons.airplanemode_active),
-                          label: response.screenWidth! >= 720 && response.screenHeight! >= 1280
-                              ? Expanded(
-                                  child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
-                                      ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              letterSpacing: 2,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold))
-                                      : Text('No data.  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              letterSpacing: 2,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold)))
-                              : Expanded(
-                                  child: indicatorData.throttle != 'null' &&
-                                          indicatorData.throttle != 'nul'
-                                      ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 13,
-                                              letterSpacing: 2,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold))
-                                      : Text('No data.  ',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(fontSize: 13, letterSpacing: 2, color: Colors.black, fontWeight: FontWeight.bold))),
-                          onPressed: () {},
-                        )));
-      },
-    );
-  }
-
-  oilTempText() {
-    return ValueListenableBuilder(
-      valueListenable: idData,
-      builder: (BuildContext context, value, Widget? child) {
-        return Flexible(
-            child: response.screenHeight! >= 1000 &&
-                    response.screenWidth! >= 500
+            child: MediaQuery.of(context).size.height >= 235
                 ? Container(
                     height: 60,
                     decoration: BoxDecoration(
@@ -1807,7 +1764,131 @@ class _HomeState extends State<Home> with WindowListener {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.red.withOpacity(0.2),
+                            color: Colors.red.withOpacity(boxShadowOpacity),
+                            spreadRadius: 4,
+                            blurRadius: 7,
+                            offset: Offset(0, 3),
+                          )
+                        ]),
+                    child: TextButton.icon(
+                      icon: Icon(Icons.airplanemode_active),
+                      label: MediaQuery.of(context).size.height >= 235
+                          ? Expanded(
+                              child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
+                                  ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          letterSpacing: 2,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold))
+                                  : Text('No data.  ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          letterSpacing: 2,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold)))
+                          : Expanded(
+                              child: indicatorData.throttle != 'null' &&
+                                      indicatorData.throttle != 'nul'
+                                  ? Text(
+                                      'Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          letterSpacing: 2,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold))
+                                  : Text('No data.  ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 13, letterSpacing: 2, color: Colors.black, fontWeight: FontWeight.bold))),
+                      onPressed: () {},
+                    ))
+                : Container(
+                    height: 45,
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                            Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(20.0),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(boxShadowOpacity),
+                            spreadRadius: 4,
+                            blurRadius: 7,
+                            offset: Offset(0, 3),
+                          )
+                        ]),
+                    child: TextButton.icon(
+                      icon: Icon(Icons.airplanemode_active),
+                      label: MediaQuery.of(context).size.height >= 235
+                          ? Expanded(
+                              child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
+                                  ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 17,
+                                          letterSpacing: 2,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold))
+                                  : Text('No data.  ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 17,
+                                          letterSpacing: 2,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold)))
+                          : Expanded(
+                              child: indicatorData.throttle != 'null' &&
+                                      indicatorData.throttle != 'nul'
+                                  ? Text(
+                                      'Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 17,
+                                          letterSpacing: 2,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold))
+                                  : Text('No data.  ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 17, letterSpacing: 2, color: Colors.black, fontWeight: FontWeight.bold))),
+                      onPressed: () {},
+                    )));
+      },
+    );
+  }
+
+  oilTempText() {
+    return ValueListenableBuilder(
+      valueListenable: idData,
+      builder: (BuildContext context, value, Widget? child) {
+        return Flexible(
+            child: MediaQuery.of(context).size.height >= 235
+                ? Container(
+                    height: 60,
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                            Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(20.0),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(boxShadowOpacity),
                             spreadRadius: 4,
                             blurRadius: 7,
                             offset: Offset(0, 3),
@@ -1877,7 +1958,7 @@ class _HomeState extends State<Home> with WindowListener {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.red.withOpacity(0.2),
+                            color: Colors.red.withOpacity(boxShadowOpacity),
                             spreadRadius: 4,
                             blurRadius: 7,
                             offset: Offset(0, 3),
@@ -1947,8 +2028,10 @@ class _HomeState extends State<Home> with WindowListener {
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
+  bool isUserGLoadNew = false;
   ValueNotifier<String?> textForIasFlap = ValueNotifier('2000');
   ValueNotifier<String?> textForIasGear = ValueNotifier('2000');
+  ValueNotifier<String?> textForGLoad = ValueNotifier('2000');
   double? fuelPercent;
   bool isFullNotifOn = true;
   bool isDamageIDNew = false;
@@ -1964,15 +2047,16 @@ class _HomeState extends State<Home> with WindowListener {
   double? avgTAS;
   int counter = 0;
   bool runRedLine = false;
+  double boxShadowOpacity = 0.07;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Stack(
         children: [
           ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
+            imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
             child: Image.asset(
-              "assets/event_korean_war.jpg",
+              'assets/event_korean_war.jpg',
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
               fit: BoxFit.cover,
@@ -1981,74 +2065,89 @@ class _HomeState extends State<Home> with WindowListener {
           Scaffold(
             backgroundColor: Colors.transparent,
             resizeToAvoidBottomInset: true,
-            appBar: AppBar(
-                elevation: 1,
-                leading: IconButton(
-                  alignment: Alignment.topCenter,
-                  hoverColor: Colors.blueAccent,
-                  color: Colors.red,
-                  iconSize: 40,
-                  mouseCursor: MouseCursor.uncontrolled,
-                  onPressed: () async {
-                    WindowManager.instance.terminate();
-                  },
-                  icon: Icon(Icons.close),
-                ),
-                actions: [
-                  IconButton(
-                    tooltip: 'Go to information page',
-                    icon: Icon(
-                      Icons.info,
-                      color: Colors.cyanAccent,
-                    ),
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/info');
-                    },
-                  ),
-                  IconButton(
-                    hoverColor: Colors.yellowAccent[100],
-                    tooltip: 'Enter red line speed for IAS with flaps open',
-                    icon: Icon(
-                      Icons.warning,
+            appBar: MediaQuery.of(context).size.height >= 235
+                ? AppBar(
+                    elevation: 1,
+                    leading: IconButton(
+                      alignment: Alignment.topCenter,
+                      hoverColor: Colors.blueAccent,
                       color: Colors.red,
+                      iconSize: 40,
+                      mouseCursor: MouseCursor.uncontrolled,
+                      onPressed: () async {
+                        WindowManager.instance.terminate();
+                      },
+                      icon: Icon(Icons.close),
                     ),
-                    onPressed: () async {
-                      String? pressedTextFlap = await Navigator.of(context)
-                          .push(dialogBuilderIasFlap(context));
-                      setState(() {
-                        textForIasFlap.value = pressedTextFlap;
-                      });
-                    },
-                  ),
-                  IconButton(
-                    onPressed: () async {
-                      String? pressedTextGear = await Navigator.of(context)
-                          .push(dialogBuilderIasGear(context));
-                      setState(() {
-                        textForIasGear.value = pressedTextGear;
-                      });
-                    },
-                    icon: Icon(
-                      Icons.warning,
-                      color: Colors.deepPurple,
-                    ),
-                    tooltip: 'Enter IAS speed for gear red line',
-                  )
-                ],
-                backgroundColor: Colors.transparent,
-                centerTitle: true,
-                title: indicatorData.name != 'NULL'
-                    ? Text("You're flying ${indicatorData.name}")
-                    : (stateData.height == 32 &&
-                            stateData.minFuel == 0 &&
-                            stateData.flap == 0)
-                        ? Text("You're in Hangar...")
-                        : Text('No vehicle data available / Not flying.')),
+                    actions: [
+                      IconButton(
+                        tooltip: 'Go to information page',
+                        icon: Icon(
+                          Icons.info,
+                          color: Colors.cyanAccent,
+                        ),
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/info');
+                        },
+                      ),
+                      IconButton(
+                        hoverColor: Colors.yellowAccent[100],
+                        tooltip: 'Enter red line speed for IAS with flaps open',
+                        icon: Icon(
+                          Icons.warning,
+                          color: Colors.red,
+                        ),
+                        onPressed: () async {
+                          String? pressedTextFlap = await Navigator.of(context)
+                              .push(dialogBuilderIasFlap(context));
+                          setState(() {
+                            textForIasFlap.value = pressedTextFlap;
+                          });
+                        },
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          String? pressedTextGear = await Navigator.of(context)
+                              .push(dialogBuilderIasGear(context));
+                          setState(() {
+                            textForIasGear.value = pressedTextGear;
+                          });
+                        },
+                        icon: Icon(
+                          Icons.warning,
+                          color: Colors.deepPurple,
+                        ),
+                        tooltip: 'Enter IAS speed for gear red line',
+                      ),
+                      IconButton(
+                          tooltip: 'Enter maximum GLoad to get warning',
+                          onPressed: () async {
+                            String? pressedTextGLoad =
+                                await Navigator.of(context)
+                                    .push(dialogBuilderOverG(context));
+                            setState(() {
+                              textForGLoad.value = pressedTextGLoad;
+                            });
+                          },
+                          icon: Icon(
+                            Icons.warning,
+                            color: Colors.amber,
+                          ))
+                    ],
+                    backgroundColor: Colors.transparent,
+                    centerTitle: true,
+                    title: indicatorData.name != 'NULL'
+                        ? Text("You're flying ${indicatorData.name}")
+                        : (stateData.height == 32 &&
+                                stateData.minFuel == 0 &&
+                                stateData.flap == 0)
+                            ? Text("You're in Hangar...")
+                            : Text('No vehicle data available / Not flying.'))
+                : null,
             body: AnimatedOpacity(
                 duration: Duration(seconds: 5),
                 opacity: widget1Opacity,
-                child: response.screenHeight! >= 1000 &&
-                        response.screenWidth! >= 500
+                child: MediaQuery.of(context).size.height >= 235
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [

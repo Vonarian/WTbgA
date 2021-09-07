@@ -19,6 +19,23 @@ class _InfoPageState extends State<InfoPage> {
             Navigator.pushReplacementNamed(context, '/home');
           },
         ),
+        actions: [
+          appbarButtonBuilder(
+              'IAS red line for Flaps',
+              'This button in the home screen allows you to enter maximum IAS allowed with flaps open',
+              Icons.warning,
+              Colors.red),
+          appbarButtonBuilder(
+              'IAS red line for gears',
+              'This button in the home screen allows you to enter maximum IAS allowed with gears open',
+              Icons.warning,
+              Colors.deepPurple),
+          appbarButtonBuilder(
+              'Force close button',
+              "This button at the left of the AppBar allows you to force close the application, 'Alt + del' does the same. ",
+              Icons.close,
+              Colors.red)
+        ],
         centerTitle: true,
         title: Text(
           'Information Page',
@@ -38,7 +55,8 @@ class _InfoPageState extends State<InfoPage> {
                 'Clicking on Water Temp button allows you enable/disable the overheat notifications'),
             containerBuilder('Compass', 'This button does nothing😁'),
             containerBuilder('IAS', 'This button does nothing😁'),
-            containerBuilder('Throttle', 'This button does nothing😁')
+            containerBuilder('Throttle', 'This button does nothing😁'),
+            containerBuilder('Absolute Climb rate', 'This button does nothing')
           ],
         ),
       ),
@@ -99,5 +117,20 @@ class _InfoPageState extends State<InfoPage> {
         ),
       ),
     );
+  }
+
+  Widget appbarButtonBuilder(
+      String text, String buttonText, var buttonIcon, var buttonColor) {
+    return IconButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context)
+            ..removeCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+              content: Text(buttonText),
+              duration: Duration(seconds: 5),
+            ));
+        },
+        icon: Icon(buttonIcon, color: buttonColor),
+        tooltip: text);
   }
 }
