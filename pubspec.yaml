@@ -41,17 +41,21 @@ dependencies:
     git:
       url: https://github.com/leanflutter/window_manager.git
       ref: main
-  system_tray:
-    git:
-      url: https://github.com/antler119/system_tray.git
-  hotkey_manager:
-    git:
-      url: https://github.com/leanflutter/hotkey_manager.git
-      ref: main
+#  system_tray: ^0.0.7
+
+  hotkey_manager: ^0.1.1
   libwinmedia:
     git:
       url: https://github.com/libwinmedia/libwinmedia.dart.git
-#  response: ^1.0.0
+  flutter_acrylic:
+    git:
+      url: https://github.com/alexmercerind/flutter_acrylic.git
+  kumi_popup_window:
+    git:
+      url: https://github.com/q876625596/kumi_popup_window.git
+  bitsdojo_window:
+
+    #  response: ^1.0.0
 
     #  adaptive_theme:
 
