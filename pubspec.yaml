@@ -41,7 +41,9 @@ dependencies:
     git:
       url: https://github.com/leanflutter/window_manager.git
       ref: main
-#  system_tray: ^0.0.7
+  tray_manager: ^0.0.2
+
+  #  system_tray: ^0.0.7
 
   hotkey_manager: ^0.1.1
   libwinmedia:
@@ -99,6 +101,7 @@ flutter:
     - assets/GearUp.wav
     - assets/Running90s.wav
     - assets/PullUp.mp3
+    - assets/app_icon.ico
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

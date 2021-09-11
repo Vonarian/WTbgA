@@ -12,6 +12,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
+import 'package:tray_manager/tray_manager.dart';
 // import 'package:system_tray/system_tray.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
@@ -117,7 +118,7 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> with WindowListener {
+class _HomeState extends State<Home> with WindowListener, TrayListener {
   static Route<String> dialogBuilderIasFlap(BuildContext context) {
     TextEditingController userInputIasFlap = TextEditingController();
     return DialogRoute(
@@ -540,8 +541,8 @@ class _HomeState extends State<Home> with WindowListener {
   }
 
   Future<void> averageTasForStall() async {
+    if (!mounted) return;
     if (stateData.tas != null) {
-      if (!mounted) return;
       setState(() {
         firstSpeed = stateData.tas;
       });
@@ -581,10 +582,19 @@ class _HomeState extends State<Home> with WindowListener {
   void dispose() {
     super.dispose();
     // _timer?.cancel();
+    TrayManager.instance.removeListener(this);
+    windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
     textForIasFlap.removeListener((userRedLineFlap));
   }
 
+  void _handleClickMinimize() async {
+    windowManager.minimize();
+  }
+
+  void _handleClickRestore() async {
+    windowManager.restore();
+  }
   // Future<void> initSystemTray() async {
   //   String? path;
   //   if (Platform.isWindows) {
@@ -668,10 +678,10 @@ class _HomeState extends State<Home> with WindowListener {
   @override
   void initState() {
     keyRegister();
-    // initSystemTray();
+    TrayManager.instance.addListener(this);
+    windowManager.addListener(this);
     updateMsgId();
     updateStateIndicator();
-    windowManager.addListener(this);
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) {
@@ -781,6 +791,7 @@ class _HomeState extends State<Home> with WindowListener {
         windowManager.setAlwaysOnTop(!isAlwaysOnTop);
         Future.delayed(Duration(milliseconds: 200));
         isAlwaysOnTop = await windowManager.isAlwaysOnTop();
+        windowManager.setCustomFrame(isFrameless: true);
         print(isAlwaysOnTop);
       },
     );
@@ -2046,6 +2057,111 @@ class _HomeState extends State<Home> with WindowListener {
     );
   }
 
+  drawerBuilder() {
+    return Drawer(
+      child: Container(
+        decoration: BoxDecoration(color: Colors.blueGrey),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Icon(
+                Icons.notifications,
+                size: 100,
+              ),
+            ),
+            SizedBox(
+              height: 24,
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {
+                    isFullNotifOn = !isFullNotifOn;
+                  },
+                  label: isFullNotifOn
+                      ? Text(
+                          'Notifications: On',
+                          style: TextStyle(color: Colors.green),
+                        )
+                      : Text(
+                          'Notifications: Off',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                  icon: isFullNotifOn
+                      ? Icon(Icons.notifications)
+                      : Icon(Icons.notifications_off)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {
+                    isEngineDeathNotifOn = !isEngineDeathNotifOn;
+                  },
+                  label: isEngineDeathNotifOn
+                      ? Text(
+                          'Engine Notification: On',
+                          style: TextStyle(color: Colors.green),
+                        )
+                      : Text(
+                          'Engine Notification: Off',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                  icon: isEngineDeathNotifOn
+                      ? Icon(Icons.notifications)
+                      : Icon(Icons.notifications_off)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {
+                    isOilNotifOn = !isOilNotifOn;
+                  },
+                  label: isOilNotifOn
+                      ? Text(
+                          'Oil Notification: On',
+                          style: TextStyle(color: Colors.green),
+                        )
+                      : Text(
+                          'Oil Notification: Off',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                  icon: isOilNotifOn
+                      ? Icon(Icons.notifications)
+                      : Icon(Icons.notifications_off)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {
+                    isWaterNotifOn = !isWaterNotifOn;
+                  },
+                  label: isWaterNotifOn
+                      ? Text(
+                          'Water Notification: On',
+                          style: TextStyle(color: Colors.green),
+                        )
+                      : Text(
+                          'Water Notification: Off',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                  icon: isWaterNotifOn
+                      ? Icon(Icons.notifications)
+                      : Icon(Icons.notifications_off)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // final buttonColors = WindowButtonColors(
   //     iconNormal: const Color(0xFF805306),
   //     mouseOver: const Color(0xFFF6A00C),
@@ -2056,13 +2172,15 @@ class _HomeState extends State<Home> with WindowListener {
   late dynamic indicatorData;
   late dynamic msgData;
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
-  bool isUserIasFlapNew = false;
-  bool isUserIasGearNew = false;
-  bool isUserGLoadNew = false;
   ValueNotifier<String?> textForIasFlap = ValueNotifier('2000');
   ValueNotifier<String?> textForIasGear = ValueNotifier('2000');
   ValueNotifier<String?> textForGLoad = ValueNotifier('2000');
   double? fuelPercent;
+  bool _removeIconAfterRestored = true;
+  bool _showWindowBelowTrayIcon = false;
+  bool isUserIasFlapNew = false;
+  bool isUserIasGearNew = false;
+  bool isUserGLoadNew = false;
   bool isFullNotifOn = true;
   bool isDamageIDNew = false;
   bool isDamageMsgNew = false;
@@ -2076,22 +2194,28 @@ class _HomeState extends State<Home> with WindowListener {
   int? secondSpeed;
   double? avgTAS;
   int counter = 0;
-  bool runRedLine = false;
   double boxShadowOpacity = 0.07;
   Color borderColor = Color(0xFF805306);
+  final windowManager = WindowManager.instance;
+  var logoPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    '/logoWTbgA.jpg'
+  ]);
 
   @override
   Widget build(BuildContext context) {
     return WindowBorder(
       color: borderColor,
-      child: Column(
+      child: Flex(
+        direction: Axis.vertical,
         children: [
           WindowTitleBarBox(
             child: MoveWindow(
               child: Container(
                 color: Colors.red,
                 width: MediaQuery.of(context).size.width,
-                height: 56.0,
+                height: 56,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -2108,6 +2232,9 @@ class _HomeState extends State<Home> with WindowListener {
                           mouseDown: Colors.white.withOpacity(0.2),
                           iconMouseOver: Colors.white,
                           iconMouseDown: Colors.white),
+                      onPressed: () {
+                        _handleClickMinimize();
+                      },
                     ),
                     MaximizeWindowButton(
                       animate: true,
@@ -2135,182 +2262,246 @@ class _HomeState extends State<Home> with WindowListener {
             ),
           ),
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                  image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: AssetImage(
-                        'assets/event_korean_war.jpg',
-                      ))),
-              child: Scaffold(
-                backgroundColor: Colors.transparent,
-                resizeToAvoidBottomInset: true,
-                appBar: MediaQuery.of(context).size.height >= 300
-                    ? AppBar(
-                        elevation: 1,
-                        actions: [
-                          IconButton(
-                            tooltip: 'Go to information page',
-                            icon: Icon(
-                              Icons.info,
-                              color: Colors.cyanAccent,
-                            ),
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/info');
-                            },
-                          ),
-                          IconButton(
-                            hoverColor: Colors.yellowAccent[100],
-                            tooltip:
-                                'Enter red line speed for IAS with flaps open',
-                            icon: Icon(
-                              Icons.warning,
-                              color: Colors.red,
-                            ),
-                            onPressed: () async {
-                              String? pressedTextFlap =
-                                  await Navigator.of(context)
-                                      .push(dialogBuilderIasFlap(context));
-                              setState(() {
-                                textForIasFlap.value = pressedTextFlap;
-                              });
-                            },
-                          ),
-                          IconButton(
-                            onPressed: () async {
-                              String? pressedTextGear =
-                                  await Navigator.of(context)
-                                      .push(dialogBuilderIasGear(context));
-                              setState(() {
-                                textForIasGear.value = pressedTextGear;
-                              });
-                            },
-                            icon: Icon(
-                              Icons.warning,
-                              color: Colors.deepPurple,
-                            ),
-                            tooltip: 'Enter IAS speed for gear red line',
-                          ),
-                          IconButton(
-                              tooltip: 'Enter maximum GLoad to get warning',
-                              onPressed: () async {
-                                String? pressedTextGLoad =
-                                    await Navigator.of(context)
-                                        .push(dialogBuilderOverG(context));
-                                setState(() {
-                                  textForGLoad.value = pressedTextGLoad;
-                                });
-                              },
-                              icon: Icon(
-                                Icons.warning,
-                                color: Colors.amber,
-                              )),
-                          IconButton(
-                              tooltip: 'Enter transparent page.',
-                              onPressed: () {
-                                Navigator.pushReplacementNamed(
-                                    context, '/transparent');
-                              },
-                              icon: Icon(Icons.window_rounded))
-                        ],
-                        backgroundColor: Colors.transparent,
-                        centerTitle: true,
-                        title: indicatorData.name != 'NULL'
-                            ? Text("You're flying ${indicatorData.name}")
-                            : (stateData.height == 32 &&
-                                    stateData.minFuel == 0 &&
-                                    stateData.flap == 0)
-                                ? Text("You're in Hangar...")
-                                : Text(
-                                    'No vehicle data available / Not flying.'))
-                    : null,
-                body: AnimatedOpacity(
-                    duration: Duration(seconds: 5),
-                    opacity: widget1Opacity,
-                    child: MediaQuery.of(context).size.height >= 235
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              engineThrottleText(),
-                              engineTempText(),
-                              fuelIndicator(),
-                              altitudeText(),
-                              compassText(),
-                              iasText(),
-                              climbRate(),
-                              oilTempText(),
-                              waterTempText()
-                            ],
-                          )
-                        : SingleChildScrollView(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Row(
-                                  children: [
-                                    engineThrottleText(),
-                                    engineTempText(),
-                                    fuelIndicator(),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    altitudeText(),
-                                    compassText(),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    iasText(),
-                                    climbRate(),
-                                  ],
-                                ),
-                                Row(
-                                  children: [oilTempText(), waterTempText()],
-                                )
-                              ],
-                            ),
-                          )),
-                floatingActionButton: MediaQuery.of(context).size.height >=
-                            450 &&
-                        MediaQuery.of(context).size.width >= 450
-                    ? FloatingActionButton(
-                        backgroundColor: Colors.red,
-                        tooltip: isFullNotifOn
-                            ? 'Toggle overheat notifier(On)'
-                            : 'Toggle overheat notifier(Off)',
-                        child: isFullNotifOn
-                            ? Icon(
-                                Icons.notifications,
-                                color: Colors.green[400],
-                              )
-                            : Icon(
-                                Icons.notifications_off,
-                                color: Colors.black,
-                              ),
-                        onPressed: () {
-                          setState(() {
-                            isFullNotifOn = !isFullNotifOn;
-                          });
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: isFullNotifOn
-                                    ? Text(
-                                        'Notifications are now enabled',
-                                        style: TextStyle(color: Colors.green),
-                                      )
-                                    : Text(
-                                        'Notifications are now disabled',
-                                        style: TextStyle(color: Colors.red),
-                                      )));
-                        })
-                    : null,
+              child: Stack(children: [
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+              child: Image.asset(
+                'assets/event_korean_war.jpg',
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width,
+                fit: BoxFit.cover,
               ),
             ),
-          ),
+            Scaffold(
+              drawer: drawerBuilder(),
+              backgroundColor: Colors.transparent,
+              resizeToAvoidBottomInset: true,
+              appBar: MediaQuery.of(context).size.height >= 300
+                  ? AppBar(
+                      leading: Builder(
+                        builder: (BuildContext context) {
+                          return IconButton(
+                            icon: Icon(Icons.list),
+                            onPressed: () {
+                              Scaffold.of(context).openDrawer();
+                            },
+                          );
+                        },
+                      ),
+                      automaticallyImplyLeading: false,
+                      elevation: 0.75,
+                      actions: [
+                        IconButton(
+                          tooltip: 'Go to information page',
+                          icon: Icon(
+                            Icons.info,
+                            color: Colors.cyanAccent,
+                          ),
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(context, '/info');
+                          },
+                        ),
+                        IconButton(
+                          hoverColor: Colors.yellowAccent[100],
+                          tooltip:
+                              'Enter red line speed for IAS with flaps open',
+                          icon: Icon(
+                            Icons.warning,
+                            color: Colors.red,
+                          ),
+                          onPressed: () async {
+                            String? pressedTextFlap =
+                                await Navigator.of(context)
+                                    .push(dialogBuilderIasFlap(context));
+                            setState(() {
+                              textForIasFlap.value = pressedTextFlap;
+                            });
+                          },
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            String? pressedTextGear =
+                                await Navigator.of(context)
+                                    .push(dialogBuilderIasGear(context));
+                            setState(() {
+                              textForIasGear.value = pressedTextGear;
+                            });
+                          },
+                          icon: Icon(
+                            Icons.warning,
+                            color: Colors.deepPurple,
+                          ),
+                          tooltip: 'Enter IAS speed for gear red line',
+                        ),
+                        IconButton(
+                            tooltip: 'Enter maximum GLoad to get warning',
+                            onPressed: () async {
+                              String? pressedTextGLoad =
+                                  await Navigator.of(context)
+                                      .push(dialogBuilderOverG(context));
+                              setState(() {
+                                textForGLoad.value = pressedTextGLoad;
+                              });
+                            },
+                            icon: Icon(
+                              Icons.warning,
+                              color: Colors.amber,
+                            )),
+                        IconButton(
+                            tooltip: 'Enter transparent page.',
+                            onPressed: () {
+                              Navigator.pushReplacementNamed(
+                                  context, '/transparent');
+                            },
+                            icon: Icon(Icons.window_rounded))
+                      ],
+                      backgroundColor: Colors.transparent,
+                      centerTitle: true,
+                      title: indicatorData.name != 'NULL'
+                          ? Text("You're flying ${indicatorData.name}")
+                          : (stateData.height == 32 &&
+                                  stateData.minFuel == 0 &&
+                                  stateData.flap == 0)
+                              ? Text("You're in Hangar...")
+                              : Text('No vehicle data available / Not flying.'))
+                  : null,
+              body: AnimatedOpacity(
+                  duration: Duration(seconds: 5),
+                  opacity: widget1Opacity,
+                  child: MediaQuery.of(context).size.height >= 235
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            engineThrottleText(),
+                            engineTempText(),
+                            fuelIndicator(),
+                            altitudeText(),
+                            compassText(),
+                            iasText(),
+                            climbRate(),
+                            oilTempText(),
+                            waterTempText()
+                          ],
+                        )
+                      : SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Row(
+                                children: [
+                                  engineThrottleText(),
+                                  engineTempText(),
+                                  fuelIndicator(),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  altitudeText(),
+                                  compassText(),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  iasText(),
+                                  climbRate(),
+                                ],
+                              ),
+                              Row(
+                                children: [oilTempText(), waterTempText()],
+                              )
+                            ],
+                          ),
+                        )),
+              floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
+                      MediaQuery.of(context).size.width >= 450
+                  ? FloatingActionButton(
+                      backgroundColor: Colors.red,
+                      tooltip: isFullNotifOn
+                          ? 'Toggle overheat notifier(On)'
+                          : 'Toggle overheat notifier(Off)',
+                      child: isFullNotifOn
+                          ? Icon(
+                              Icons.notifications,
+                              color: Colors.green[400],
+                            )
+                          : Icon(
+                              Icons.notifications_off,
+                              color: Colors.black,
+                            ),
+                      onPressed: () {
+                        setState(() {
+                          isFullNotifOn = !isFullNotifOn;
+                        });
+                        ScaffoldMessenger.of(context)
+                          ..removeCurrentSnackBar()
+                          ..showSnackBar(SnackBar(
+                              content: isFullNotifOn
+                                  ? Text(
+                                      'Notifications are now enabled',
+                                      style: TextStyle(color: Colors.green),
+                                    )
+                                  : Text(
+                                      'Notifications are now disabled',
+                                      style: TextStyle(color: Colors.red),
+                                    )));
+                      })
+                  : null,
+            ),
+          ])),
         ],
       ),
     );
+  }
+
+  @override
+  void onTrayIconMouseUp() async {
+    List<MenuItem> menuItems = [
+      MenuItem(title: 'Show/Hide Main Window'),
+      MenuItem.separator,
+      MenuItem(title: 'Exit App'),
+    ];
+    await TrayManager.instance.setContextMenu(menuItems);
+    await TrayManager.instance.popUpContextMenu();
+    await TrayManager.instance.setIcon('assets/app_icon.ico');
+
+    if (_showWindowBelowTrayIcon) {
+      Size windowSize = await windowManager.getSize();
+      Rect trayIconBounds = await TrayManager.instance.getBounds();
+      Size trayIconSize = trayIconBounds.size;
+      Offset trayIconNewPosition = trayIconBounds.topLeft;
+
+      Offset newPosition = Offset(
+        trayIconNewPosition.dx - ((windowSize.width - trayIconSize.width) / 2),
+        trayIconNewPosition.dy,
+      );
+
+      windowManager.setPosition(newPosition);
+      await Future.delayed(Duration(milliseconds: 100));
+    }
+    _handleClickRestore();
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    TrayManager.instance.popUpContextMenu();
+  }
+
+  @override
+  void onTrayMenuItemClick(MenuItem menuItem) {
+    print(menuItem.toJson());
+  }
+
+  @override
+  void onWindowMinimize() async {
+    await TrayManager.instance.setIcon(
+      'assets/app_icon.ico',
+    );
+  }
+
+  @override
+  void onWindowRestore() async {
+    if (_removeIconAfterRestored) {
+      await TrayManager.instance.destroy();
+    }
   }
 }

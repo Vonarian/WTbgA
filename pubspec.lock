@@ -601,6 +601,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.0"
+  tray_manager:
+    dependency: "direct main"
+    description:
+      name: tray_manager
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.2"
   typed_data:
     dependency: transitive
     description:
