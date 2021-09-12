@@ -121,7 +121,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with WindowListener, TrayListener {
-  static Route<String> dialogBuilderIasFlap(BuildContext context) {
+  static Route<int> dialogBuilderIasFlap(BuildContext context) {
     TextEditingController userInputIasFlap = TextEditingController();
     return DialogRoute(
       context: context,
@@ -139,7 +139,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   ..showSnackBar(SnackBar(
                       content: Text(
                           'You will be notified if IAS reaches red line speed of ${userInputIasFlap.text} km/h (With flaps open). ')));
-                Navigator.of(context).pop(userInputIasFlap.text);
+                Navigator.of(context).pop(int.parse(userInputIasFlap.text));
               },
               child: Text('Notify')),
         ],
@@ -225,8 +225,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   ]);
   void userRedLineFlap() {
     if (!mounted) return;
-    if (stateData.ias != null && textForIasFlap.value != null) {
-      if (stateData.ias >= int.parse(textForIasFlap.value!) &&
+    if (stateData.ias != null && _textForIasFlap.value != null) {
+      if (stateData.ias >= _textForIasFlap.value &&
           isUserIasFlapNew &&
           stateData.flap > 0) {
         Toast toast = new Toast(
@@ -245,7 +245,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         player.play();
         isUserIasFlapNew = false;
       }
-      if (stateData.ias < int.parse(textForIasFlap.value!)) {
+      if (stateData.ias < _textForIasFlap.value) {
         setState(() {
           isUserIasFlapNew = true;
         });
@@ -255,8 +255,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   void userRedLineGear() {
     if (!mounted) return;
-    if (stateData.ias != null && textForIasGear.value != null) {
-      if (stateData.ias >= int.parse(textForIasGear.value!) &&
+    if (stateData.ias != null && _textForIasGear.value != null) {
+      if (stateData.ias >= int.parse(_textForIasGear.value!) &&
           isUserIasGearNew &&
           stateData.gear > 0) {
         Toast toast = new Toast(
@@ -275,11 +275,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         gearUpPlayer.play();
         isUserIasGearNew = false;
       }
-      if (stateData.ias >= int.parse(textForIasGear.value!) &&
+      if (stateData.ias >= int.parse(_textForIasGear.value!) &&
           stateData.gear > 0) {
         gearUpPlayer.play();
       }
-      if (stateData.ias < int.parse(textForIasGear.value!)) {
+      if (stateData.ias < int.parse(_textForIasGear.value!)) {
         setState(() {
           isUserIasGearNew = true;
         });
@@ -305,10 +305,10 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   Future<void> loadChecker() async {
     if (!mounted) return;
-    if (textForGLoad.value != null &&
+    if (_textForGLoad.value != null &&
         isUserGLoadNew &&
         stateData.load != null &&
-        stateData.load >= int.parse(textForGLoad.value!)) {
+        stateData.load >= int.parse(_textForGLoad.value!)) {
       overGPlayer.play();
     }
   }
@@ -596,7 +596,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
-    textForIasFlap.removeListener((userRedLineFlap));
+    _textForIasFlap.removeListener((userRedLineFlap));
   }
 
   void _handleClickMinimize() async {
@@ -704,6 +704,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     _prefs.then((SharedPreferences prefs) {
       _isFullNotifOn = (prefs.getBool('isFullNotifOn') ?? true);
     });
+    _prefs.then((SharedPreferences prefs) {
+      _textForIasFlap.value = (prefs.getInt('textForIasFlap') ?? 2000);
+      if (_textForIasFlap.value != 2000) {
+        isUserIasFlapNew = true;
+      }
+    });
     keyRegister();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
@@ -737,16 +743,16 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       vehicleStateCheck();
       run = false;
     });
-    textForIasFlap.addListener(() {
+    _textForIasFlap.addListener(() {
       isUserIasFlapNew = true;
     });
     msgDataNotifier.addListener(() {
       isDamageMsgNew = true;
     });
-    textForIasGear.addListener(() {
+    _textForIasGear.addListener(() {
       isUserIasGearNew = true;
     });
-    textForGLoad.addListener(() {
+    _textForGLoad.addListener(() {
       isUserGLoadNew = true;
     });
     const redLineTimer = Duration(milliseconds: 1500);
@@ -2236,9 +2242,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   late dynamic msgData;
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
-  ValueNotifier<String?> textForIasFlap = ValueNotifier('2000');
-  ValueNotifier<String?> textForIasGear = ValueNotifier('2000');
-  ValueNotifier<String?> textForGLoad = ValueNotifier('2000');
+  ValueNotifier<int?> _textForIasFlap = ValueNotifier(2000);
+  ValueNotifier<String?> _textForIasGear = ValueNotifier('2000');
+  ValueNotifier<String?> _textForGLoad = ValueNotifier('2000');
   bool _isTrayEnabled = true;
   bool _removeIconAfterRestored = true;
   bool _showWindowBelowTrayIcon = false;
@@ -2376,12 +2382,15 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             color: Colors.red,
                           ),
                           onPressed: () async {
-                            String? pressedTextFlap =
-                                await Navigator.of(context)
-                                    .push(dialogBuilderIasFlap(context));
+                            final SharedPreferences prefs = await _prefs;
+                            _textForIasFlap.value = await Navigator.of(context)
+                                .push(dialogBuilderIasFlap(context));
+                            int textForIasFlap =
+                                (prefs.getInt('textForIasFlap') ?? 2000);
                             setState(() {
-                              textForIasFlap.value = pressedTextFlap;
+                              textForIasFlap = _textForIasFlap.value!;
                             });
+                            prefs.setInt("textForIasFlap", textForIasFlap);
                           },
                         ),
                         IconButton(
@@ -2390,7 +2399,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 await Navigator.of(context)
                                     .push(dialogBuilderIasGear(context));
                             setState(() {
-                              textForIasGear.value = pressedTextGear;
+                              _textForIasGear.value = pressedTextGear;
                             });
                           },
                           icon: Icon(
@@ -2406,7 +2415,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                   await Navigator.of(context)
                                       .push(dialogBuilderOverG(context));
                               setState(() {
-                                textForGLoad.value = pressedTextGLoad;
+                                _textForGLoad.value = pressedTextGLoad;
                               });
                             },
                             icon: Icon(
