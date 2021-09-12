@@ -14,7 +14,6 @@ import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
-// import 'package:system_tray/system_tray.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -62,7 +61,7 @@ class _LoadingState extends State<Loading> {
   }
 
   void _launchURL() async => await launch(_url);
-  var _url =
+  final _url =
       'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga';
 
   @override
@@ -94,7 +93,7 @@ class _LoadingState extends State<Loading> {
           onPressed: () async {
             setupToolData();
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(
+              content: const Text(
                   "If you didn't go to the next screen, click on More Info"),
               action: SnackBarAction(
                 label: 'More Info',
@@ -154,7 +153,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     );
   }
 
-  static Route<String> dialogBuilderOverG(BuildContext context) {
+  static Route<int> dialogBuilderOverG(BuildContext context) {
     TextEditingController userInputOverG = TextEditingController();
     return DialogRoute(
         context: context,
@@ -179,14 +178,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                         ..showSnackBar(SnackBar(
                             content: Text(
                                 'You will be notified if G load reaches red line load of ${userInputOverG.text}. ')));
-                      Navigator.of(context).pop(userInputOverG.text);
+                      Navigator.of(context).pop(int.parse(userInputOverG.text));
                     },
                     child: Text('Notify'))
               ],
             ));
   }
 
-  static Route<String> dialogBuilderIasGear(BuildContext context) {
+  static Route<int> dialogBuilderIasGear(BuildContext context) {
     TextEditingController userInputIasGear = TextEditingController();
     return DialogRoute(
         context: context,
@@ -210,7 +209,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                         ..showSnackBar(SnackBar(
                             content: Text(
                                 'You will be notified if IAS reaches red line speed of ${userInputIasGear.text} km/h (With gears open). ')));
-                      Navigator.of(context).pop(userInputIasGear.text);
+                      Navigator.of(context)
+                          .pop(int.parse(userInputIasGear.text));
                     },
                     child: Text('Notify'))
               ],
@@ -229,12 +229,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       if (stateData.ias >= _textForIasFlap.value &&
           isUserIasFlapNew &&
           stateData.flap > 0) {
-        Toast toast = new Toast(
+        Toast toast = Toast(
             type: ToastType.imageAndText02,
             title: '😳Flap WARNING!',
             subtitle:
                 'Be careful, flaps are open and IAS has reached red line!',
-            image: new File(warningLogo));
+            image: File(warningLogo));
         service!.show(toast);
         toast.dispose();
         service?.stream.listen((event) {
@@ -256,15 +256,15 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   void userRedLineGear() {
     if (!mounted) return;
     if (stateData.ias != null && _textForIasGear.value != null) {
-      if (stateData.ias >= int.parse(_textForIasGear.value!) &&
+      if (stateData.ias >= _textForIasGear.value! &&
           isUserIasGearNew &&
           stateData.gear > 0) {
-        Toast toast = new Toast(
+        Toast toast = Toast(
             type: ToastType.imageAndText02,
             title: '😳Gear WARNING!',
             subtitle:
                 'Be careful, gears are open and IAS has reached red line!',
-            image: new File(warningLogo));
+            image: File(warningLogo));
         service!.show(toast);
         toast.dispose();
         service?.stream.listen((event) {
@@ -275,11 +275,10 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         gearUpPlayer.play();
         isUserIasGearNew = false;
       }
-      if (stateData.ias >= int.parse(_textForIasGear.value!) &&
-          stateData.gear > 0) {
+      if (stateData.ias >= _textForIasGear.value! && stateData.gear > 0) {
         gearUpPlayer.play();
       }
-      if (stateData.ias < int.parse(_textForIasGear.value!)) {
+      if (stateData.ias < _textForIasGear.value!) {
         setState(() {
           isUserIasGearNew = true;
         });
@@ -308,7 +307,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     if (_textForGLoad.value != null &&
         isUserGLoadNew &&
         stateData.load != null &&
-        stateData.load >= int.parse(_textForGLoad.value!)) {
+        stateData.load >= _textForGLoad.value!) {
       overGPlayer.play();
     }
   }
@@ -321,11 +320,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         isDamageIDNew &&
         msgData == "Engine died: no fuel" &&
         isDamageMsgNew) {
-      Toast toast = new Toast(
+      Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳Engine WARNING!',
           subtitle: 'Engine ran out of fuel and died!',
-          image: new File(warningLogo));
+          image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -341,11 +340,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         _isFullNotifOn &&
         isDamageIDNew &&
         msgData == "Oil overheated") {
-      Toast toast = new Toast(
+      Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳OIL WARNING!',
           subtitle: 'Oil is overheating!',
-          image: new File(warningLogo));
+          image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -361,11 +360,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
-      Toast toast = new Toast(
+      Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
           subtitle: 'Engine is overheating!',
-          image: new File(warningLogo));
+          image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -381,11 +380,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
-      Toast toast = new Toast(
+      Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
           subtitle: 'Engine is overheating!',
-          image: new File(warningLogo));
+          image: File(warningLogo));
       service!.show(toast);
       service?.stream.listen((event) {
         if (event is ToastActivated) {
@@ -440,11 +439,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'You are out of ammunition. Reloading is not possible.') {
-      Toast toast = new Toast(
+      Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳WARNING!!',
           subtitle: 'Your vehicle is possibly destroyed / Not repairable😒',
-          image: new File(warningLogo));
+          image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -500,11 +499,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   void flapChecker() {
     if (((indicatorData.flap1 != indicatorData.flap2) ||
         msgData == 'Asymmetric flap extension' && isDamageIDNew)) {
-      Toast toast = new Toast(
+      Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳Flap WARNING!!',
           subtitle: 'Flaps are not opened equally, be careful',
-          image: new File(warningLogo));
+          image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
       service?.stream.listen((event) {
@@ -525,11 +524,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     double? avgTAS = ((secondSpeed! - firstSpeed!) / 2);
     if (avgTAS >= 10) {
       while (counter < 2) {
-        Toast toast = new Toast(
+        Toast toast = Toast(
             type: ToastType.imageAndText02,
             title: '😳WARNING!!',
             subtitle: 'Very high acceleration, be careful',
-            image: new File(warningLogo));
+            image: File(warningLogo));
         service!.show(toast);
         toast.dispose();
         service?.stream.listen((event) {
@@ -686,9 +685,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     }
   }
 
-  @override
-  void initState() {
-    // updateRam();
+  receiveDiskValues() {
     _prefs.then((SharedPreferences prefs) {
       _isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
     });
@@ -710,6 +707,23 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         isUserIasFlapNew = true;
       }
     });
+    _prefs.then((SharedPreferences prefs) {
+      _textForIasGear.value = (prefs.getInt('textForIasGear') ?? 2000);
+      if (_textForIasGear.value != 2000) {
+        isUserIasGearNew = true;
+      }
+    });
+    _prefs.then((SharedPreferences prefs) {
+      _textForGLoad.value = (prefs.getInt('textForGLoad') ?? 12);
+      if (_textForGLoad.value != 12) {
+        isUserGLoadNew = true;
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    // updateRam();
     keyRegister();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
@@ -765,6 +779,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     Future.delayed(Duration(milliseconds: 250), () {
       widget1Opacity = 1;
     });
+    receiveDiskValues();
   }
 
   void _trayInit() async {
@@ -1046,17 +1061,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 child: stateData.water == null || stateData.water == 15
                     ? TextButton.icon(
                         icon: Icon(Icons.water),
-                        onPressed: () {
-                          _isWaterNotifOn = !_isWaterNotifOn;
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: _isWaterNotifOn
-                                    ? Text(
-                                        'Water Notifications are now enabled')
-                                    : Text(
-                                        'Water Notifications are now disabled')));
-                        },
+                        onPressed: () {},
                         label: Expanded(
                           child: Text(
                             'Not water-cooled / No data available!  ',
@@ -1071,17 +1076,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       )
                     : TextButton.icon(
                         icon: Icon(Icons.water),
-                        onPressed: () {
-                          _isWaterNotifOn = !_isWaterNotifOn;
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: _isWaterNotifOn
-                                    ? Text(
-                                        'Water Notifications are now enabled')
-                                    : Text(
-                                        'Water Notifications are now disabled')));
-                        },
+                        onPressed: () {},
                         label: Expanded(
                           child: Text(
                             'Water Temp = ${stateData.water!} degrees  ',
@@ -1119,17 +1114,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 child: stateData.water == null || stateData.water == 15
                     ? TextButton.icon(
                         icon: Icon(Icons.water),
-                        onPressed: () {
-                          _isWaterNotifOn = !_isWaterNotifOn;
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: _isWaterNotifOn
-                                    ? Text(
-                                        'Water Notifications are now enabled')
-                                    : Text(
-                                        'Water Notifications are now disabled')));
-                        },
+                        onPressed: () {},
                         label: Expanded(
                           child: Text(
                             'Not water-cooled / No data available!  ',
@@ -1144,17 +1129,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       )
                     : TextButton.icon(
                         icon: Icon(Icons.water),
-                        onPressed: () {
-                          _isWaterNotifOn = !_isWaterNotifOn;
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: _isWaterNotifOn
-                                    ? Text(
-                                        'Water Notifications are now enabled')
-                                    : Text(
-                                        'Water Notifications are now disabled')));
-                        },
+                        onPressed: () {},
                         label: Expanded(
                           child: Text(
                             'Water Temp = ${stateData.water!} degrees  ',
@@ -2216,6 +2191,97 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                         ),
                   icon: Icon(Icons.minimize_rounded)),
             ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                label: Text('Go to information page'),
+                icon: Icon(
+                  Icons.info,
+                  color: Colors.cyanAccent,
+                ),
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/info');
+                },
+              ),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                label: Text(
+                    'Current red line IAS for flaps:${_textForIasFlap.value}Km/h'),
+                icon: Icon(
+                  Icons.warning,
+                  color: Colors.red,
+                ),
+                onPressed: () async {
+                  final SharedPreferences prefs = await _prefs;
+                  _textForIasFlap.value = await Navigator.of(context)
+                      .push(dialogBuilderIasFlap(context));
+                  int textForIasFlap = (prefs.getInt('textForIasFlap') ?? 2000);
+                  setState(() {
+                    textForIasFlap = _textForIasFlap.value!;
+                  });
+                  prefs.setInt("textForIasFlap", textForIasFlap);
+                },
+              ),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                label: Text(
+                    'Current red line IAS for gears:${_textForIasFlap.value}Km/h'),
+                onPressed: () async {
+                  final SharedPreferences prefs = await _prefs;
+                  _textForIasGear.value = await Navigator.of(context)
+                      .push(dialogBuilderIasGear(context));
+                  int textForIasGear = (prefs.getInt('textForIasGear') ?? 2000);
+
+                  setState(() {
+                    textForIasGear = _textForIasGear.value!;
+                  });
+                  prefs.setInt("textForIasGear", textForIasGear);
+                },
+                icon: Icon(
+                  Icons.warning,
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  label:
+                      Text('Current red line G load:${_textForGLoad.value}G'),
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
+                    _textForGLoad.value = await Navigator.of(context)
+                        .push(dialogBuilderOverG(context));
+                    int textForGLoad = (prefs.getInt('textForGLoad') ?? 12);
+
+                    setState(() {
+                      textForGLoad = _textForGLoad.value!;
+                    });
+                    prefs.setInt("textForGLoad", textForGLoad);
+                  },
+                  icon: Icon(
+                    Icons.warning,
+                    color: Colors.amber,
+                  )),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  label: Text('Enter transparent mode'),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/transparent');
+                  },
+                  icon: Icon(Icons.window_rounded)),
+            )
             // Container(
             //     alignment: Alignment.topLeft,
             //     decoration: BoxDecoration(color: Colors.black87),
@@ -2243,8 +2309,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   ValueNotifier<int?> _textForIasFlap = ValueNotifier(2000);
-  ValueNotifier<String?> _textForIasGear = ValueNotifier('2000');
-  ValueNotifier<String?> _textForGLoad = ValueNotifier('2000');
+  ValueNotifier<int?> _textForIasGear = ValueNotifier(2000);
+  ValueNotifier<int?> _textForGLoad = ValueNotifier(12);
   bool _isTrayEnabled = true;
   bool _removeIconAfterRestored = true;
   bool _showWindowBelowTrayIcon = false;
@@ -2290,11 +2356,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // IconButton(
-                    //     onPressed: () {
-                    //       // systemT
-                    //     },
-                    //     icon: Icon(Icons.arrow_drop_down)),
                     MinimizeWindowButton(
                       animate: true,
                       colors: WindowButtonColors(
@@ -2362,74 +2423,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       ),
                       automaticallyImplyLeading: false,
                       elevation: 0.75,
-                      actions: [
-                        IconButton(
-                          tooltip: 'Go to information page',
-                          icon: Icon(
-                            Icons.info,
-                            color: Colors.cyanAccent,
-                          ),
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/info');
-                          },
-                        ),
-                        IconButton(
-                          hoverColor: Colors.yellowAccent[100],
-                          tooltip:
-                              'Enter red line speed for IAS with flaps open',
-                          icon: Icon(
-                            Icons.warning,
-                            color: Colors.red,
-                          ),
-                          onPressed: () async {
-                            final SharedPreferences prefs = await _prefs;
-                            _textForIasFlap.value = await Navigator.of(context)
-                                .push(dialogBuilderIasFlap(context));
-                            int textForIasFlap =
-                                (prefs.getInt('textForIasFlap') ?? 2000);
-                            setState(() {
-                              textForIasFlap = _textForIasFlap.value!;
-                            });
-                            prefs.setInt("textForIasFlap", textForIasFlap);
-                          },
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            String? pressedTextGear =
-                                await Navigator.of(context)
-                                    .push(dialogBuilderIasGear(context));
-                            setState(() {
-                              _textForIasGear.value = pressedTextGear;
-                            });
-                          },
-                          icon: Icon(
-                            Icons.warning,
-                            color: Colors.deepPurple,
-                          ),
-                          tooltip: 'Enter IAS speed for gear red line',
-                        ),
-                        IconButton(
-                            tooltip: 'Enter maximum GLoad to get warning',
-                            onPressed: () async {
-                              String? pressedTextGLoad =
-                                  await Navigator.of(context)
-                                      .push(dialogBuilderOverG(context));
-                              setState(() {
-                                _textForGLoad.value = pressedTextGLoad;
-                              });
-                            },
-                            icon: Icon(
-                              Icons.warning,
-                              color: Colors.amber,
-                            )),
-                        IconButton(
-                            tooltip: 'Enter transparent page.',
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(
-                                  context, '/transparent');
-                            },
-                            icon: Icon(Icons.window_rounded))
-                      ],
                       backgroundColor: Colors.transparent,
                       centerTitle: true,
                       title: indicatorData.name != 'NULL'
