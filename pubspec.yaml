@@ -42,6 +42,7 @@ dependencies:
       url: https://github.com/leanflutter/window_manager.git
       ref: main
   tray_manager: ^0.0.2
+  shared_preferences: ^2.0.7
 
   #  system_tray: ^0.0.7
 
@@ -56,6 +57,7 @@ dependencies:
     git:
       url: https://github.com/q876625596/kumi_popup_window.git
   bitsdojo_window:
+  linux_system_info: ^0.0.6
 
     #  response: ^1.0.0
 

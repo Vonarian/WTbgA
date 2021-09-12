@@ -8,9 +8,90 @@ class InfoPage extends StatefulWidget {
 }
 
 class _InfoPageState extends State<InfoPage> {
+  drawerBuilder() {
+    return Drawer(
+      child: Container(
+        decoration: BoxDecoration(color: Colors.blueGrey),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Icon(
+                Icons.notifications,
+                size: 100,
+              ),
+            ),
+            SizedBox(
+              height: 24,
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {},
+                  label: Text(
+                    'Notifications: On/Off',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                  icon: Icon(Icons.notifications)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {},
+                  label: Text(
+                    'Engine Notification: On/Off',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                  icon: Icon(Icons.notifications)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {},
+                  label: Text(
+                    'Oil Notification: On/Off',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                  icon: Icon(Icons.notifications)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {},
+                  label: Text(
+                    'Water Notification: On/Off',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                  icon: Icon(Icons.notifications)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () {},
+                  label: Text(
+                    'Minimize to tray: On/Off',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                  icon: Icon(Icons.minimize_rounded)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: drawerBuilder(),
       appBar: AppBar(
         backgroundColor: Colors.blueAccent,
         leading: IconButton(
@@ -31,10 +112,25 @@ class _InfoPageState extends State<InfoPage> {
               Icons.warning,
               Colors.deepPurple),
           appbarButtonBuilder(
-              'Force close button',
-              "This button at the left of the AppBar allows you to force close the application, 'Alt + del' does the same. ",
-              Icons.close,
-              Colors.red)
+              'G load limit',
+              "This button in the home screen allows you to enter allowed G load before you get a warning. ",
+              Icons.warning,
+              Colors.amber),
+          appbarButtonBuilder(
+              'Transparent page',
+              'This button in the home screen allows you to enter transparent page',
+              Icons.window,
+              Colors.white),
+          Builder(
+            builder: (BuildContext context) {
+              return IconButton(
+                icon: Icon(Icons.list),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              );
+            },
+          ),
         ],
         centerTitle: true,
         title: Text(

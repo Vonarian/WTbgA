@@ -12,6 +12,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 // import 'package:system_tray/system_tray.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -71,9 +72,10 @@ class _LoadingState extends State<Loading> {
           child: Image.asset('assets/event_korean_war.jpg'),
           imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0)),
       Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           centerTitle: true,
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.transparent,
           title: Text(
             'Loading WTbgI',
             style: TextStyle(
@@ -313,9 +315,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   Future<void> vehicleStateCheck() async {
     await Damage.getDamage();
-    if (isOilNotifOn &&
+    if (_isOilNotifOn &&
         stateData.oil != 15 &&
-        isFullNotifOn &&
+        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == "Engine died: no fuel" &&
         isDamageMsgNew) {
@@ -334,9 +336,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       isDamageIDNew = false;
       player.play();
     }
-    if (isOilNotifOn &&
+    if (_isOilNotifOn &&
         stateData.oil != 15 &&
-        isFullNotifOn &&
+        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == "Oil overheated") {
       Toast toast = new Toast(
@@ -356,7 +358,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     }
     if (isEngineNotifOn &&
         stateData.oil != 15 &&
-        isFullNotifOn &&
+        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
       Toast toast = new Toast(
@@ -374,9 +376,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       isDamageIDNew = false;
       player.play();
     }
-    if (isWaterNotifOn &&
+    if (_isWaterNotifOn &&
         stateData.water != 15 &&
-        isFullNotifOn &&
+        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
       Toast toast = new Toast(
@@ -394,9 +396,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       isDamageIDNew = false;
       player.play();
     }
-    if (isEngineDeathNotifOn &&
+    if (_isEngineDeathNotifOn &&
         stateData.oil != 15 &&
-        isFullNotifOn &&
+        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == "Engine died: overheating") {
       Toast toast = Toast(
@@ -414,9 +416,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       isDamageIDNew = false;
       player.play();
     }
-    if (isEngineDeathNotifOn &&
+    if (_isEngineDeathNotifOn &&
         stateData.oil != 15 &&
-        isFullNotifOn &&
+        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == "Engine died: propeller broken") {
       Toast toast = Toast(
@@ -435,7 +437,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       player.play();
     }
     if (stateData.oil != 15 &&
-        isFullNotifOn &&
+        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'You are out of ammunition. Reloading is not possible.') {
       Toast toast = new Toast(
@@ -485,6 +487,15 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           : emptyString;
     });
   }
+
+  // Future<void> updateRam() async {
+  //   var ramTotalReceive = MemInfo().mem_total_gb;
+  //   var ramUsageReceive = MemInfo().swap_total_gb;
+  //   setState(() {
+  //     ramUsage = ramUsageReceive;
+  //     ramTotal = ramTotalReceive;
+  //   });
+  // }
 
   void flapChecker() {
     if (((indicatorData.flap1 != indicatorData.flap2) ||
@@ -677,6 +688,22 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   @override
   void initState() {
+    // updateRam();
+    _prefs.then((SharedPreferences prefs) {
+      _isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
+    });
+    _prefs.then((SharedPreferences prefs) {
+      _isTrayEnabled = (prefs.getBool('isTrayEnabled') ?? true);
+    });
+    _prefs.then((SharedPreferences prefs) {
+      _isWaterNotifOn = (prefs.getBool('isWaterNotifOn') ?? true);
+    });
+    _prefs.then((SharedPreferences prefs) {
+      _isEngineDeathNotifOn = (prefs.getBool('isEngineDeathNotifOn') ?? true);
+    });
+    _prefs.then((SharedPreferences prefs) {
+      _isFullNotifOn = (prefs.getBool('isFullNotifOn') ?? true);
+    });
     keyRegister();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
@@ -687,6 +714,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     Timer.periodic(twoSec, (Timer t) {
       updateMsgId();
       flapChecker();
+      // updateRam();
     });
     const oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) => updateStateIndicator());
@@ -731,6 +759,24 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     Future.delayed(Duration(milliseconds: 250), () {
       widget1Opacity = 1;
     });
+  }
+
+  void _trayInit() async {
+    await TrayManager.instance.setIcon(
+      'assets/app_icon.ico',
+    );
+    List<MenuItem> menuItems = [
+      MenuItem(
+        identifier: 'exit-app',
+        title: 'Exit',
+      ),
+      MenuItem(identifier: 'show-app', title: 'Show')
+    ];
+    await TrayManager.instance.setContextMenu(menuItems);
+  }
+
+  void _trayUnInit() async {
+    await TrayManager.instance.destroy();
   }
 
   // Future<void> oilNotify() async {
@@ -995,11 +1041,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     ? TextButton.icon(
                         icon: Icon(Icons.water),
                         onPressed: () {
-                          isWaterNotifOn = !isWaterNotifOn;
+                          _isWaterNotifOn = !_isWaterNotifOn;
                           ScaffoldMessenger.of(context)
                             ..removeCurrentSnackBar()
                             ..showSnackBar(SnackBar(
-                                content: isWaterNotifOn
+                                content: _isWaterNotifOn
                                     ? Text(
                                         'Water Notifications are now enabled')
                                     : Text(
@@ -1020,11 +1066,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     : TextButton.icon(
                         icon: Icon(Icons.water),
                         onPressed: () {
-                          isWaterNotifOn = !isWaterNotifOn;
+                          _isWaterNotifOn = !_isWaterNotifOn;
                           ScaffoldMessenger.of(context)
                             ..removeCurrentSnackBar()
                             ..showSnackBar(SnackBar(
-                                content: isWaterNotifOn
+                                content: _isWaterNotifOn
                                     ? Text(
                                         'Water Notifications are now enabled')
                                     : Text(
@@ -1068,11 +1114,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     ? TextButton.icon(
                         icon: Icon(Icons.water),
                         onPressed: () {
-                          isWaterNotifOn = !isWaterNotifOn;
+                          _isWaterNotifOn = !_isWaterNotifOn;
                           ScaffoldMessenger.of(context)
                             ..removeCurrentSnackBar()
                             ..showSnackBar(SnackBar(
-                                content: isWaterNotifOn
+                                content: _isWaterNotifOn
                                     ? Text(
                                         'Water Notifications are now enabled')
                                     : Text(
@@ -1093,11 +1139,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     : TextButton.icon(
                         icon: Icon(Icons.water),
                         onPressed: () {
-                          isWaterNotifOn = !isWaterNotifOn;
+                          _isWaterNotifOn = !_isWaterNotifOn;
                           ScaffoldMessenger.of(context)
                             ..removeCurrentSnackBar()
                             ..showSnackBar(SnackBar(
-                                content: isWaterNotifOn
+                                content: _isWaterNotifOn
                                     ? Text(
                                         'Water Notifications are now enabled')
                                     : Text(
@@ -1663,7 +1709,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       child: TextButton.icon(
                         icon: Icon(Icons.airplanemode_active),
                         label: Expanded(
-                            child: isFullNotifOn &&
+                            child: _isFullNotifOn &&
                                     msgData == 'Engine overheated' &&
                                     run &&
                                     indicatorData.engine != 'nul' &&
@@ -1696,18 +1742,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                             letterSpacing: 2,
                                             color: Colors.black,
                                             fontWeight: FontWeight.bold))),
-                        onPressed: () {
-                          isEngineDeathNotifOn = !isEngineDeathNotifOn;
-                          isEngineNotifOn = !isEngineNotifOn;
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: isEngineDeathNotifOn && isEngineNotifOn
-                                    ? Text(
-                                        'Engine Notifications are now enabled')
-                                    : Text(
-                                        'Engine Notifications are now disabled')));
-                        },
+                        onPressed: () {},
                       ))
                   : Container(
                       height: 45,
@@ -1734,7 +1769,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       child: TextButton.icon(
                         icon: Icon(Icons.airplanemode_active),
                         label: Expanded(
-                            child: isFullNotifOn &&
+                            child: _isFullNotifOn &&
                                     msgData == 'Engine overheated' &&
                                     run &&
                                     indicatorData.engine != 'nul' &&
@@ -1767,18 +1802,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                             letterSpacing: 2,
                                             color: Colors.black,
                                             fontWeight: FontWeight.bold))),
-                        onPressed: () {
-                          isEngineDeathNotifOn = !isEngineDeathNotifOn;
-                          isEngineNotifOn = !isEngineNotifOn;
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: isEngineDeathNotifOn && isEngineNotifOn
-                                    ? Text(
-                                        'Engine Notifications are now enabled')
-                                    : Text(
-                                        'Engine Notifications are now disabled')));
-                        },
+                        onPressed: () {},
                       )));
         });
   }
@@ -1940,7 +1964,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       label: Expanded(
                           child: (stateData.oil != null &&
                                       stateData.oil != 15) &&
-                                  isFullNotifOn &&
+                                  _isFullNotifOn &&
                                   msgData == "Oil overheated" &&
                                   run
                               ? BlinkText(
@@ -1970,18 +1994,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                           letterSpacing: 2,
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold))),
-                      onPressed: () {
-                        setState(() {
-                          isOilNotifOn = !isOilNotifOn;
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: isOilNotifOn
-                                    ? Text('Oil Notifications are now enabled')
-                                    : Text(
-                                        'Oil Notifications are now disabled')));
-                        });
-                      },
+                      onPressed: () {},
                     ))
                 : Container(
                     height: 45,
@@ -2010,7 +2023,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       label: Expanded(
                           child: (stateData.oil != null &&
                                       stateData.oil != 15) &&
-                                  isFullNotifOn &&
+                                  _isFullNotifOn &&
                                   msgData == "Oil overheated" &&
                                   run
                               ? BlinkText(
@@ -2040,18 +2053,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                           letterSpacing: 2,
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold))),
-                      onPressed: () {
-                        setState(() {
-                          isOilNotifOn = !isOilNotifOn;
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(SnackBar(
-                                content: isOilNotifOn
-                                    ? Text('Oil Notifications are now enabled')
-                                    : Text(
-                                        'Oil Notifications are now disabled')));
-                        });
-                      },
+                      onPressed: () {},
                     )));
       },
     );
@@ -2080,10 +2082,17 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               alignment: Alignment.topLeft,
               decoration: BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
+                    bool isFullNotifOn =
+                        (prefs.getBool('isFullNotifOn') ?? true);
                     isFullNotifOn = !isFullNotifOn;
+                    setState(() {
+                      _isFullNotifOn = isFullNotifOn;
+                    });
+                    prefs.setBool("isFullNotifOn", isFullNotifOn);
                   },
-                  label: isFullNotifOn
+                  label: _isFullNotifOn
                       ? Text(
                           'Notifications: On',
                           style: TextStyle(color: Colors.green),
@@ -2092,7 +2101,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           'Notifications: Off',
                           style: TextStyle(color: Colors.red),
                         ),
-                  icon: isFullNotifOn
+                  icon: _isFullNotifOn
                       ? Icon(Icons.notifications)
                       : Icon(Icons.notifications_off)),
             ),
@@ -2100,10 +2109,17 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               alignment: Alignment.topLeft,
               decoration: BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
+                    bool isEngineDeathNotifOn =
+                        (prefs.getBool('isEngineDeathNotifOn') ?? true);
                     isEngineDeathNotifOn = !isEngineDeathNotifOn;
+                    setState(() {
+                      _isEngineDeathNotifOn = isEngineDeathNotifOn;
+                    });
+                    prefs.setBool("isWaterNotifOn", isEngineDeathNotifOn);
                   },
-                  label: isEngineDeathNotifOn
+                  label: _isEngineDeathNotifOn
                       ? Text(
                           'Engine Notification: On',
                           style: TextStyle(color: Colors.green),
@@ -2112,7 +2128,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           'Engine Notification: Off',
                           style: TextStyle(color: Colors.red),
                         ),
-                  icon: isEngineDeathNotifOn
+                  icon: _isEngineDeathNotifOn
                       ? Icon(Icons.notifications)
                       : Icon(Icons.notifications_off)),
             ),
@@ -2120,10 +2136,16 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               alignment: Alignment.topLeft,
               decoration: BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
+                    bool isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
                     isOilNotifOn = !isOilNotifOn;
+                    setState(() {
+                      _isOilNotifOn = isOilNotifOn;
+                    });
+                    prefs.setBool("isOilNotifOn", isOilNotifOn);
                   },
-                  label: isOilNotifOn
+                  label: _isOilNotifOn
                       ? Text(
                           'Oil Notification: On',
                           style: TextStyle(color: Colors.green),
@@ -2132,7 +2154,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           'Oil Notification: Off',
                           style: TextStyle(color: Colors.red),
                         ),
-                  icon: isOilNotifOn
+                  icon: _isOilNotifOn
                       ? Icon(Icons.notifications)
                       : Icon(Icons.notifications_off)),
             ),
@@ -2140,10 +2162,17 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               alignment: Alignment.topLeft,
               decoration: BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
+                    bool isWaterNotifOn =
+                        (prefs.getBool('isWaterNotifOn') ?? true);
                     isWaterNotifOn = !isWaterNotifOn;
+                    setState(() {
+                      _isWaterNotifOn = isWaterNotifOn;
+                    });
+                    prefs.setBool("isWaterNotifOn", isWaterNotifOn);
                   },
-                  label: isWaterNotifOn
+                  label: _isWaterNotifOn
                       ? Text(
                           'Water Notification: On',
                           style: TextStyle(color: Colors.green),
@@ -2152,10 +2181,42 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           'Water Notification: Off',
                           style: TextStyle(color: Colors.red),
                         ),
-                  icon: isWaterNotifOn
+                  icon: _isWaterNotifOn
                       ? Icon(Icons.notifications)
                       : Icon(Icons.notifications_off)),
             ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
+                    bool isTrayEnabled =
+                        (prefs.getBool('isTrayEnabled') ?? true);
+                    isTrayEnabled = !isTrayEnabled;
+                    setState(() {
+                      _isTrayEnabled = isTrayEnabled;
+                    });
+                    prefs.setBool("isTrayEnabled", isTrayEnabled);
+                  },
+                  label: _isTrayEnabled
+                      ? Text(
+                          'Minimize to tray: On',
+                          style: TextStyle(color: Colors.green),
+                        )
+                      : Text(
+                          'Minimize to tray: Off',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                  icon: Icon(Icons.minimize_rounded)),
+            ),
+            // Container(
+            //     alignment: Alignment.topLeft,
+            //     decoration: BoxDecoration(color: Colors.black87),
+            //     child: Text(
+            //       '$ramUsage/$ramTotal GB used',
+            //       style: TextStyle(color: Colors.green),
+            //     )),
           ],
         ),
       ),
@@ -2168,33 +2229,37 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   //     mouseDown: const Color(0xFF805306),
   //     iconMouseOver: const Color(0xFF805306),
   //     iconMouseDown: const Color(0xFFFFD500));
+  var ramUsage;
+  var ramTotal;
   late dynamic stateData;
   late dynamic indicatorData;
   late dynamic msgData;
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   ValueNotifier<String?> textForIasFlap = ValueNotifier('2000');
   ValueNotifier<String?> textForIasGear = ValueNotifier('2000');
   ValueNotifier<String?> textForGLoad = ValueNotifier('2000');
-  double? fuelPercent;
+  bool _isTrayEnabled = true;
   bool _removeIconAfterRestored = true;
   bool _showWindowBelowTrayIcon = false;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
   bool isUserGLoadNew = false;
-  bool isFullNotifOn = true;
+  bool _isFullNotifOn = true;
   bool isDamageIDNew = false;
   bool isDamageMsgNew = false;
   bool run = true;
   bool isEngineNotifOn = true;
-  bool isOilNotifOn = true;
-  bool isEngineDeathNotifOn = true;
-  bool isWaterNotifOn = true;
+  bool _isOilNotifOn = true;
+  bool _isEngineDeathNotifOn = true;
+  bool _isWaterNotifOn = true;
+  double? fuelPercent;
+  double boxShadowOpacity = 0.07;
   double widget1Opacity = 0.0;
+  double? avgTAS;
   int? firstSpeed;
   int? secondSpeed;
-  double? avgTAS;
   int counter = 0;
-  double boxShadowOpacity = 0.07;
   Color borderColor = Color(0xFF805306);
   final windowManager = WindowManager.instance;
   var logoPath = p.joinAll([
@@ -2234,6 +2299,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           iconMouseDown: Colors.white),
                       onPressed: () {
                         _handleClickMinimize();
+                        _isTrayEnabled ? windowManager.hide() : null;
                       },
                     ),
                     MaximizeWindowButton(
@@ -2412,40 +2478,40 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             ],
                           ),
                         )),
-              floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
-                      MediaQuery.of(context).size.width >= 450
-                  ? FloatingActionButton(
-                      backgroundColor: Colors.red,
-                      tooltip: isFullNotifOn
-                          ? 'Toggle overheat notifier(On)'
-                          : 'Toggle overheat notifier(Off)',
-                      child: isFullNotifOn
-                          ? Icon(
-                              Icons.notifications,
-                              color: Colors.green[400],
-                            )
-                          : Icon(
-                              Icons.notifications_off,
-                              color: Colors.black,
-                            ),
-                      onPressed: () {
-                        setState(() {
-                          isFullNotifOn = !isFullNotifOn;
-                        });
-                        ScaffoldMessenger.of(context)
-                          ..removeCurrentSnackBar()
-                          ..showSnackBar(SnackBar(
-                              content: isFullNotifOn
-                                  ? Text(
-                                      'Notifications are now enabled',
-                                      style: TextStyle(color: Colors.green),
-                                    )
-                                  : Text(
-                                      'Notifications are now disabled',
-                                      style: TextStyle(color: Colors.red),
-                                    )));
-                      })
-                  : null,
+              // floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
+              //         MediaQuery.of(context).size.width >= 450
+              //     ? FloatingActionButton(
+              //         backgroundColor: Colors.red,
+              //         tooltip: isFullNotifOn
+              //             ? 'Toggle overheat notifier(On)'
+              //             : 'Toggle overheat notifier(Off)',
+              //         child: isFullNotifOn
+              //             ? Icon(
+              //                 Icons.notifications,
+              //                 color: Colors.green[400],
+              //               )
+              //             : Icon(
+              //                 Icons.notifications_off,
+              //                 color: Colors.black,
+              //               ),
+              //         onPressed: () {
+              //           setState(() {
+              //             isFullNotifOn = !isFullNotifOn;
+              //           });
+              //           ScaffoldMessenger.of(context)
+              //             ..removeCurrentSnackBar()
+              //             ..showSnackBar(SnackBar(
+              //                 content: isFullNotifOn
+              //                     ? Text(
+              //                         'Notifications are now enabled',
+              //                         style: TextStyle(color: Colors.green),
+              //                       )
+              //                     : Text(
+              //                         'Notifications are now disabled',
+              //                         style: TextStyle(color: Colors.red),
+              //                       )));
+              //         })
+              //     : null,
             ),
           ])),
         ],
@@ -2454,16 +2520,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   @override
-  void onTrayIconMouseUp() async {
-    List<MenuItem> menuItems = [
-      MenuItem(title: 'Show/Hide Main Window'),
-      MenuItem.separator,
-      MenuItem(title: 'Exit App'),
-    ];
-    await TrayManager.instance.setContextMenu(menuItems);
-    await TrayManager.instance.popUpContextMenu();
-    await TrayManager.instance.setIcon('assets/app_icon.ico');
-
+  void onTrayIconMouseDown() async {
     if (_showWindowBelowTrayIcon) {
       Size windowSize = await windowManager.getSize();
       Rect trayIconBounds = await TrayManager.instance.getBounds();
@@ -2487,21 +2544,28 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   @override
-  void onTrayMenuItemClick(MenuItem menuItem) {
+  void onTrayMenuItemClick(MenuItem menuItem) async {
     print(menuItem.toJson());
+
+    switch (menuItem.identifier) {
+      case "exit-app":
+        windowManager.terminate();
+        break;
+      case 'show-app':
+        windowManager.show();
+        break;
+    }
   }
 
   @override
   void onWindowMinimize() async {
-    await TrayManager.instance.setIcon(
-      'assets/app_icon.ico',
-    );
+    _trayInit();
   }
 
   @override
   void onWindowRestore() async {
     if (_removeIconAfterRestored) {
-      await TrayManager.instance.destroy();
+      _trayUnInit();
     }
   }
 }

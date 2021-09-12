@@ -217,16 +217,8 @@ class _TransparentPageState extends State<TransparentPage> {
         ), keyDownHandler: (_) {
       windowManager.terminate();
     });
-    HotKeyManager.instance.register(
-        HotKey(
-          KeyCode.digit1,
-          modifiers: [KeyModifier.alt],
-        ), keyDownHandler: (_) {
-      if (mounted) {
-        Navigator.pushNamed(context, '/home');
-      }
-    });
     bool isAlwaysOnTop = await windowManager.isAlwaysOnTop();
+
     HotKeyManager.instance.register(
       HotKey(
         KeyCode.digit2,
@@ -236,8 +228,19 @@ class _TransparentPageState extends State<TransparentPage> {
         windowManager.setAlwaysOnTop(!isAlwaysOnTop);
         Future.delayed(Duration(milliseconds: 200));
         isAlwaysOnTop = await windowManager.isAlwaysOnTop();
+        windowManager.setCustomFrame(isFrameless: true);
+        print(isAlwaysOnTop);
       },
     );
+    HotKeyManager.instance.register(
+        HotKey(
+          KeyCode.digit1,
+          modifiers: [KeyModifier.alt],
+        ), keyDownHandler: (_) {
+      if (mounted) {
+        Navigator.pushNamed(context, '/home');
+      }
+    });
   }
 
   @override
