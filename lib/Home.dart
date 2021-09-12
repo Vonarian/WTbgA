@@ -2210,7 +2210,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               decoration: BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                 label: Text(
-                    'Current red line IAS for flaps:${_textForIasFlap.value}Km/h'),
+                    'Current red line IAS for flaps: ${_textForIasFlap.value}Km/h'),
                 icon: Icon(
                   Icons.warning,
                   color: Colors.red,
@@ -2232,7 +2232,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               decoration: BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                 label: Text(
-                    'Current red line IAS for gears:${_textForIasFlap.value}Km/h'),
+                    'Current red line IAS for gears: ${_textForIasFlap.value}Km/h'),
                 onPressed: () async {
                   final SharedPreferences prefs = await _prefs;
                   _textForIasGear.value = await Navigator.of(context)
@@ -2255,7 +2255,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               decoration: BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   label:
-                      Text('Current red line G load:${_textForGLoad.value}G'),
+                      Text('Current red line G load: ${_textForGLoad.value}G'),
                   onPressed: () async {
                     final SharedPreferences prefs = await _prefs;
                     _textForGLoad.value = await Navigator.of(context)
