@@ -265,9 +265,8 @@ class _TransparentPageState extends State<TransparentPage> {
     super.initState();
     this.setWindowEffect(this.effect);
     WidgetsBinding.instance!.addPostFrameCallback((_) {
-      stateData = ModalRoute.of(context)?.settings.arguments as ToolDataState;
-      indicatorData =
-          ModalRoute.of(context)?.settings.arguments as ToolDataIndicator;
+      stateData = ModalRoute.of(context)?.settings.arguments;
+      indicatorData = ModalRoute.of(context)?.settings.arguments;
     });
   }
 
@@ -276,10 +275,10 @@ class _TransparentPageState extends State<TransparentPage> {
     this.setState(() => this.effect = value);
   }
 
-  late dynamic stateData;
-  late dynamic indicatorData;
+  dynamic stateData;
+  dynamic indicatorData;
   ValueNotifier<int> idData = ValueNotifier(-1);
-  late String? msgData;
+  String? msgData;
   double? fuelPercent;
 
   @override

@@ -494,21 +494,37 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     List<ChatEvents> dataForChatEnemy = await ChatEvents.getChat();
     List<ChatEvents> dataForChatSender = await ChatEvents.getChat();
     List<ChatEvents> dataForChatMode = await ChatEvents.getChat();
+    if (!mounted) return;
     setState(() {
-      chatId.value = dataForChatId.isNotEmpty
+      chatIdFirst.value = dataForChatId.isNotEmpty
           ? dataForChatId[dataForChatId.length - 1].id
           : emptyInt;
-      chatMsg = dataForChatMsg.isNotEmpty
+      chatMsgFirst = dataForChatMsg.isNotEmpty
           ? dataForChatMsg[dataForChatMsg.length - 1].msg
           : emptyString;
-      chatMode = dataForChatMode.isNotEmpty
+      chatModeFirst = dataForChatMode.isNotEmpty
           ? dataForChatMode[dataForChatMode.length - 1].mode
           : emptyString;
-      chatEnemy = dataForChatEnemy.isNotEmpty
+      chatEnemyFirst = dataForChatEnemy.isNotEmpty
           ? dataForChatEnemy[dataForChatEnemy.length - 1].enemy
           : emptyBool;
-      chatSender = dataForChatSender.isNotEmpty
+      chatSenderFirst = dataForChatSender.isNotEmpty
           ? dataForChatSender[dataForChatSender.length - 1].sender
+          : emptyString;
+      chatIdSecond.value = dataForChatId.isNotEmpty
+          ? dataForChatId[dataForChatId.length - 2].id
+          : emptyInt;
+      chatMsgSecond = dataForChatMsg.isNotEmpty
+          ? dataForChatMsg[dataForChatMsg.length - 2].msg
+          : emptyString;
+      chatModeSecond = dataForChatMode.isNotEmpty
+          ? dataForChatMode[dataForChatMode.length - 2].mode
+          : emptyString;
+      chatEnemySecond = dataForChatEnemy.isNotEmpty
+          ? dataForChatEnemy[dataForChatEnemy.length - 2].enemy
+          : emptyBool;
+      chatSenderSecond = dataForChatSender.isNotEmpty
+          ? dataForChatSender[dataForChatSender.length - 2].sender
           : emptyString;
     });
   }
@@ -544,7 +560,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   void highAcceleration() {
     if (!mounted) return;
-    if (secondSpeed != null) {
+    if (secondSpeed == null) {
       return;
     }
     double? avgTAS = ((secondSpeed! - firstSpeed!) / 2);
@@ -756,14 +772,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     updateMsgId();
     updateStateIndicator();
     updateChat();
-    chatSettings();
+    chatSettingsManager();
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) {
       updateMsgId();
       flapChecker();
       updateChat();
-      chatSettings();
+      chatSettingsManager();
       // updateRam();
     });
     const oneSec = Duration(milliseconds: 200);
@@ -798,9 +814,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     _textForGLoad.addListener(() {
       isUserGLoadNew = true;
     });
-    chatId.addListener(() {
+    chatIdFirst.addListener(() {
       setState(() {
-        chatSettings();
+        chatSettingsManager();
       });
     });
     const redLineTimer = Duration(milliseconds: 1500);
@@ -2074,9 +2090,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     );
   }
 
-  chatBuilder() {
+  chatBuilder(String? chatSender, String? chatMsg, String? chatPrefix) {
     return ValueListenableBuilder(
-        valueListenable: chatId,
+        valueListenable: chatIdFirst,
         builder: (BuildContext context, value, Widget? child) {
           return Column(
             children: [
@@ -2086,7 +2102,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   child: chatMsg != 'No Data'
                       ? Text(
                           '$chatSender says:',
-                          style: TextStyle(color: chatColor),
+                          style: TextStyle(color: chatColorFirst),
                         )
                       : null),
               Container(
@@ -2096,7 +2112,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       ? ListView(children: [
                           Text(
                             '$chatPrefix $chatMsg',
-                            style: TextStyle(color: chatColor),
+                            style: TextStyle(color: chatColorFirst),
                           )
                         ])
                       : null),
@@ -2105,24 +2121,50 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         });
   }
 
-  chatSettings() {
+  chatSettingsManager() {
+    if (!mounted) return;
     setState(() {
-      if (chatMode == 'All') {
-        chatPrefix = '[ALL]';
+      if (chatModeFirst == 'All') {
+        chatPrefixFirst = '[ALL]';
       }
-      if (chatMode == 'Team') {
-        chatPrefix = '[Team]';
+      if (chatModeFirst == 'Team') {
+        chatPrefixFirst = '[Team]';
       }
-      if (chatMode == null) {
-        chatPrefix = null;
+      if (chatModeFirst == 'Squad') {
+        chatPrefixFirst = '[Squad]';
       }
-      if (chatSender == null) {
-        chatSender == emptyString;
+      if (chatModeFirst == null) {
+        chatPrefixFirst = null;
       }
-      if (chatEnemy == true) {
-        chatColor = Colors.red;
+      if (chatSenderFirst == null) {
+        chatSenderFirst == emptyString;
+      }
+      if (chatEnemyFirst == true) {
+        chatColorFirst = Colors.red;
       } else {
-        chatColor = Colors.lightBlueAccent;
+        chatColorFirst = Colors.lightBlueAccent;
+      }
+    });
+    setState(() {
+      if (chatModeSecond == 'All') {
+        chatPrefixSecond = '[ALL]';
+      }
+      if (chatModeSecond == 'Team') {
+        chatPrefixSecond = '[Team]';
+      }
+      if (chatModeSecond == 'Squad') {
+        chatPrefixSecond = '[Squad]';
+      }
+      if (chatModeSecond == null) {
+        chatPrefixSecond = null;
+      }
+      if (chatSenderSecond == null) {
+        chatSenderSecond == emptyString;
+      }
+      if (chatEnemyFirst == true) {
+        chatColorSecond = Colors.red;
+      } else {
+        chatColorSecond = Colors.lightBlueAccent;
       }
     });
   }
@@ -2372,7 +2414,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             Container(
               alignment: Alignment.topCenter,
               decoration: BoxDecoration(color: Colors.black87),
-              child: chatBuilder(),
+              child: chatBuilder(
+                  chatSenderSecond, chatMsgSecond, chatPrefixSecond),
+            ),
+            Container(
+              alignment: Alignment.topCenter,
+              decoration: BoxDecoration(color: Colors.black87),
+              child:
+                  chatBuilder(chatSenderFirst, chatMsgFirst, chatPrefixFirst),
             ),
             // Container(
             //     alignment: Alignment.topLeft,
@@ -2398,12 +2447,17 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   dynamic stateData;
   dynamic indicatorData;
   String? msgData;
-  String? chatMsg;
-  ValueNotifier<int?> chatId = ValueNotifier(null);
-  String? chatMode;
-  bool? chatEnemy;
-  String? chatSender;
+  String? chatMsgFirst;
+  String? chatModeFirst;
+  String? chatSenderFirst;
+  String? chatSenderSecond;
+  String? chatMsgSecond;
+  String? chatModeSecond;
+  String? chatPrefixFirst;
+  String? chatPrefixSecond;
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
+  ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   ValueNotifier<int?> _textForIasFlap = ValueNotifier(2000);
   ValueNotifier<int?> _textForIasGear = ValueNotifier(2000);
@@ -2422,22 +2476,24 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool _isOilNotifOn = true;
   bool _isEngineDeathNotifOn = true;
   bool _isWaterNotifOn = true;
+  bool? chatEnemySecond;
+  bool? chatEnemyFirst;
   double? fuelPercent;
+  double? avgTAS;
   double boxShadowOpacity = 0.07;
   double widget1Opacity = 0.0;
-  double? avgTAS;
   int? firstSpeed;
   int? secondSpeed;
   int counter = 0;
   Color borderColor = Color(0xFF805306);
-  var chatColor;
-  var chatPrefix;
-  final windowManager = WindowManager.instance;
+  var chatColorFirst;
+  var chatColorSecond;
   var logoPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     '/logoWTbgA.jpg'
   ]);
+  final windowManager = WindowManager.instance;
 
   @override
   Widget build(BuildContext context) {
