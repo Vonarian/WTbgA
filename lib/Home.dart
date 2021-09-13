@@ -17,6 +17,7 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'chat.dart';
 import 'damage_event.dart';
 import 'indicatorReceiver.dart';
 import 'main.dart';
@@ -459,8 +460,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   int? emptyInt = 0;
-  String? emptyString = ' No message';
-
+  String? emptyString = 'No Data';
+  bool? emptyBool = null;
   ValueNotifier<int?> idData = ValueNotifier<int?>(null);
 
   Future<void> updateStateIndicator() async {
@@ -483,6 +484,31 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           dataForId.isNotEmpty ? dataForId[dataForId.length - 1].id : emptyInt;
       msgData = dataForMsg.isNotEmpty
           ? dataForMsg[dataForMsg.length - 1].msg
+          : emptyString;
+    });
+  }
+
+  Future<void> updateChat() async {
+    List<ChatEvents> dataForChatId = await ChatEvents.getChat();
+    List<ChatEvents> dataForChatMsg = await ChatEvents.getChat();
+    List<ChatEvents> dataForChatEnemy = await ChatEvents.getChat();
+    List<ChatEvents> dataForChatSender = await ChatEvents.getChat();
+    List<ChatEvents> dataForChatMode = await ChatEvents.getChat();
+    setState(() {
+      chatId.value = dataForChatId.isNotEmpty
+          ? dataForChatId[dataForChatId.length - 1].id
+          : emptyInt;
+      chatMsg = dataForChatMsg.isNotEmpty
+          ? dataForChatMsg[dataForChatMsg.length - 1].msg
+          : emptyString;
+      chatMode = dataForChatMode.isNotEmpty
+          ? dataForChatMode[dataForChatMode.length - 1].mode
+          : emptyString;
+      chatEnemy = dataForChatEnemy.isNotEmpty
+          ? dataForChatEnemy[dataForChatEnemy.length - 1].enemy
+          : emptyBool;
+      chatSender = dataForChatSender.isNotEmpty
+          ? dataForChatSender[dataForChatSender.length - 1].sender
           : emptyString;
     });
   }
@@ -729,11 +755,15 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     windowManager.addListener(this);
     updateMsgId();
     updateStateIndicator();
+    updateChat();
+    chatSettings();
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) {
       updateMsgId();
       flapChecker();
+      updateChat();
+      chatSettings();
       // updateRam();
     });
     const oneSec = Duration(milliseconds: 200);
@@ -746,9 +776,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     });
     windowManager.addListener(this);
     WidgetsBinding.instance!.addPostFrameCallback((_) {
-      stateData = ModalRoute.of(context)?.settings.arguments as ToolDataState;
-      indicatorData =
-          ModalRoute.of(context)?.settings.arguments as ToolDataIndicator;
+      stateData = ModalRoute.of(context)?.settings.arguments;
+      indicatorData = ModalRoute.of(context)?.settings.arguments;
     });
     idData.addListener(() {
       setState(() {
@@ -768,6 +797,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     });
     _textForGLoad.addListener(() {
       isUserGLoadNew = true;
+    });
+    chatId.addListener(() {
+      setState(() {
+        chatSettings();
+      });
     });
     const redLineTimer = Duration(milliseconds: 1500);
     Timer.periodic(redLineTimer, (Timer t) {
@@ -2040,6 +2074,59 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     );
   }
 
+  chatBuilder() {
+    return ValueListenableBuilder(
+        valueListenable: chatId,
+        builder: (BuildContext context, value, Widget? child) {
+          return Column(
+            children: [
+              Container(
+                  alignment: Alignment.topCenter,
+                  height: 30,
+                  child: chatMsg != 'No Data'
+                      ? Text(
+                          '$chatSender says:',
+                          style: TextStyle(color: chatColor),
+                        )
+                      : null),
+              Container(
+                  alignment: Alignment.topLeft,
+                  height: 40,
+                  child: chatMsg != 'No Data'
+                      ? ListView(children: [
+                          Text(
+                            '$chatPrefix $chatMsg',
+                            style: TextStyle(color: chatColor),
+                          )
+                        ])
+                      : null),
+            ],
+          );
+        });
+  }
+
+  chatSettings() {
+    setState(() {
+      if (chatMode == 'All') {
+        chatPrefix = '[ALL]';
+      }
+      if (chatMode == 'Team') {
+        chatPrefix = '[Team]';
+      }
+      if (chatMode == null) {
+        chatPrefix = null;
+      }
+      if (chatSender == null) {
+        chatSender == emptyString;
+      }
+      if (chatEnemy == true) {
+        chatColor = Colors.red;
+      } else {
+        chatColor = Colors.lightBlueAccent;
+      }
+    });
+  }
+
   drawerBuilder() {
     return Drawer(
       child: Container(
@@ -2098,7 +2185,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     setState(() {
                       _isEngineDeathNotifOn = isEngineDeathNotifOn;
                     });
-                    prefs.setBool("isWaterNotifOn", isEngineDeathNotifOn);
+                    prefs.setBool("isEngineDeathNotifOn", isEngineDeathNotifOn);
                   },
                   label: _isEngineDeathNotifOn
                       ? Text(
@@ -2232,7 +2319,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               decoration: BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                 label: Text(
-                    'Current red line IAS for gears: ${_textForIasFlap.value}Km/h'),
+                    'Current red line IAS for gears: ${_textForIasGear.value}Km/h'),
                 onPressed: () async {
                   final SharedPreferences prefs = await _prefs;
                   _textForIasGear.value = await Navigator.of(context)
@@ -2281,7 +2368,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     Navigator.pushReplacementNamed(context, '/transparent');
                   },
                   icon: Icon(Icons.window_rounded)),
-            )
+            ),
+            Container(
+              alignment: Alignment.topCenter,
+              decoration: BoxDecoration(color: Colors.black87),
+              child: chatBuilder(),
+            ),
             // Container(
             //     alignment: Alignment.topLeft,
             //     decoration: BoxDecoration(color: Colors.black87),
@@ -2303,9 +2395,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   //     iconMouseDown: const Color(0xFFFFD500));
   var ramUsage;
   var ramTotal;
-  late dynamic stateData;
-  late dynamic indicatorData;
-  late dynamic msgData;
+  dynamic stateData;
+  dynamic indicatorData;
+  String? msgData;
+  String? chatMsg;
+  ValueNotifier<int?> chatId = ValueNotifier(null);
+  String? chatMode;
+  bool? chatEnemy;
+  String? chatSender;
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   ValueNotifier<int?> _textForIasFlap = ValueNotifier(2000);
@@ -2333,6 +2430,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   int? secondSpeed;
   int counter = 0;
   Color borderColor = Color(0xFF805306);
+  var chatColor;
+  var chatPrefix;
   final windowManager = WindowManager.instance;
   var logoPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),

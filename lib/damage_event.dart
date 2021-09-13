@@ -6,18 +6,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'damage_event.g.dart';
 
-Future<DamageEvents> getDamageEvents() async {
-  try {
-    final response = await http
-        .get(Uri.parse('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=0'));
-    final damageEvents = DamageEvents.fromJson(jsonDecode(response.body));
-    return damageEvents;
-  } catch (e, stackTrace) {
-    log('Encountered error: $e', stackTrace: stackTrace);
-    rethrow;
-  }
-}
-
 @JsonSerializable(includeIfNull: false, createToJson: false)
 class DamageEvents {
   List<Damage> damage;

@@ -16,7 +16,7 @@ DamageEvents _$DamageEventsFromJson(Map<String, dynamic> json) {
 
 Damage _$DamageFromJson(Map<String, dynamic> json) {
   return Damage(
-    id: json['id'],
-    msg: json['msg'],
+    id: json['id'] as int?,
+    msg: json['msg'] as String?,
   );
 }
