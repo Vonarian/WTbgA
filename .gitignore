@@ -606,3 +606,4 @@ wtbgassistant.iml
 pubspec.lock
 README.md
 wtbgassistant.iml
+/analysis_options.yaml
