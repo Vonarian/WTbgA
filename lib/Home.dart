@@ -640,11 +640,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     _textForIasFlap.removeListener((userRedLineFlap));
   }
 
-  void _handleClickMinimize() async {
+  Future<void> _handleClickMinimize() async {
     windowManager.minimize();
   }
 
-  void _handleClickRestore() async {
+  Future<void> _handleClickRestore() async {
     windowManager.restore();
   }
   // Future<void> initSystemTray() async {
@@ -712,7 +712,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   //   });
   // }
 
-  hostChecker() async {
+  Future<void> hostChecker() async {
     if (await canLaunch('http://localhost:8111')) {
     } else {
       ScaffoldMessenger.of(context)
@@ -727,7 +727,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     }
   }
 
-  receiveDiskValues() {
+  void receiveDiskValues() {
     _prefs.then((SharedPreferences prefs) {
       _isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
     });
@@ -832,7 +832,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     receiveDiskValues();
   }
 
-  void _trayInit() async {
+  Future<void> _trayInit() async {
     await TrayManager.instance.setIcon(
       'assets/app_icon.ico',
     );
@@ -875,7 +875,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
 // dialogBuilderBuilder() =>
 // void Function(String text) onSubmit
-  keyRegister() async {
+  Future<void> keyRegister() async {
     HotKeyManager.instance.register(
       HotKey(
         KeyCode.digit5,
@@ -930,7 +930,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     // );
   }
 
-  fuelIndicator() {
+  Widget fuelIndicator() {
     if (stateData.minFuel != null) {
       fuelPercent = (stateData.minFuel / stateData.maxFuel) * 100;
     }
@@ -1082,7 +1082,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           )));
   }
 
-  waterTempText() {
+  Widget waterTempText() {
     return Flexible(
         fit: FlexFit.loose,
         child: MediaQuery.of(context).size.height >= 235
@@ -1194,7 +1194,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       )));
   }
 
-  altitudeText() {
+  Widget altitudeText() {
     return Flexible(
         child: MediaQuery.of(context).size.height >= 235
             ? Container(
@@ -1297,7 +1297,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 )));
   }
 
-  climbRate() {
+  Widget climbRate() {
     ToolDataState.getState();
     averageTasForStall();
     return Flexible(
@@ -1449,7 +1449,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               ));
   }
 
-  iasText() {
+  Widget iasText() {
     return Flexible(
         child: MediaQuery.of(context).size.height >= 235
             ? Container(
@@ -1596,7 +1596,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           )));
   }
 
-  compassText() {
+  Widget compassText() {
     return Flexible(
         child: MediaQuery.of(context).size.height >= 235
             ? Container(
@@ -1709,7 +1709,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       )));
   }
 
-  engineTempText() {
+  Widget engineTempText() {
     return ValueListenableBuilder(
         valueListenable: idData,
         builder: (BuildContext context, value, Widget? child) {
@@ -1838,7 +1838,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         });
   }
 
-  engineThrottleText() {
+  Widget engineThrottleText() {
     return ValueListenableBuilder(
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
@@ -1962,7 +1962,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     );
   }
 
-  oilTempText() {
+  Widget oilTempText() {
     return ValueListenableBuilder(
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
@@ -2090,7 +2090,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     );
   }
 
-  chatBuilder(String? chatSender, String? chatMsg, String? chatPrefix) {
+  Widget chatBuilder(String? chatSender, String? chatMsg, String? chatPrefix) {
     return ValueListenableBuilder(
         valueListenable: chatIdFirst,
         builder: (BuildContext context, value, Widget? child) {
@@ -2169,7 +2169,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     });
   }
 
-  drawerBuilder() {
+  Widget drawerBuilder() {
     return Drawer(
       child: Container(
         decoration: BoxDecoration(color: Colors.blueGrey),
