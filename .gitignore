@@ -582,6 +582,7 @@ windows/runner/utils.h
 windows/runner/win32_window.cpp
 windows/runner/win32_window.h
 wtbgassistant.iml
+pubspec.lock
 *.so
 .flutter-plugins
 .flutter-plugins-dependencies
