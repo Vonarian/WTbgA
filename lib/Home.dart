@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
@@ -969,7 +970,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -987,7 +988,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 20,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                                 endColor: Colors.red,
                               ),
@@ -1003,7 +1004,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 20,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -1041,7 +1042,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1059,7 +1060,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 17,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                                 endColor: Colors.red,
                               ),
@@ -1075,7 +1076,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 17,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -1119,7 +1120,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1134,7 +1135,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1172,7 +1173,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1187,7 +1188,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1230,7 +1231,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         )
@@ -1241,7 +1242,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1279,7 +1280,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         )
@@ -1290,7 +1291,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1349,7 +1350,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                             endColor: Colors.red,
                           ))
@@ -1361,7 +1362,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 20,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ))
                             : Expanded(
@@ -1371,7 +1372,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 20,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ))),
               )
@@ -1421,7 +1422,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                             endColor: Colors.red,
                           ))
@@ -1433,7 +1434,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 17,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ))
                             : Expanded(
@@ -1443,7 +1444,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 17,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ))),
               ));
@@ -1485,7 +1486,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1503,7 +1504,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 20,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -1518,7 +1519,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 20,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -1556,7 +1557,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1574,7 +1575,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 17,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -1589,7 +1590,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 style: TextStyle(
                                     fontSize: 17,
                                     letterSpacing: 2,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -1633,7 +1634,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1648,7 +1649,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1687,7 +1688,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1702,7 +1703,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             style: TextStyle(
                                 fontSize: 17,
                                 letterSpacing: 2,
-                                color: Colors.black,
+                                color: textColor,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1751,7 +1752,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                     style: TextStyle(
                                         fontSize: 20,
                                         letterSpacing: 2,
-                                        color: Colors.black,
+                                        color: textColor,
                                         fontWeight: FontWeight.bold),
                                     endColor: Colors.red,
                                     times: 13,
@@ -1764,14 +1765,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                         style: TextStyle(
                                             fontSize: 20,
                                             letterSpacing: 2,
-                                            color: Colors.black,
+                                            color: textColor,
                                             fontWeight: FontWeight.bold))
                                     : Text('No data.  ',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                             fontSize: 20,
                                             letterSpacing: 2,
-                                            color: Colors.black,
+                                            color: textColor,
                                             fontWeight: FontWeight.bold))),
                         onPressed: () {},
                       ))
@@ -1811,7 +1812,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                     style: TextStyle(
                                         fontSize: 15,
                                         letterSpacing: 2,
-                                        color: Colors.black,
+                                        color: textColor,
                                         fontWeight: FontWeight.bold),
                                     endColor: Colors.red,
                                     times: 13,
@@ -1824,14 +1825,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                         style: TextStyle(
                                             fontSize: 15,
                                             letterSpacing: 2,
-                                            color: Colors.black,
+                                            color: textColor,
                                             fontWeight: FontWeight.bold))
                                     : Text('No data.  ',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                             fontSize: 15,
                                             letterSpacing: 2,
-                                            color: Colors.black,
+                                            color: textColor,
                                             fontWeight: FontWeight.bold))),
                         onPressed: () {},
                       )));
@@ -1876,14 +1877,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                       style: TextStyle(
                                           fontSize: 20,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold))
                                   : Text('No data.  ',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           fontSize: 20,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold)))
                           : Expanded(
                               child: indicatorData.throttle != 'null' &&
@@ -1894,11 +1895,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                       style: TextStyle(
                                           fontSize: 20,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold))
                                   : Text('No data.  ',
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 13, letterSpacing: 2, color: Colors.black, fontWeight: FontWeight.bold))),
+                                      style: TextStyle(fontSize: 13, letterSpacing: 2, color: textColor, fontWeight: FontWeight.bold))),
                       onPressed: () {},
                     ))
                 : Container(
@@ -1933,14 +1934,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                       style: TextStyle(
                                           fontSize: 17,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold))
                                   : Text('No data.  ',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           fontSize: 17,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold)))
                           : Expanded(
                               child: indicatorData.throttle != 'null' &&
@@ -1951,7 +1952,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                       style: TextStyle(
                                           fontSize: 17,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold))
                                   : Text('No data.  ',
                                       textAlign: TextAlign.center,
@@ -2004,7 +2005,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                   style: TextStyle(
                                       fontSize: 20,
                                       letterSpacing: 2,
-                                      color: Colors.black,
+                                      color: textColor,
                                       fontWeight: FontWeight.bold),
                                   endColor: Colors.red,
                                   times: 13,
@@ -2016,14 +2017,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                       style: TextStyle(
                                           fontSize: 20,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold))
                                   : Text('No data.  ',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           fontSize: 20,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold))),
                       onPressed: () {},
                     ))
@@ -2063,7 +2064,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                   style: TextStyle(
                                       fontSize: 17,
                                       letterSpacing: 2,
-                                      color: Colors.black,
+                                      color: textColor,
                                       fontWeight: FontWeight.bold),
                                   endColor: Colors.red,
                                   times: 13,
@@ -2075,14 +2076,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                       style: TextStyle(
                                           fontSize: 17,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold))
                                   : Text('No data.  ',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           fontSize: 17,
                                           letterSpacing: 2,
-                                          color: Colors.black,
+                                          color: textColor,
                                           fontWeight: FontWeight.bold))),
                       onPressed: () {},
                     )));
@@ -2185,9 +2186,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 size: 100,
               ),
             ),
-            SizedBox(
-              height: 24,
-            ),
             Container(
               alignment: Alignment.topLeft,
               decoration: BoxDecoration(color: Colors.black87),
@@ -2212,7 +2210,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isFullNotifOn
-                      ? Icon(Icons.notifications)
+                      ? Icon(MaterialCommunityIcons.water)
                       : Icon(Icons.notifications_off)),
             ),
             Container(
@@ -2239,7 +2237,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isEngineDeathNotifOn
-                      ? Icon(Icons.notifications)
+                      ? Icon(MaterialCommunityIcons.engine)
                       : Icon(Icons.notifications_off)),
             ),
             Container(
@@ -2265,7 +2263,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isOilNotifOn
-                      ? Icon(Icons.notifications)
+                      ? Icon(MaterialCommunityIcons.oil_temperature)
                       : Icon(Icons.notifications_off)),
             ),
             Container(
@@ -2292,7 +2290,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isWaterNotifOn
-                      ? Icon(Icons.notifications)
+                      ? Icon(MaterialCommunityIcons.water)
                       : Icon(Icons.notifications_off)),
             ),
             Container(
@@ -2318,7 +2316,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           'Minimize to tray: Off',
                           style: TextStyle(color: Colors.red),
                         ),
-                  icon: Icon(Icons.minimize_rounded)),
+                  icon: Icon(MaterialCommunityIcons.tray)),
             ),
             Container(
               alignment: Alignment.topLeft,
@@ -2341,7 +2339,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 label: Text(
                     'Current red line IAS for flaps: ${_textForIasFlap.value}Km/h'),
                 icon: Icon(
-                  Icons.warning,
+                  MaterialCommunityIcons.airplane_takeoff,
                   color: Colors.red,
                 ),
                 onPressed: () async {
@@ -2374,7 +2372,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   prefs.setInt("textForIasGear", textForIasGear);
                 },
                 icon: Icon(
-                  Icons.warning,
+                  EvilIcons.gear,
                   color: Colors.deepPurple,
                 ),
               ),
@@ -2397,7 +2395,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     prefs.setInt("textForGLoad", textForGLoad);
                   },
                   icon: Icon(
-                    Icons.warning,
+                    MaterialCommunityIcons.airplane_landing,
                     color: Colors.amber,
                   )),
             ),
@@ -2409,7 +2407,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/transparent');
                   },
-                  icon: Icon(Icons.window_rounded)),
+                  icon: Icon(MaterialCommunityIcons.dock_window)),
             ),
             Container(
               alignment: Alignment.topCenter,
@@ -2433,6 +2431,97 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           ],
         ),
       ),
+    );
+  }
+
+  Widget homeWidgetColumn() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        engineThrottleText(),
+        engineTempText(),
+        fuelIndicator(),
+        altitudeText(),
+        compassText(),
+        iasText(),
+        climbRate(),
+        oilTempText(),
+        waterTempText()
+      ],
+    );
+  }
+
+  Widget homeWidgetRow() {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Row(
+            children: [
+              engineThrottleText(),
+              engineTempText(),
+              fuelIndicator(),
+            ],
+          ),
+          Row(
+            children: [
+              altitudeText(),
+              compassText(),
+            ],
+          ),
+          Row(
+            children: [
+              iasText(),
+              climbRate(),
+            ],
+          ),
+          Row(
+            children: [oilTempText(), waterTempText()],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget homeWidgetNoData() {
+    return Center(
+      child: Container(
+          height: MediaQuery.of(context).size.height,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                  Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: const BorderRadius.all(
+                Radius.circular(20.0),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.pink.withOpacity(boxShadowOpacity),
+                  spreadRadius: 4,
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                )
+              ]),
+          child: TextButton.icon(
+            icon: Icon(Icons.signal_wifi_statusbar_connected_no_internet_4),
+            onPressed: () {},
+            label: Expanded(
+              child: Text(
+                'No Data.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 50,
+                    letterSpacing: 2,
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          )),
     );
   }
 
@@ -2486,6 +2575,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   int? secondSpeed;
   int counter = 0;
   Color borderColor = Color(0xFF805306);
+  Color textColor = Colors.white;
   var chatColorFirst;
   var chatColorSecond;
   var logoPath = p.joinAll([
@@ -2561,115 +2651,81 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               ),
             ),
             Scaffold(
-              drawer: drawerBuilder(),
-              backgroundColor: Colors.transparent,
-              resizeToAvoidBottomInset: true,
-              appBar: MediaQuery.of(context).size.height >= 300
-                  ? AppBar(
-                      leading: Builder(
-                        builder: (BuildContext context) {
-                          return IconButton(
-                            icon: Icon(Icons.list),
-                            onPressed: () {
-                              Scaffold.of(context).openDrawer();
-                            },
-                          );
-                        },
-                      ),
-                      automaticallyImplyLeading: false,
-                      elevation: 0.75,
-                      backgroundColor: Colors.transparent,
-                      centerTitle: true,
-                      title: indicatorData.name != 'NULL'
-                          ? Text("You're flying ${indicatorData.name}")
-                          : (stateData.height == 32 &&
-                                  stateData.minFuel == 0 &&
-                                  stateData.flap == 0)
-                              ? Text("You're in Hangar...")
-                              : Text('No vehicle data available / Not flying.'))
-                  : null,
-              body: AnimatedOpacity(
-                  duration: Duration(seconds: 5),
-                  opacity: widget1Opacity,
-                  child: MediaQuery.of(context).size.height >= 235
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            engineThrottleText(),
-                            engineTempText(),
-                            fuelIndicator(),
-                            altitudeText(),
-                            compassText(),
-                            iasText(),
-                            climbRate(),
-                            oilTempText(),
-                            waterTempText()
-                          ],
-                        )
-                      : SingleChildScrollView(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Row(
-                                children: [
-                                  engineThrottleText(),
-                                  engineTempText(),
-                                  fuelIndicator(),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  altitudeText(),
-                                  compassText(),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  iasText(),
-                                  climbRate(),
-                                ],
-                              ),
-                              Row(
-                                children: [oilTempText(), waterTempText()],
-                              )
-                            ],
-                          ),
-                        )),
-              // floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
-              //         MediaQuery.of(context).size.width >= 450
-              //     ? FloatingActionButton(
-              //         backgroundColor: Colors.red,
-              //         tooltip: isFullNotifOn
-              //             ? 'Toggle overheat notifier(On)'
-              //             : 'Toggle overheat notifier(Off)',
-              //         child: isFullNotifOn
-              //             ? Icon(
-              //                 Icons.notifications,
-              //                 color: Colors.green[400],
-              //               )
-              //             : Icon(
-              //                 Icons.notifications_off,
-              //                 color: Colors.black,
-              //               ),
-              //         onPressed: () {
-              //           setState(() {
-              //             isFullNotifOn = !isFullNotifOn;
-              //           });
-              //           ScaffoldMessenger.of(context)
-              //             ..removeCurrentSnackBar()
-              //             ..showSnackBar(SnackBar(
-              //                 content: isFullNotifOn
-              //                     ? Text(
-              //                         'Notifications are now enabled',
-              //                         style: TextStyle(color: Colors.green),
-              //                       )
-              //                     : Text(
-              //                         'Notifications are now disabled',
-              //                         style: TextStyle(color: Colors.red),
-              //                       )));
-              //         })
-              //     : null,
-            ),
+                drawer: drawerBuilder(),
+                backgroundColor: Colors.transparent,
+                resizeToAvoidBottomInset: true,
+                appBar: MediaQuery.of(context).size.height >= 300
+                    ? AppBar(
+                        leading: Builder(
+                          builder: (BuildContext context) {
+                            return IconButton(
+                              icon: Icon(Icons.list),
+                              onPressed: () {
+                                Scaffold.of(context).openDrawer();
+                              },
+                            );
+                          },
+                        ),
+                        automaticallyImplyLeading: false,
+                        elevation: 0.75,
+                        backgroundColor: Colors.transparent,
+                        centerTitle: true,
+                        title: indicatorData.name != 'NULL'
+                            ? Text("You're flying ${indicatorData.name}")
+                            : (stateData.height == 32 &&
+                                    stateData.minFuel == 0 &&
+                                    stateData.flap == 0)
+                                ? Text("You're in Hangar...")
+                                : Text(
+                                    'No vehicle data available / Not flying.'))
+                    : null,
+                body: AnimatedOpacity(
+                    duration: Duration(seconds: 5),
+                    opacity: widget1Opacity,
+                    child: MediaQuery.of(context).size.height >= 235 &&
+                            (indicatorData.valid == true &&
+                                indicatorData.valid != null)
+                        ? homeWidgetColumn()
+                        : MediaQuery.of(context).size.height < 235 &&
+                                (indicatorData.valid == true &&
+                                    indicatorData.valid != null)
+                            ? homeWidgetRow()
+                            : homeWidgetNoData())
+                // floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
+                //         MediaQuery.of(context).size.width >= 450
+                //     ? FloatingActionButton(
+                //         backgroundColor: Colors.red,
+                //         tooltip: isFullNotifOn
+                //             ? 'Toggle overheat notifier(On)'
+                //             : 'Toggle overheat notifier(Off)',
+                //         child: isFullNotifOn
+                //             ? Icon(
+                //                 Icons.notifications,
+                //                 color: Colors.green[400],
+                //               )
+                //             : Icon(
+                //                 Icons.notifications_off,
+                //                 color: Colors.black,
+                //               ),
+                //         onPressed: () {
+                //           setState(() {
+                //             isFullNotifOn = !isFullNotifOn;
+                //           });
+                //           ScaffoldMessenger.of(context)
+                //             ..removeCurrentSnackBar()
+                //             ..showSnackBar(SnackBar(
+                //                 content: isFullNotifOn
+                //                     ? Text(
+                //                         'Notifications are now enabled',
+                //                         style: TextStyle(color: Colors.green),
+                //                       )
+                //                     : Text(
+                //                         'Notifications are now disabled',
+                //                         style: TextStyle(color: Colors.red),
+                //                       )));
+                //         })
+                //     : null,
+                ),
           ])),
         ],
       ),

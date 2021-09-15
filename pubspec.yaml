@@ -53,6 +53,7 @@ dependencies:
       url: https://github.com/q876625596/kumi_popup_window.git
   bitsdojo_window:
   linux_system_info: ^0.0.6
+  flutter_vector_icons: ^1.0.0
 
     #  response: ^1.0.0
 
