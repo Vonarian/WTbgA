@@ -593,8 +593,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     }
   }
 
-  Future<void> averageTasForStall() async {
+  Future averageTasForStall() async {
     if (!mounted) return;
+    if (secondSpeed == null) return;
     if (stateData.tas != null) {
       setState(() {
         firstSpeed = stateData.tas;
@@ -913,6 +914,21 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         print(isAlwaysOnTop);
       },
     );
+    HotKeyManager.instance
+        .register(HotKey(KeyCode.backspace, modifiers: [KeyModifier.alt]),
+            keyDownHandler: (_) {
+      setState(() {
+        showIas = true;
+        showAlt = true;
+        showCompass = true;
+        showEngineTemp = true;
+        showOilTemp = true;
+        showWaterTemp = true;
+        showThrottle = true;
+        showClimb = true;
+        showFuel = true;
+      });
+    });
     // bool isFullScreen = await windowManager.isFullScreen();
     // HotKeyManager.instance.register(
     //   HotKey(
@@ -935,907 +951,500 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     if (stateData.minFuel != null) {
       fuelPercent = (stateData.minFuel / stateData.maxFuel) * 100;
     }
-    return Flexible(
-        child: MediaQuery.of(context).size.height >= 235
-            ? Container(
-                height: 60,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
+    return Container(
+        height: MediaQuery.of(context).size.height >= 235
+            ? normalHeight
+            : smallHeight,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(20.0),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.pink.withOpacity(boxShadowOpacity),
+                spreadRadius: 4,
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              )
+            ]),
+        child: stateData.minFuel != null && fuelPercent! >= 15.00
+            ? TextButton.icon(
+                icon: Icon(Icons.speed),
+                onPressed: () {
+                  showFuel = !showFuel;
+                },
+                label: Expanded(
+                  child: Text(
+                    'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 20,
+                        letterSpacing: 2,
+                        color: textColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )
+            : stateData.minFuel != null &&
+                    fuelPercent! < 15.00 &&
+                    (stateData.height != 32 && stateData.minFuel != 0)
+                ? TextButton.icon(
+                    icon: Icon(Icons.speed),
+                    onPressed: () {
+                      showFuel = !showFuel;
+                    },
+                    label: Expanded(
+                      child: BlinkText(
+                        'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 20,
+                            letterSpacing: 2,
+                            color: textColor,
+                            fontWeight: FontWeight.bold),
+                        endColor: Colors.red,
+                      ),
                     ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
+                  )
+                : TextButton.icon(
+                    icon: Icon(Icons.speed),
+                    onPressed: () {
+                      showFuel = !showFuel;
+                    },
+                    label: Expanded(
+                      child: Text(
+                        'No Data.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 20,
+                            letterSpacing: 2,
+                            color: textColor,
+                            fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: stateData.minFuel != null && fuelPercent! >= 15.00
-                    ? TextButton.icon(
-                        icon: Icon(Icons.speed),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )
-                    : stateData.minFuel != null &&
-                            fuelPercent! < 15.00 &&
-                            (stateData.height != 32 && stateData.minFuel != 0)
-                        ? TextButton.icon(
-                            icon: Icon(Icons.speed),
-                            onPressed: () {},
-                            label: Expanded(
-                              child: BlinkText(
-                                'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                                endColor: Colors.red,
-                              ),
-                            ),
-                          )
-                        : TextButton.icon(
-                            icon: Icon(Icons.speed),
-                            onPressed: () {},
-                            label: Expanded(
-                              child: Text(
-                                'No Data.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ))
-            : Container(
-                height: 45,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: stateData.minFuel != null && fuelPercent! >= 15.00
-                    ? TextButton.icon(
-                        icon: Icon(Icons.speed),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )
-                    : stateData.minFuel != null &&
-                            fuelPercent! < 15.00 &&
-                            (stateData.height != 32 && stateData.minFuel != 0)
-                        ? TextButton.icon(
-                            icon: Icon(Icons.speed),
-                            onPressed: () {},
-                            label: Expanded(
-                              child: BlinkText(
-                                'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 17,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                                endColor: Colors.red,
-                              ),
-                            ),
-                          )
-                        : TextButton.icon(
-                            icon: Icon(Icons.speed),
-                            onPressed: () {},
-                            label: Expanded(
-                              child: Text(
-                                'No Data.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 17,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          )));
+                  ));
   }
 
   Widget waterTempText() {
-    return Flexible(
-        fit: FlexFit.loose,
-        child: MediaQuery.of(context).size.height >= 235
-            ? Container(
-                height: 60,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: stateData.water == null || stateData.water == 15
-                    ? TextButton.icon(
-                        icon: Icon(Icons.water),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Not water-cooled / No data available!  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )
-                    : TextButton.icon(
-                        icon: Icon(Icons.water),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Water Temp = ${stateData.water!} degrees  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ))
-            : Container(
-                height: 45,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: stateData.water == null || stateData.water == 15
-                    ? TextButton.icon(
-                        icon: Icon(Icons.water),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Not water-cooled / No data available!  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )
-                    : TextButton.icon(
-                        icon: Icon(Icons.water),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Water Temp = ${stateData.water!} degrees  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )));
+    return Container(
+        height: MediaQuery.of(context).size.height >= 235
+            ? normalHeight
+            : smallHeight,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(20.0),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.pink.withOpacity(boxShadowOpacity),
+                spreadRadius: 4,
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              )
+            ]),
+        child: stateData.water == null || stateData.water == 15
+            ? TextButton.icon(
+                icon: Icon(Icons.water),
+                onPressed: () {
+                  showWaterTemp = !showWaterTemp;
+                },
+                label: Expanded(
+                  child: Text(
+                    'Not water-cooled / No data available!  ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 20,
+                        letterSpacing: 2,
+                        color: textColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )
+            : TextButton.icon(
+                icon: Icon(Icons.water),
+                onPressed: () {
+                  showWaterTemp = !showWaterTemp;
+                },
+                label: Expanded(
+                  child: Text(
+                    'Water Temp = ${stateData.water!} degrees  ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 20,
+                        letterSpacing: 2,
+                        color: textColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ));
   }
 
   Widget altitudeText() {
-    return Flexible(
-        child: MediaQuery.of(context).size.height >= 235
-            ? Container(
-                height: 60,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: TextButton.icon(
-                  icon: Icon(Icons.height),
-                  onPressed: () {},
-                  label: stateData.height != null
-                      ? Expanded(
-                          child: Text(
-                            'Altitude: ${stateData.height} meters ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        )
-                      : Expanded(
-                          child: Text(
-                            'No data available. ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                ))
-            : Container(
-                height: 45,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: TextButton.icon(
-                  icon: Icon(Icons.height),
-                  onPressed: () {},
-                  label: stateData.height != null
-                      ? Expanded(
-                          child: Text(
-                            'Altitude: ${stateData.height} meters ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        )
-                      : Expanded(
-                          child: Text(
-                            'No data available. ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                )));
+    return Container(
+        height: MediaQuery.of(context).size.height >= 235
+            ? normalHeight
+            : smallHeight,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(20.0),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.pink.withOpacity(boxShadowOpacity),
+                spreadRadius: 4,
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              )
+            ]),
+        child: TextButton.icon(
+          icon: Icon(Icons.height),
+          onPressed: () {
+            showAlt = !showAlt;
+          },
+          label: stateData.height != null
+              ? Expanded(
+                  child: Text(
+                    'Altitude: ${stateData.height} meters ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 20,
+                        letterSpacing: 2,
+                        color: textColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                )
+              : Expanded(
+                  child: Text(
+                    'No data available. ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 20,
+                        letterSpacing: 2,
+                        color: textColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+        ));
   }
 
   Widget climbRate() {
     ToolDataState.getState();
     averageTasForStall();
-    return Flexible(
-        child: MediaQuery.of(context).size.height >= 235
-            ? Container(
-                height: 60,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: TextButton.icon(
-                    icon: Icon(Icons.arrow_upward),
-                    onPressed: () {},
-                    label: indicatorData.vertical != null &&
-                                stateData.ias != null &&
-                                stateData.climb != null &&
-                                (stateData.ias < 250 &&
-                                    stateData.climb != null &&
-                                    stateData.climb != null &&
-                                    stateData.climb < 60 &&
-                                    indicatorData.vertical >= -135 &&
-                                    indicatorData.vertical <= -50) ||
-                            (stateData.ias != null &&
-                                    stateData.ias < 180 &&
-                                    stateData.climb != null &&
-                                    stateData.climb < 10) &&
-                                stateData.ias != 0 &&
-                                stateData.height > 250
-                        ? Expanded(
-                            child: BlinkText(
-                            'Absolute Climb rate = ${stateData.climb} m/s (Possible stall!)',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                            endColor: Colors.red,
-                          ))
-                        : stateData.climb != null && stateData.climb != 0.0
-                            ? Expanded(
-                                child: Text(
-                                'Absolute Climb rate = ${stateData.climb} m/s',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ))
-                            : Expanded(
-                                child: Text(
-                                'No Data. ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ))),
-              )
-            : Container(
-                height: 45,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: TextButton.icon(
-                    icon: Icon(Icons.arrow_upward),
-                    onPressed: () {},
-                    label: indicatorData.vertical != null &&
-                                stateData.ias != null &&
-                                (stateData.ias < 250 &&
-                                    stateData.climb != null &&
-                                    stateData.climb != null &&
-                                    stateData.climb < 60 &&
-                                    indicatorData.vertical >= -135 &&
-                                    indicatorData.vertical <= -50) ||
-                            (stateData.ias != null &&
-                                    stateData.ias < 180 &&
-                                    stateData.climb != null &&
-                                    stateData.climb < 10) &&
-                                stateData.ias != 0 &&
-                                stateData.height > 250
-                        ? Expanded(
-                            child: BlinkText(
-                            'Absolute Climb rate = ${stateData.climb} m/s (Possible stall!)',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                            endColor: Colors.red,
-                          ))
-                        : stateData.climb != null && stateData.climb != 0.0
-                            ? Expanded(
-                                child: Text(
-                                'Absolute Climb rate = ${stateData.climb} m/s',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 17,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ))
-                            : Expanded(
-                                child: Text(
-                                'No Data. ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 17,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ))),
-              ));
+    return Container(
+      height: MediaQuery.of(context).size.height >= 235
+          ? normalHeight
+          : smallHeight,
+      decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromRGBO(10, 123, 10, 0.403921568627451),
+              Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: const BorderRadius.all(
+            Radius.circular(20.0),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.pink.withOpacity(boxShadowOpacity),
+              spreadRadius: 4,
+              blurRadius: 10,
+              offset: Offset(0, 3),
+            )
+          ]),
+      child: TextButton.icon(
+          icon: Icon(Icons.arrow_upward),
+          onPressed: () {
+            showClimb = !showClimb;
+          },
+          label: indicatorData.vertical != null &&
+                      stateData.ias != null &&
+                      stateData.climb != null &&
+                      (stateData.ias < 250 &&
+                          stateData.climb != null &&
+                          stateData.climb != null &&
+                          stateData.climb < 60 &&
+                          indicatorData.vertical >= -135 &&
+                          indicatorData.vertical <= -50) ||
+                  (stateData.ias != null &&
+                          stateData.ias < 180 &&
+                          stateData.climb != null &&
+                          stateData.climb < 10) &&
+                      stateData.ias != 0 &&
+                      stateData.height > 250
+              ? Expanded(
+                  child: BlinkText(
+                  'Absolute Climb rate = ${stateData.climb} m/s (Possible stall!)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
+                  endColor: Colors.red,
+                ))
+              : stateData.climb != null && stateData.climb != 0.0
+                  ? Expanded(
+                      child: Text(
+                      'Absolute Climb rate = ${stateData.climb} m/s',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: textColor,
+                          fontWeight: FontWeight.bold),
+                    ))
+                  : Expanded(
+                      child: Text(
+                      'No Data. ',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: textColor,
+                          fontWeight: FontWeight.bold),
+                    ))),
+    );
   }
 
   Widget iasText() {
-    return Flexible(
-        child: MediaQuery.of(context).size.height >= 235
-            ? Container(
-                height: 60,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
+    return Container(
+        height: MediaQuery.of(context).size.height >= 235
+            ? normalHeight
+            : smallHeight,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(20.0),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.pink.withOpacity(boxShadowOpacity),
+                spreadRadius: 4,
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              )
+            ]),
+        child: stateData.ias == null || stateData.ias == 0
+            ? TextButton.icon(
+                icon: Icon(Icons.speed),
+                onPressed: () {
+                  showIas = !showIas;
+                },
+                label: Expanded(
+                  child: Text(
+                    'Stationary / No data!  ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 20,
+                        letterSpacing: 2,
+                        color: textColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )
+            : indicatorData.mach != null &&
+                    indicatorData.mach >= 1 &&
+                    stateData.ias != null
+                ? TextButton.icon(
+                    icon: Icon(Icons.speed),
+                    onPressed: () {
+                      showIas = !showIas;
+                    },
+                    label: Expanded(
+                      child: Text(
+                        'IAS = ${stateData.ias!} km/h (Above Mach) ',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 20,
+                            letterSpacing: 2,
+                            color: textColor,
+                            fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
+                  )
+                : TextButton.icon(
+                    icon: Icon(Icons.speed),
+                    onPressed: () {
+                      showIas = !showIas;
+                    },
+                    label: Expanded(
+                      child: Text(
+                        'IAS = ${stateData.ias!} km/h ',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 20,
+                            letterSpacing: 2,
+                            color: textColor,
+                            fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: stateData.ias == null || stateData.ias == 0
-                    ? TextButton.icon(
-                        icon: Icon(Icons.speed),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Stationary / No data!  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )
-                    : indicatorData.mach != null &&
-                            indicatorData.mach >= 1 &&
-                            stateData.ias != null
-                        ? TextButton.icon(
-                            icon: Icon(Icons.speed),
-                            onPressed: () {},
-                            label: Expanded(
-                              child: Text(
-                                'IAS = ${stateData.ias!} km/h (Above Mach) ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          )
-                        : TextButton.icon(
-                            icon: Icon(Icons.speed),
-                            onPressed: () {},
-                            label: Expanded(
-                              child: Text(
-                                'IAS = ${stateData.ias!} km/h ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ))
-            : Container(
-                height: 45,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: stateData.ias == null || stateData.ias == 0
-                    ? TextButton.icon(
-                        icon: Icon(Icons.speed),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Stationary / No data!  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )
-                    : indicatorData.mach != null &&
-                            indicatorData.mach >= 1 &&
-                            stateData.ias != null
-                        ? TextButton.icon(
-                            icon: Icon(Icons.speed),
-                            onPressed: () {},
-                            label: Expanded(
-                              child: Text(
-                                'IAS = ${stateData.ias!} km/h (Above Mach) ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 17,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          )
-                        : TextButton.icon(
-                            icon: Icon(Icons.speed),
-                            onPressed: () {},
-                            label: Expanded(
-                              child: Text(
-                                'IAS = ${stateData.ias!} km/h ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 17,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          )));
+                  ));
   }
 
   Widget compassText() {
-    return Flexible(
-        child: MediaQuery.of(context).size.height >= 235
-            ? Container(
-                height: 60,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: indicatorData.compass == '0' ||
-                        indicatorData.compass == null
-                    ? TextButton.icon(
-                        icon: Icon(Icons.gps_fixed),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'No data.  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )
-                    : TextButton.icon(
-                        icon: Icon(Icons.gps_fixed),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Compass = ${indicatorData.compass?.toStringAsFixed(0)} degrees ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ))
-            : Container(
-                height: 45,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                        Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(20.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pink.withOpacity(boxShadowOpacity),
-                        spreadRadius: 4,
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ]),
-                child: indicatorData.compass == '0' ||
-                        indicatorData.compass == null
-                    ? TextButton.icon(
-                        icon: Icon(Icons.gps_fixed),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'No data.  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )
-                    : TextButton.icon(
-                        icon: Icon(Icons.gps_fixed),
-                        onPressed: () {},
-                        label: Expanded(
-                          child: Text(
-                            'Compass = ${indicatorData.compass?.toStringAsFixed(0)} degrees ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 17,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      )));
+    return Container(
+        height: MediaQuery.of(context).size.height >= 235
+            ? normalHeight
+            : smallHeight,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(20.0),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.pink.withOpacity(boxShadowOpacity),
+                spreadRadius: 4,
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              )
+            ]),
+        child: indicatorData.compass == '0' || indicatorData.compass == null
+            ? TextButton.icon(
+                icon: Icon(Icons.gps_fixed),
+                onPressed: () {
+                  showCompass = !showCompass;
+                },
+                label: Expanded(
+                  child: Text(
+                    'No data.  ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 20,
+                        letterSpacing: 2,
+                        color: textColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )
+            : TextButton.icon(
+                icon: Icon(Icons.gps_fixed),
+                onPressed: () {
+                  showCompass = !showCompass;
+                },
+                label: Expanded(
+                  child: Text(
+                    'Compass = ${indicatorData.compass?.toStringAsFixed(0)} degrees ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 20,
+                        letterSpacing: 2,
+                        color: textColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ));
   }
 
   Widget engineTempText() {
     return ValueListenableBuilder(
         valueListenable: idData,
         builder: (BuildContext context, value, Widget? child) {
-          return Flexible(
-              child: MediaQuery.of(context).size.height >= 235
-                  ? Container(
-                      height: 60,
-                      decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                              Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                            ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(20.0),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.red.withOpacity(boxShadowOpacity),
-                              spreadRadius: 4,
-                              blurRadius: 7,
-                              offset: Offset(0, 3),
-                            )
-                          ]),
-                      child: TextButton.icon(
-                        icon: Icon(Icons.airplanemode_active),
-                        label: Expanded(
-                            child: _isFullNotifOn &&
-                                    msgData == 'Engine overheated' &&
-                                    run &&
-                                    indicatorData.engine != 'nul' &&
-                                    indicatorData.engine != null
-                                ? BlinkText(
-                                    'Engine Temp= ${(indicatorData!.engine.toStringAsFixed(0))} degrees  ',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        letterSpacing: 2,
-                                        color: textColor,
-                                        fontWeight: FontWeight.bold),
-                                    endColor: Colors.red,
-                                    times: 13,
-                                    duration: Duration(milliseconds: 300),
-                                  )
-                                : indicatorData.engine != null
-                                    ? Text(
-                                        'Engine Temp= ${(indicatorData.engine.toStringAsFixed(0))} degrees  ',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            fontSize: 20,
-                                            letterSpacing: 2,
-                                            color: textColor,
-                                            fontWeight: FontWeight.bold))
-                                    : Text('No data.  ',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            fontSize: 20,
-                                            letterSpacing: 2,
-                                            color: textColor,
-                                            fontWeight: FontWeight.bold))),
-                        onPressed: () {},
-                      ))
-                  : Container(
-                      height: 45,
-                      decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                              Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                            ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(20.0),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.red.withOpacity(boxShadowOpacity),
-                              spreadRadius: 4,
-                              blurRadius: 7,
-                              offset: Offset(0, 3),
-                            )
-                          ]),
-                      child: TextButton.icon(
-                        icon: Icon(Icons.airplanemode_active),
-                        label: Expanded(
-                            child: _isFullNotifOn &&
-                                    msgData == 'Engine overheated' &&
-                                    run &&
-                                    indicatorData.engine != 'nul' &&
-                                    indicatorData.engine != null
-                                ? BlinkText(
-                                    'Engine Temp= ${(indicatorData!.engine.toStringAsFixed(0))} degrees  ',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        letterSpacing: 2,
-                                        color: textColor,
-                                        fontWeight: FontWeight.bold),
-                                    endColor: Colors.red,
-                                    times: 13,
-                                    duration: Duration(milliseconds: 300),
-                                  )
-                                : indicatorData.engine != null
-                                    ? Text(
-                                        'Engine Temp= ${(indicatorData.engine.toStringAsFixed(0))} degrees  ',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            fontSize: 15,
-                                            letterSpacing: 2,
-                                            color: textColor,
-                                            fontWeight: FontWeight.bold))
-                                    : Text('No data.  ',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            fontSize: 15,
-                                            letterSpacing: 2,
-                                            color: textColor,
-                                            fontWeight: FontWeight.bold))),
-                        onPressed: () {},
-                      )));
+          return Container(
+              height: MediaQuery.of(context).size.height >= 235
+                  ? normalHeight
+                  : smallHeight,
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                      Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(20.0),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(boxShadowOpacity),
+                      spreadRadius: 4,
+                      blurRadius: 7,
+                      offset: Offset(0, 3),
+                    )
+                  ]),
+              child: TextButton.icon(
+                icon: Icon(Icons.airplanemode_active),
+                label: Expanded(
+                    child: _isFullNotifOn &&
+                            msgData == 'Engine overheated' &&
+                            run &&
+                            indicatorData.engine != 'nul' &&
+                            indicatorData.engine != null
+                        ? BlinkText(
+                            'Engine Temp= ${(indicatorData!.engine.toStringAsFixed(0))} degrees  ',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 20,
+                                letterSpacing: 2,
+                                color: textColor,
+                                fontWeight: FontWeight.bold),
+                            endColor: Colors.red,
+                            times: 13,
+                            duration: Duration(milliseconds: 300),
+                          )
+                        : indicatorData.engine != null
+                            ? Text(
+                                'Engine Temp= ${(indicatorData.engine.toStringAsFixed(0))} degrees  ',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    letterSpacing: 2,
+                                    color: textColor,
+                                    fontWeight: FontWeight.bold))
+                            : Text('No data.  ',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    letterSpacing: 2,
+                                    color: textColor,
+                                    fontWeight: FontWeight.bold))),
+                onPressed: () {
+                  showEngineTemp = !showEngineTemp;
+                },
+              ));
         });
   }
 
@@ -1843,122 +1452,69 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     return ValueListenableBuilder(
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
-        return Flexible(
-            child: MediaQuery.of(context).size.height >= 235
-                ? Container(
-                    height: 60,
-                    decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                            Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(20.0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.red.withOpacity(boxShadowOpacity),
-                            spreadRadius: 4,
-                            blurRadius: 7,
-                            offset: Offset(0, 3),
-                          )
-                        ]),
-                    child: TextButton.icon(
-                      icon: Icon(Icons.airplanemode_active),
-                      label: MediaQuery.of(context).size.height >= 235
-                          ? Expanded(
-                              child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
-                                  ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold))
-                                  : Text('No data.  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold)))
-                          : Expanded(
-                              child: indicatorData.throttle != 'null' &&
-                                      indicatorData.throttle != 'nul'
-                                  ? Text(
-                                      'Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold))
-                                  : Text('No data.  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 13, letterSpacing: 2, color: textColor, fontWeight: FontWeight.bold))),
-                      onPressed: () {},
-                    ))
-                : Container(
-                    height: 45,
-                    decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                            Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(20.0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.red.withOpacity(boxShadowOpacity),
-                            spreadRadius: 4,
-                            blurRadius: 7,
-                            offset: Offset(0, 3),
-                          )
-                        ]),
-                    child: TextButton.icon(
-                      icon: Icon(Icons.airplanemode_active),
-                      label: MediaQuery.of(context).size.height >= 235
-                          ? Expanded(
-                              child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
-                                  ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 17,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold))
-                                  : Text('No data.  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 17,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold)))
-                          : Expanded(
-                              child: indicatorData.throttle != 'null' &&
-                                      indicatorData.throttle != 'nul'
-                                  ? Text(
-                                      'Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 17,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold))
-                                  : Text('No data.  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 17, letterSpacing: 2, color: Colors.black, fontWeight: FontWeight.bold))),
-                      onPressed: () {},
-                    )));
+        return Container(
+            height: MediaQuery.of(context).size.height >= 235
+                ? normalHeight
+                : smallHeight,
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                    Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(20.0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(boxShadowOpacity),
+                    spreadRadius: 4,
+                    blurRadius: 7,
+                    offset: Offset(0, 3),
+                  )
+                ]),
+            child: TextButton.icon(
+              icon: Icon(Icons.airplanemode_active),
+              label: MediaQuery.of(context).size.height >= 235
+                  ? Expanded(
+                      child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
+                          ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  letterSpacing: 2,
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold))
+                          : Text('No data.  ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  letterSpacing: 2,
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold)))
+                  : Expanded(
+                      child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
+                          ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  letterSpacing: 2,
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold))
+                          : Text('No data.  ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  letterSpacing: 2,
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold))),
+              onPressed: () {
+                showThrottle = !showThrottle;
+              },
+            ));
       },
     );
   }
@@ -1967,126 +1523,68 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     return ValueListenableBuilder(
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
-        return Flexible(
-            child: MediaQuery.of(context).size.height >= 235
-                ? Container(
-                    height: 60,
-                    decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                            Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(20.0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.red.withOpacity(boxShadowOpacity),
-                            spreadRadius: 4,
-                            blurRadius: 7,
-                            offset: Offset(0, 3),
-                          )
-                        ]),
-                    child: TextButton.icon(
-                      icon: Icon(Icons.airplanemode_active),
-                      label: Expanded(
-                          child: (stateData.oil != null &&
-                                      stateData.oil != 15) &&
-                                  _isFullNotifOn &&
-                                  msgData == "Oil overheated" &&
-                                  run
-                              ? BlinkText(
-                                  'Oil Temp= ${stateData.oil} degrees  ',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      letterSpacing: 2,
-                                      color: textColor,
-                                      fontWeight: FontWeight.bold),
-                                  endColor: Colors.red,
-                                  times: 13,
-                                  duration: Duration(milliseconds: 200),
-                                )
-                              : stateData.oil != null && stateData.oil != 15
-                                  ? Text('Oil Temp= ${stateData.oil} degrees  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold))
-                                  : Text('No data.  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold))),
-                      onPressed: () {},
-                    ))
-                : Container(
-                    height: 45,
-                    decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                            Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(20.0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.red.withOpacity(boxShadowOpacity),
-                            spreadRadius: 4,
-                            blurRadius: 7,
-                            offset: Offset(0, 3),
-                          )
-                        ]),
-                    child: TextButton.icon(
-                      icon: Icon(Icons.airplanemode_active),
-                      label: Expanded(
-                          child: (stateData.oil != null &&
-                                      stateData.oil != 15) &&
-                                  _isFullNotifOn &&
-                                  msgData == "Oil overheated" &&
-                                  run
-                              ? BlinkText(
-                                  'Oil Temp= ${stateData.oil} degrees  ',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: 17,
-                                      letterSpacing: 2,
-                                      color: textColor,
-                                      fontWeight: FontWeight.bold),
-                                  endColor: Colors.red,
-                                  times: 13,
-                                  duration: Duration(milliseconds: 200),
-                                )
-                              : stateData.oil != null && stateData.oil != 15
-                                  ? Text('Oil Temp= ${stateData.oil} degrees  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 17,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold))
-                                  : Text('No data.  ',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 17,
-                                          letterSpacing: 2,
-                                          color: textColor,
-                                          fontWeight: FontWeight.bold))),
-                      onPressed: () {},
-                    )));
+        return Container(
+            height: MediaQuery.of(context).size.height >= 235
+                ? normalHeight
+                : smallHeight,
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromRGBO(10, 123, 10, 0.403921568627451),
+                    Color.fromRGBO(0, 50, 158, 0.4196078431372549),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(20.0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(boxShadowOpacity),
+                    spreadRadius: 4,
+                    blurRadius: 7,
+                    offset: Offset(0, 3),
+                  )
+                ]),
+            child: TextButton.icon(
+              icon: Icon(Icons.airplanemode_active),
+              label: Expanded(
+                  child: (stateData.oil != null && stateData.oil != 15) &&
+                          _isFullNotifOn &&
+                          msgData == "Oil overheated" &&
+                          run
+                      ? BlinkText(
+                          'Oil Temp= ${stateData.oil} degrees  ',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 20,
+                              letterSpacing: 2,
+                              color: textColor,
+                              fontWeight: FontWeight.bold),
+                          endColor: Colors.red,
+                          times: 13,
+                          duration: Duration(milliseconds: 200),
+                        )
+                      : stateData.oil != null && stateData.oil != 15
+                          ? Text('Oil Temp= ${stateData.oil} degrees  ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  letterSpacing: 2,
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold))
+                          : Text('No data.  ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  letterSpacing: 2,
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold))),
+              onPressed: () {
+                showOilTemp = !showOilTemp;
+              },
+            ));
       },
     );
   }
@@ -2173,16 +1671,18 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   Widget drawerBuilder() {
     return Drawer(
       child: Container(
-        decoration: BoxDecoration(color: Colors.blueGrey),
+        decoration: BoxDecoration(color: Colors.deepPurple),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
+              curve: Curves.bounceIn,
+              duration: Duration(seconds: 12),
               decoration: BoxDecoration(
                 color: Colors.deepPurple,
               ),
               child: Icon(
-                Icons.notifications,
+                Icons.settings,
                 size: 100,
               ),
             ),
@@ -2435,51 +1935,89 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Widget homeWidgetColumn() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return ListView(
       children: [
-        engineThrottleText(),
-        engineTempText(),
-        fuelIndicator(),
-        altitudeText(),
-        compassText(),
-        iasText(),
-        climbRate(),
-        oilTempText(),
-        waterTempText()
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3),
+            child: showThrottle ? engineThrottleText() : null),
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3),
+            child: showEngineTemp ? engineTempText() : null),
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3),
+            child: showFuel ? fuelIndicator() : null),
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3),
+            child: showAlt ? altitudeText() : null),
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3),
+            child: showCompass ? compassText() : null),
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3), child: showIas ? iasText() : null),
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3),
+            child: showClimb ? climbRate() : null),
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3),
+            child: showOilTemp ? oilTempText() : null),
+        AnimatedSwitcher(
+            duration: Duration(seconds: 3),
+            child: showWaterTemp ? waterTempText() : null)
       ],
     );
   }
 
   Widget homeWidgetRow() {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Row(
-            children: [
-              engineThrottleText(),
-              engineTempText(),
-              fuelIndicator(),
-            ],
-          ),
-          Row(
-            children: [
-              altitudeText(),
-              compassText(),
-            ],
-          ),
-          Row(
-            children: [
-              iasText(),
-              climbRate(),
-            ],
-          ),
-          Row(
-            children: [oilTempText(), waterTempText()],
-          )
-        ],
-      ),
+    return ListView(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showThrottle ? engineThrottleText() : null),
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showEngineTemp ? engineTempText() : null),
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showFuel ? fuelIndicator() : null),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showAlt ? altitudeText() : null),
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showCompass ? compassText() : null),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showIas ? iasText() : null),
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showClimb ? climbRate() : null),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showOilTemp ? oilTempText() : null),
+            AnimatedSwitcher(
+                duration: Duration(seconds: 3),
+                child: showWaterTemp ? waterTempText() : null)
+          ],
+        )
+      ],
     );
   }
 
@@ -2565,15 +2103,28 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool _isOilNotifOn = true;
   bool _isEngineDeathNotifOn = true;
   bool _isWaterNotifOn = true;
+  bool showIas = true;
+  bool showAlt = true;
+  bool showCompass = true;
+  bool showEngineTemp = true;
+  bool showOilTemp = true;
+  bool showWaterTemp = true;
+  bool showThrottle = true;
+  bool showClimb = true;
+  bool showFuel = true;
   bool? chatEnemySecond;
   bool? chatEnemyFirst;
   double? fuelPercent;
   double? avgTAS;
   double boxShadowOpacity = 0.07;
   double widget1Opacity = 0.0;
+  double normalHeight = 60;
+  double smallHeight = 45;
+  double normalFont = 20;
+  double smallFont = 17;
+  int counter = 0;
   int? firstSpeed;
   int? secondSpeed;
-  int counter = 0;
   Color borderColor = Color(0xFF805306);
   Color textColor = Colors.white;
   var chatColorFirst;
