@@ -16,6 +16,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wakelock/wakelock.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'chat.dart';
@@ -2112,6 +2113,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool showThrottle = true;
   bool showClimb = true;
   bool showFuel = true;
+  bool wakeLock = false;
   bool? chatEnemySecond;
   bool? chatEnemyFirst;
   double? fuelPercent;
@@ -2207,6 +2209,42 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 resizeToAvoidBottomInset: true,
                 appBar: MediaQuery.of(context).size.height >= 300
                     ? AppBar(
+                        actions: [
+                            IconButton(
+                                onPressed: () async {
+                                  wakeLock = !wakeLock;
+                                  setState(() {
+                                    Wakelock.toggle(enable: wakeLock);
+                                  });
+                                  bool wakeLockEnabled = await Wakelock.enabled;
+                                  if (!wakeLockEnabled) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content:
+                                          const Text("Screen timeout enabled"),
+                                      duration: Duration(seconds: 3),
+                                    ));
+                                  } else {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content:
+                                          const Text("Screen timeout disabled"),
+                                      duration: Duration(seconds: 3),
+                                    ));
+                                  }
+                                  print(wakeLockEnabled);
+                                  print(wakeLock);
+                                },
+                                icon: wakeLock
+                                    ? Icon(
+                                        Icons.timelapse_outlined,
+                                        color: Colors.green,
+                                      )
+                                    : Icon(
+                                        Icons.timelapse_outlined,
+                                        color: Colors.red,
+                                      ))
+                          ],
                         leading: Builder(
                           builder: (BuildContext context) {
                             return IconButton(
@@ -2231,7 +2269,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                     'No vehicle data available / Not flying.'))
                     : null,
                 body: AnimatedOpacity(
-                    duration: Duration(seconds: 5),
+                    duration: Duration(seconds: 3),
                     opacity: widget1Opacity,
                     child: MediaQuery.of(context).size.height >= 235 &&
                             (indicatorData.valid == true &&

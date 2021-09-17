@@ -54,6 +54,7 @@ dependencies:
   bitsdojo_window:
   linux_system_info: ^0.0.6
   flutter_vector_icons: ^1.0.0
+  wakelock: ^0.5.6
 
     #  response: ^1.0.0
 
