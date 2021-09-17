@@ -952,7 +952,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     if (stateData.minFuel != null) {
       fuelPercent = (stateData.minFuel / stateData.maxFuel) * 100;
     }
-    return Container(
+    return AnimatedContainer(
+        duration: Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
@@ -1035,7 +1036,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Widget waterTempText() {
-    return Container(
+    return AnimatedContainer(
+        duration: Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
@@ -1097,7 +1099,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Widget altitudeText() {
-    return Container(
+    return AnimatedContainer(
+        duration: Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
@@ -1155,7 +1158,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   Widget climbRate() {
     ToolDataState.getState();
     averageTasForStall();
-    return Container(
+    return AnimatedContainer(
+      duration: Duration(seconds: 2),
       height: MediaQuery.of(context).size.height >= 235
           ? normalHeight
           : smallHeight,
@@ -1235,7 +1239,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Widget iasText() {
-    return Container(
+    return AnimatedContainer(
+        duration: Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
@@ -1317,7 +1322,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Widget compassText() {
-    return Container(
+    return AnimatedContainer(
+        duration: Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
@@ -1382,7 +1388,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     return ValueListenableBuilder(
         valueListenable: idData,
         builder: (BuildContext context, value, Widget? child) {
-          return Container(
+          return AnimatedContainer(
+              duration: Duration(seconds: 2),
               height: MediaQuery.of(context).size.height >= 235
                   ? normalHeight
                   : smallHeight,
@@ -1453,7 +1460,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     return ValueListenableBuilder(
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
-        return Container(
+        return AnimatedContainer(
+            duration: Duration(seconds: 2),
             height: MediaQuery.of(context).size.height >= 235
                 ? normalHeight
                 : smallHeight,
@@ -1524,7 +1532,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     return ValueListenableBuilder(
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
-        return Container(
+        return AnimatedContainer(
+            duration: Duration(seconds: 2),
             height: MediaQuery.of(context).size.height >= 235
                 ? normalHeight
                 : smallHeight,
@@ -1974,48 +1983,66 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showThrottle ? engineThrottleText() : null),
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showEngineTemp ? engineTempText() : null),
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showFuel ? fuelIndicator() : null),
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showThrottle ? engineThrottleText() : null),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showEngineTemp ? engineTempText() : null),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showFuel ? fuelIndicator() : null),
+            ),
           ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showAlt ? altitudeText() : null),
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showCompass ? compassText() : null),
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showAlt ? altitudeText() : null),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showCompass ? compassText() : null),
+            ),
           ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showIas ? iasText() : null),
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showClimb ? climbRate() : null),
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showIas ? iasText() : null),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showClimb ? climbRate() : null),
+            ),
           ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showOilTemp ? oilTempText() : null),
-            AnimatedSwitcher(
-                duration: Duration(seconds: 3),
-                child: showWaterTemp ? waterTempText() : null)
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showOilTemp ? oilTempText() : null),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                  duration: Duration(seconds: 3),
+                  child: showWaterTemp ? waterTempText() : null),
+            )
           ],
         )
       ],
