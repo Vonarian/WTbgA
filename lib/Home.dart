@@ -220,12 +220,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             ));
   }
 
-  var player = Player(id: 0);
-  var warningLogo = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/assets',
-    'WARNING.png'
-  ]);
   void userRedLineFlap() {
     if (!mounted) return;
     if (stateData.ias != null && _textForIasFlap.value != null) {
@@ -289,9 +283,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     }
   }
 
-  var pullUpPlayer = Player(id: 3);
-  var gearUpPlayer = Player(id: 2);
-  var overGPlayer = Player(id: 1);
   Future<void> pullUpChecker() async {
     if (!mounted) return;
     if (indicatorData.vertical != null &&
@@ -566,24 +557,20 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       return;
     }
     double? avgTAS = ((secondSpeed! - firstSpeed!) / 2);
-    if (avgTAS >= 10) {
-      while (counter < 2) {
-        Toast toast = Toast(
-            type: ToastType.imageAndText02,
-            title: '😳WARNING!!',
-            subtitle: 'Very high acceleration, be careful',
-            image: File(warningLogo));
-        service!.show(toast);
-        toast.dispose();
-        service?.stream.listen((event) {
-          if (event is ToastActivated) {
-            windowManager.show();
-          }
-        });
-        isDamageIDNew = false;
-        player.play();
-        counter++;
-      }
+    if (avgTAS >= 10 && counter == 0) {
+      Toast toast = Toast(
+          type: ToastType.imageAndText02,
+          title: '😳WARNING!!',
+          subtitle: 'Very high acceleration, be careful',
+          image: File(warningLogo));
+      service!.show(toast);
+      toast.dispose();
+      service?.stream.listen((event) {
+        if (event is ToastActivated) {
+          windowManager.show();
+        }
+      });
+      player.play();
     }
     if (counter == 1) {
       Future.delayed(const Duration(seconds: 6), () {
@@ -2099,6 +2086,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   //     iconMouseDown: const Color(0xFFFFD500));
   var ramUsage;
   var ramTotal;
+  var chatColorFirst;
+  var chatColorSecond;
+
+  Player pullUpPlayer = Player(id: 3);
+  Player gearUpPlayer = Player(id: 2);
+  Player overGPlayer = Player(id: 1);
+  Player player = Player(id: 0);
+
   dynamic stateData;
   dynamic indicatorData;
   String? msgData;
@@ -2110,6 +2105,16 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   String? chatModeSecond;
   String? chatPrefixFirst;
   String? chatPrefixSecond;
+  String logoPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    '/logoWTbgA.jpg'
+  ]);
+  String warningLogo = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'WARNING.png'
+  ]);
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
@@ -2156,13 +2161,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   int? secondSpeed;
   Color borderColor = Color(0xFF805306);
   Color textColor = Colors.white;
-  var chatColorFirst;
-  var chatColorSecond;
-  var logoPath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/assets',
-    '/logoWTbgA.jpg'
-  ]);
+
   final windowManager = WindowManager.instance;
 
   @override
@@ -2323,7 +2322,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 //                 Icons.notifications_off,
                 //                 color: Colors.black,
                 //               ),
-                //         onPressed: () {
+                // onPressed: () {
                 //           setState(() {
                 //             isFullNotifOn = !isFullNotifOn;
                 //           });
