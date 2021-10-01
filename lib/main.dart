@@ -8,10 +8,10 @@ import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
-import 'package:wtbgassistant/Info.dart';
+import 'package:wtbgassistant/info.dart';
 import 'package:wtbgassistant/transparent.dart';
 
-import 'Home.dart';
+import 'home.dart';
 
 ToastService? service;
 // final response = ResponseUI.instance;
@@ -57,7 +57,7 @@ void main() async {
   pullUpPlayer.open([Media(uri: pullUpPath)]);
   pullUpPlayer.open([Media(uri: pullUpPath)]);
 
-  service = new ToastService(
+  service = ToastService(
     appName: 'WarThunder Background Assistant',
     companyName: 'VonarianTheGreat',
     productName: 'WarThunder Background Assistant',
@@ -70,7 +70,7 @@ void main() async {
       routes: {
         '/': (context) => Loading(),
         '/home': (context) => Home(),
-        '/info': (context) => InfoPage(),
+        '/info': (context) => const InfoPage(),
         '/transparent': (context) => TransparentPage()
       },
     ),

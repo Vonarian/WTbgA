@@ -21,13 +21,15 @@ import 'package:window_manager/window_manager.dart';
 
 import 'chat.dart';
 import 'damage_event.dart';
-import 'indicatorReceiver.dart';
+import 'indicator_receiver.dart';
 import 'main.dart';
-import 'stateReceiver.dart';
+import 'state_receiver.dart';
 
 final windowManager = WindowManager.instance;
 
 class Loading extends StatefulWidget {
+  const Loading({Key? key}) : super(key: key);
+
   @override
   _LoadingState createState() => _LoadingState();
 }
@@ -78,7 +80,7 @@ class _LoadingState extends State<Loading> {
         appBar: AppBar(
           centerTitle: true,
           backgroundColor: Colors.transparent,
-          title: Text(
+          title: const Text(
             'Loading WTbgI',
             style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -86,7 +88,7 @@ class _LoadingState extends State<Loading> {
                 color: Colors.cyanAccent),
           ),
         ),
-        body: Center(
+        body: const Center(
           child: SpinKitChasingDots(
             color: Colors.redAccent,
             size: 80.0,
@@ -104,11 +106,11 @@ class _LoadingState extends State<Loading> {
                   _launchURL();
                 },
               ),
-              duration: Duration(seconds: 5),
+              duration: const Duration(seconds: 5),
             ));
           },
           backgroundColor: Colors.red,
-          child: Icon(Icons.refresh),
+          child: const Icon(Icons.refresh),
         ),
       ),
     ]);
@@ -118,6 +120,8 @@ class _LoadingState extends State<Loading> {
 //Home
 
 class Home extends StatefulWidget {
+  const Home({Key? key}) : super(key: key);
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -133,7 +137,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Cancel')),
+              child: const Text('Cancel')),
           ElevatedButton(
               onPressed: () {
                 ScaffoldMessenger.of(context)
@@ -143,14 +147,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           'You will be notified if IAS reaches red line speed of ${userInputIasFlap.text} km/h (With flaps open). ')));
                 Navigator.of(context).pop(int.parse(userInputIasFlap.text));
               },
-              child: Text('Notify')),
+              child: const Text('Notify')),
         ],
-        title: Text('Red line notifier (Enter red line flap speed). '),
+        title: const Text('Red line notifier (Enter red line flap speed). '),
         content: TextField(
           // onSubmitted: onSubmit,
           onChanged: (value) {},
           controller: userInputIasFlap,
-          decoration: InputDecoration(hintText: "Enter the IAS in km/h"),
+          decoration: const InputDecoration(hintText: "Enter the IAS in km/h"),
         ),
       ),
     );
@@ -165,15 +169,16 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 onChanged: (value) {},
                 controller: userInputOverG,
                 decoration:
-                    InputDecoration(hintText: 'Enter the G load number'),
+                    const InputDecoration(hintText: 'Enter the G load number'),
               ),
-              title: Text('Red line notifier (Enter red line G load speed). '),
+              title: const Text(
+                  'Red line notifier (Enter red line G load speed). '),
               actions: [
                 ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text('Cancel')),
+                    child: const Text('Cancel')),
                 ElevatedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context)
@@ -183,7 +188,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 'You will be notified if G load reaches red line load of ${userInputOverG.text}. ')));
                       Navigator.of(context).pop(int.parse(userInputOverG.text));
                     },
-                    child: Text('Notify'))
+                    child: const Text('Notify'))
               ],
             ));
   }
@@ -196,15 +201,17 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               content: TextField(
                 onChanged: (value) {},
                 controller: userInputIasGear,
-                decoration: InputDecoration(hintText: 'Enter the IAS in km/h'),
+                decoration:
+                    const InputDecoration(hintText: 'Enter the IAS in km/h'),
               ),
-              title: Text('Red line notifier (Enter red line gear speed). '),
+              title:
+                  const Text('Red line notifier (Enter red line gear speed). '),
               actions: [
                 ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text('Cancel')),
+                    child: const Text('Cancel')),
                 ElevatedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context)
@@ -215,7 +222,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       Navigator.of(context)
                           .pop(int.parse(userInputIasGear.text));
                     },
-                    child: Text('Notify'))
+                    child: const Text('Notify'))
               ],
             ));
   }
@@ -454,7 +461,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   int? emptyInt = 0;
   String? emptyString = 'No Data';
-  bool? emptyBool = null;
+  bool? emptyBool;
   ValueNotifier<int?> idData = ValueNotifier<int?>(null);
 
   Future<void> updateStateIndicator() async {
@@ -707,7 +714,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     } else {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
-        ..showSnackBar(SnackBar(
+        ..showSnackBar(const SnackBar(
           content: BlinkText(
             'Unable to connect to game server.',
             endColor: Colors.red,
@@ -816,7 +823,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       loadChecker();
       pullUpChecker();
     });
-    Future.delayed(Duration(milliseconds: 250), () {
+    Future.delayed(const Duration(milliseconds: 250), () {
       widget1Opacity = 1;
     });
     receiveDiskValues();
@@ -896,10 +903,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       ),
       keyDownHandler: (_) async {
         windowManager.setAlwaysOnTop(!isAlwaysOnTop);
-        Future.delayed(Duration(milliseconds: 200));
+        Future.delayed(const Duration(milliseconds: 200));
         isAlwaysOnTop = await windowManager.isAlwaysOnTop();
         windowManager.setCustomFrame(isFrameless: true);
-        print(isAlwaysOnTop);
       },
     );
     HotKeyManager.instance
@@ -940,12 +946,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       fuelPercent = (stateData.minFuel / stateData.maxFuel) * 100;
     }
     return AnimatedContainer(
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
         decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
                 Color.fromRGBO(10, 123, 10, 0.403921568627451),
                 Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -961,12 +967,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 color: Colors.pink.withOpacity(boxShadowOpacity),
                 spreadRadius: 4,
                 blurRadius: 10,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               )
             ]),
         child: stateData.minFuel != null && fuelPercent! >= 15.00
             ? TextButton.icon(
-                icon: Icon(Icons.speed),
+                icon: const Icon(Icons.speed),
                 onPressed: () {
                   showFuel = !showFuel;
                 },
@@ -986,7 +992,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     fuelPercent! < 15.00 &&
                     (stateData.height != 32 && stateData.minFuel != 0)
                 ? TextButton.icon(
-                    icon: Icon(Icons.speed),
+                    icon: const Icon(Icons.speed),
                     onPressed: () {
                       showFuel = !showFuel;
                     },
@@ -1004,7 +1010,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     ),
                   )
                 : TextButton.icon(
-                    icon: Icon(Icons.speed),
+                    icon: const Icon(Icons.speed),
                     onPressed: () {
                       showFuel = !showFuel;
                     },
@@ -1024,12 +1030,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   Widget waterTempText() {
     return AnimatedContainer(
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
         decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
                 Color.fromRGBO(10, 123, 10, 0.403921568627451),
                 Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -1045,12 +1051,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 color: Colors.pink.withOpacity(boxShadowOpacity),
                 spreadRadius: 4,
                 blurRadius: 10,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               )
             ]),
         child: stateData.water == null || stateData.water == 15
             ? TextButton.icon(
-                icon: Icon(Icons.water),
+                icon: const Icon(Icons.water),
                 onPressed: () {
                   showWaterTemp = !showWaterTemp;
                 },
@@ -1067,7 +1073,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 ),
               )
             : TextButton.icon(
-                icon: Icon(Icons.water),
+                icon: const Icon(Icons.water),
                 onPressed: () {
                   showWaterTemp = !showWaterTemp;
                 },
@@ -1087,12 +1093,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   Widget altitudeText() {
     return AnimatedContainer(
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
         decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
                 Color.fromRGBO(10, 123, 10, 0.403921568627451),
                 Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -1108,11 +1114,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 color: Colors.pink.withOpacity(boxShadowOpacity),
                 spreadRadius: 4,
                 blurRadius: 10,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               )
             ]),
         child: TextButton.icon(
-          icon: Icon(Icons.height),
+          icon: const Icon(Icons.height),
           onPressed: () {
             showAlt = !showAlt;
           },
@@ -1146,12 +1152,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     ToolDataState.getState();
     averageTasForStall();
     return AnimatedContainer(
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
       height: MediaQuery.of(context).size.height >= 235
           ? normalHeight
           : smallHeight,
       decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [
               Color.fromRGBO(10, 123, 10, 0.403921568627451),
               Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -1167,11 +1173,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               color: Colors.pink.withOpacity(boxShadowOpacity),
               spreadRadius: 4,
               blurRadius: 10,
-              offset: Offset(0, 3),
+              offset: const Offset(0, 3),
             )
           ]),
       child: TextButton.icon(
-          icon: Icon(Icons.arrow_upward),
+          icon: const Icon(Icons.arrow_upward),
           onPressed: () {
             showClimb = !showClimb;
           },
@@ -1227,12 +1233,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   Widget iasText() {
     return AnimatedContainer(
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
         decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
                 Color.fromRGBO(10, 123, 10, 0.403921568627451),
                 Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -1248,12 +1254,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 color: Colors.pink.withOpacity(boxShadowOpacity),
                 spreadRadius: 4,
                 blurRadius: 10,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               )
             ]),
         child: stateData.ias == null || stateData.ias == 0
             ? TextButton.icon(
-                icon: Icon(Icons.speed),
+                icon: const Icon(Icons.speed),
                 onPressed: () {
                   showIas = !showIas;
                 },
@@ -1273,7 +1279,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     indicatorData.mach >= 1 &&
                     stateData.ias != null
                 ? TextButton.icon(
-                    icon: Icon(Icons.speed),
+                    icon: const Icon(Icons.speed),
                     onPressed: () {
                       showIas = !showIas;
                     },
@@ -1290,7 +1296,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     ),
                   )
                 : TextButton.icon(
-                    icon: Icon(Icons.speed),
+                    icon: const Icon(Icons.speed),
                     onPressed: () {
                       showIas = !showIas;
                     },
@@ -1310,12 +1316,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   Widget compassText() {
     return AnimatedContainer(
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
         height: MediaQuery.of(context).size.height >= 235
             ? normalHeight
             : smallHeight,
         decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
                 Color.fromRGBO(10, 123, 10, 0.403921568627451),
                 Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -1331,12 +1337,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 color: Colors.pink.withOpacity(boxShadowOpacity),
                 spreadRadius: 4,
                 blurRadius: 10,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               )
             ]),
         child: indicatorData.compass == '0' || indicatorData.compass == null
             ? TextButton.icon(
-                icon: Icon(Icons.gps_fixed),
+                icon: const Icon(Icons.gps_fixed),
                 onPressed: () {
                   showCompass = !showCompass;
                 },
@@ -1353,7 +1359,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 ),
               )
             : TextButton.icon(
-                icon: Icon(Icons.gps_fixed),
+                icon: const Icon(Icons.gps_fixed),
                 onPressed: () {
                   showCompass = !showCompass;
                 },
@@ -1376,12 +1382,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         valueListenable: idData,
         builder: (BuildContext context, value, Widget? child) {
           return AnimatedContainer(
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
               height: MediaQuery.of(context).size.height >= 235
                   ? normalHeight
                   : smallHeight,
               decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
                       Color.fromRGBO(10, 123, 10, 0.403921568627451),
                       Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -1397,11 +1403,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       color: Colors.red.withOpacity(boxShadowOpacity),
                       spreadRadius: 4,
                       blurRadius: 7,
-                      offset: Offset(0, 3),
+                      offset: const Offset(0, 3),
                     )
                   ]),
               child: TextButton.icon(
-                icon: Icon(Icons.airplanemode_active),
+                icon: const Icon(Icons.airplanemode_active),
                 label: Expanded(
                     child: _isFullNotifOn &&
                             msgData == 'Engine overheated' &&
@@ -1418,7 +1424,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                 fontWeight: FontWeight.bold),
                             endColor: Colors.red,
                             times: 13,
-                            duration: Duration(milliseconds: 300),
+                            duration: const Duration(milliseconds: 300),
                           )
                         : indicatorData.engine != null
                             ? Text(
@@ -1448,12 +1454,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
         return AnimatedContainer(
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
             height: MediaQuery.of(context).size.height >= 235
                 ? normalHeight
                 : smallHeight,
             decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [
                     Color.fromRGBO(10, 123, 10, 0.403921568627451),
                     Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -1469,11 +1475,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     color: Colors.red.withOpacity(boxShadowOpacity),
                     spreadRadius: 4,
                     blurRadius: 7,
-                    offset: Offset(0, 3),
+                    offset: const Offset(0, 3),
                   )
                 ]),
             child: TextButton.icon(
-              icon: Icon(Icons.airplanemode_active),
+              icon: const Icon(Icons.airplanemode_active),
               label: MediaQuery.of(context).size.height >= 235
                   ? Expanded(
                       child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
@@ -1520,12 +1526,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       valueListenable: idData,
       builder: (BuildContext context, value, Widget? child) {
         return AnimatedContainer(
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
             height: MediaQuery.of(context).size.height >= 235
                 ? normalHeight
                 : smallHeight,
             decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [
                     Color.fromRGBO(10, 123, 10, 0.403921568627451),
                     Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -1541,11 +1547,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     color: Colors.red.withOpacity(boxShadowOpacity),
                     spreadRadius: 4,
                     blurRadius: 7,
-                    offset: Offset(0, 3),
+                    offset: const Offset(0, 3),
                   )
                 ]),
             child: TextButton.icon(
-              icon: Icon(Icons.airplanemode_active),
+              icon: const Icon(Icons.airplanemode_active),
               label: Expanded(
                   child: (stateData.oil != null && stateData.oil != 15) &&
                           _isFullNotifOn &&
@@ -1561,7 +1567,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                               fontWeight: FontWeight.bold),
                           endColor: Colors.red,
                           times: 13,
-                          duration: Duration(milliseconds: 200),
+                          duration: const Duration(milliseconds: 200),
                         )
                       : stateData.oil != null && stateData.oil != 15
                           ? Text('Oil Temp= ${stateData.oil} degrees  ',
@@ -1668,11 +1674,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   Widget drawerBuilder() {
     return Drawer(
       child: Container(
-        decoration: BoxDecoration(color: Colors.deepPurple),
+        decoration: const BoxDecoration(color: Colors.deepPurple),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
+            const DrawerHeader(
               curve: Curves.bounceIn,
               duration: Duration(seconds: 12),
               decoration: BoxDecoration(
@@ -1685,7 +1691,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
                     final SharedPreferences prefs = await _prefs;
@@ -1698,21 +1704,21 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     prefs.setBool("isFullNotifOn", isFullNotifOn);
                   },
                   label: _isFullNotifOn
-                      ? Text(
+                      ? const Text(
                           'Notifications: On',
                           style: TextStyle(color: Colors.green),
                         )
-                      : Text(
+                      : const Text(
                           'Notifications: Off',
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isFullNotifOn
-                      ? Icon(MaterialCommunityIcons.water)
-                      : Icon(Icons.notifications_off)),
+                      ? const Icon(MaterialCommunityIcons.water)
+                      : const Icon(Icons.notifications_off)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
                     final SharedPreferences prefs = await _prefs;
@@ -1725,21 +1731,21 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     prefs.setBool("isEngineDeathNotifOn", isEngineDeathNotifOn);
                   },
                   label: _isEngineDeathNotifOn
-                      ? Text(
+                      ? const Text(
                           'Engine Notification: On',
                           style: TextStyle(color: Colors.green),
                         )
-                      : Text(
+                      : const Text(
                           'Engine Notification: Off',
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isEngineDeathNotifOn
-                      ? Icon(MaterialCommunityIcons.engine)
-                      : Icon(Icons.notifications_off)),
+                      ? const Icon(MaterialCommunityIcons.engine)
+                      : const Icon(Icons.notifications_off)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
                     final SharedPreferences prefs = await _prefs;
@@ -1751,21 +1757,21 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     prefs.setBool("isOilNotifOn", isOilNotifOn);
                   },
                   label: _isOilNotifOn
-                      ? Text(
+                      ? const Text(
                           'Oil Notification: On',
                           style: TextStyle(color: Colors.green),
                         )
-                      : Text(
+                      : const Text(
                           'Oil Notification: Off',
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isOilNotifOn
-                      ? Icon(MaterialCommunityIcons.oil_temperature)
-                      : Icon(Icons.notifications_off)),
+                      ? const Icon(MaterialCommunityIcons.oil_temperature)
+                      : const Icon(Icons.notifications_off)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
                     final SharedPreferences prefs = await _prefs;
@@ -1778,21 +1784,21 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     prefs.setBool("isWaterNotifOn", isWaterNotifOn);
                   },
                   label: _isWaterNotifOn
-                      ? Text(
+                      ? const Text(
                           'Water Notification: On',
                           style: TextStyle(color: Colors.green),
                         )
-                      : Text(
+                      : const Text(
                           'Water Notification: Off',
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isWaterNotifOn
-                      ? Icon(MaterialCommunityIcons.water)
-                      : Icon(Icons.notifications_off)),
+                      ? const Icon(MaterialCommunityIcons.water)
+                      : const Icon(Icons.notifications_off)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
                     final SharedPreferences prefs = await _prefs;
@@ -1805,22 +1811,22 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     prefs.setBool("isTrayEnabled", isTrayEnabled);
                   },
                   label: _isTrayEnabled
-                      ? Text(
+                      ? const Text(
                           'Minimize to tray: On',
                           style: TextStyle(color: Colors.green),
                         )
-                      : Text(
+                      : const Text(
                           'Minimize to tray: Off',
                           style: TextStyle(color: Colors.red),
                         ),
-                  icon: Icon(MaterialCommunityIcons.tray)),
+                  icon: const Icon(MaterialCommunityIcons.tray)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                label: Text('Go to information page'),
-                icon: Icon(
+                label: const Text('Go to information page'),
+                icon: const Icon(
                   Icons.info,
                   color: Colors.cyanAccent,
                 ),
@@ -1831,11 +1837,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                 label: Text(
                     'Current red line IAS for flaps: ${_textForIasFlap.value}Km/h'),
-                icon: Icon(
+                icon: const Icon(
                   MaterialCommunityIcons.airplane_takeoff,
                   color: Colors.red,
                 ),
@@ -1853,7 +1859,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                 label: Text(
                     'Current red line IAS for gears: ${_textForIasGear.value}Km/h'),
@@ -1868,7 +1874,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   });
                   prefs.setInt("textForIasGear", textForIasGear);
                 },
-                icon: Icon(
+                icon: const Icon(
                   EvilIcons.gear,
                   color: Colors.deepPurple,
                 ),
@@ -1876,7 +1882,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   label:
                       Text('Current red line G load: ${_textForGLoad.value}G'),
@@ -1891,30 +1897,30 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     });
                     prefs.setInt("textForGLoad", textForGLoad);
                   },
-                  icon: Icon(
+                  icon: const Icon(
                     MaterialCommunityIcons.airplane_landing,
                     color: Colors.amber,
                   )),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                  label: Text('Enter transparent mode'),
+                  label: const Text('Enter transparent mode'),
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/transparent');
                   },
-                  icon: Icon(MaterialCommunityIcons.dock_window)),
+                  icon: const Icon(MaterialCommunityIcons.dock_window)),
             ),
             Container(
               alignment: Alignment.topCenter,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: chatBuilder(
                   chatSenderSecond, chatMsgSecond, chatPrefixSecond),
             ),
             Container(
               alignment: Alignment.topCenter,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child:
                   chatBuilder(chatSenderFirst, chatMsgFirst, chatPrefixFirst),
             ),
@@ -1935,30 +1941,31 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     return ListView(
       children: [
         AnimatedSwitcher(
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
             child: showThrottle ? engineThrottleText() : null),
         AnimatedSwitcher(
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
             child: showEngineTemp ? engineTempText() : null),
         AnimatedSwitcher(
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
             child: showFuel ? fuelIndicator() : null),
         AnimatedSwitcher(
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
             child: showAlt ? altitudeText() : null),
         AnimatedSwitcher(
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
             child: showCompass ? compassText() : null),
         AnimatedSwitcher(
-            duration: Duration(seconds: 3), child: showIas ? iasText() : null),
+            duration: const Duration(seconds: 3),
+            child: showIas ? iasText() : null),
         AnimatedSwitcher(
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
             child: showClimb ? climbRate() : null),
         AnimatedSwitcher(
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
             child: showOilTemp ? oilTempText() : null),
         AnimatedSwitcher(
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
             child: showWaterTemp ? waterTempText() : null)
       ],
     );
@@ -1972,17 +1979,17 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           children: [
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showThrottle ? engineThrottleText() : null),
             ),
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showEngineTemp ? engineTempText() : null),
             ),
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showFuel ? fuelIndicator() : null),
             ),
           ],
@@ -1992,12 +1999,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           children: [
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showAlt ? altitudeText() : null),
             ),
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showCompass ? compassText() : null),
             ),
           ],
@@ -2007,12 +2014,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           children: [
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showIas ? iasText() : null),
             ),
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showClimb ? climbRate() : null),
             ),
           ],
@@ -2022,12 +2029,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           children: [
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showOilTemp ? oilTempText() : null),
             ),
             Expanded(
               child: AnimatedSwitcher(
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                   child: showWaterTemp ? waterTempText() : null),
             )
           ],
@@ -2041,7 +2048,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       child: Container(
           height: MediaQuery.of(context).size.height,
           decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [
                   Color.fromRGBO(10, 123, 10, 0.403921568627451),
                   Color.fromRGBO(0, 50, 158, 0.4196078431372549),
@@ -2057,13 +2064,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   color: Colors.pink.withOpacity(boxShadowOpacity),
                   spreadRadius: 4,
                   blurRadius: 10,
-                  offset: Offset(0, 3),
+                  offset: const Offset(0, 3),
                 )
               ]),
           child: TextButton.icon(
-            icon: Icon(Icons.signal_wifi_statusbar_connected_no_internet_4),
+            icon:
+                const Icon(Icons.signal_wifi_statusbar_connected_no_internet_4),
             onPressed: () {},
-            label: Expanded(
+            label: const Expanded(
               child: Text(
                 'No Data.',
                 textAlign: TextAlign.center,
@@ -2084,10 +2092,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   //     mouseDown: const Color(0xFF805306),
   //     iconMouseOver: const Color(0xFF805306),
   //     iconMouseDown: const Color(0xFFFFD500));
-  var ramUsage;
-  var ramTotal;
-  var chatColorFirst;
-  var chatColorSecond;
+
+  Color? chatColorFirst;
+  Color? chatColorSecond;
 
   Player pullUpPlayer = Player(id: 3);
   Player gearUpPlayer = Player(id: 2);
@@ -2115,16 +2122,16 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     'data/flutter_assets/assets',
     'WARNING.png'
   ]);
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
-  ValueNotifier<int?> _textForIasFlap = ValueNotifier(2000);
-  ValueNotifier<int?> _textForIasGear = ValueNotifier(2000);
-  ValueNotifier<int?> _textForGLoad = ValueNotifier(12);
+  final ValueNotifier<int?> _textForIasFlap = ValueNotifier(2000);
+  final ValueNotifier<int?> _textForIasGear = ValueNotifier(2000);
+  final ValueNotifier<int?> _textForGLoad = ValueNotifier(12);
   bool _isTrayEnabled = true;
-  bool _removeIconAfterRestored = true;
-  bool _showWindowBelowTrayIcon = false;
+  final bool _removeIconAfterRestored = true;
+  final bool _showWindowBelowTrayIcon = false;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
   bool isUserGLoadNew = false;
@@ -2159,7 +2166,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   int counter = 0;
   int? firstSpeed;
   int? secondSpeed;
-  Color borderColor = Color(0xFF805306);
+  Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
 
   final windowManager = WindowManager.instance;
@@ -2208,8 +2215,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                         windowManager.terminate();
                       },
                       colors: WindowButtonColors(
-                          mouseOver: Color(0xFFD32F2F),
-                          mouseDown: Color(0xFFB71C1C),
+                          mouseOver: const Color(0xFFD32F2F),
+                          mouseDown: const Color(0xFFB71C1C),
                           iconNormal: Colors.white,
                           iconMouseOver: Colors.white),
                     ),
@@ -2245,28 +2252,24 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                                   bool wakeLockEnabled = await Wakelock.enabled;
                                   if (!wakeLockEnabled) {
                                     ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content:
-                                          const Text("Screen timeout enabled"),
+                                        .showSnackBar(const SnackBar(
+                                      content: Text("Screen timeout enabled"),
                                       duration: Duration(seconds: 3),
                                     ));
                                   } else {
                                     ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content:
-                                          const Text("Screen timeout disabled"),
+                                        .showSnackBar(const SnackBar(
+                                      content: Text("Screen timeout disabled"),
                                       duration: Duration(seconds: 3),
                                     ));
                                   }
-                                  print(wakeLockEnabled);
-                                  print(wakeLock);
                                 },
                                 icon: wakeLock
-                                    ? Icon(
+                                    ? const Icon(
                                         Icons.timelapse_outlined,
                                         color: Colors.green,
                                       )
-                                    : Icon(
+                                    : const Icon(
                                         Icons.timelapse_outlined,
                                         color: Colors.red,
                                       ))
@@ -2274,7 +2277,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                         leading: Builder(
                           builder: (BuildContext context) {
                             return IconButton(
-                              icon: Icon(Icons.list),
+                              icon: const Icon(Icons.list),
                               onPressed: () {
                                 Scaffold.of(context).openDrawer();
                               },
@@ -2290,12 +2293,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                             : (stateData.height == 32 &&
                                     stateData.minFuel == 0 &&
                                     stateData.flap == 0)
-                                ? Text("You're in Hangar...")
-                                : Text(
+                                ? const Text("You're in Hangar...")
+                                : const Text(
                                     'No vehicle data available / Not flying.'))
                     : null,
                 body: AnimatedOpacity(
-                    duration: Duration(seconds: 3),
+                    duration: const Duration(seconds: 3),
                     opacity: widget1Opacity,
                     child: MediaQuery.of(context).size.height >= 235 &&
                             (indicatorData.valid == true &&
@@ -2361,7 +2364,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       );
 
       windowManager.setPosition(newPosition);
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
     }
     _handleClickRestore();
   }

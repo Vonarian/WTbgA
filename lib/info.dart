@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 // import 'package:flutter_spinkit/flutter_spinkit.dart';
-// import 'stateReceiver.dart';
+// import 'state_receiver.dart';
 
 class InfoPage extends StatefulWidget {
+  const InfoPage({Key? key}) : super(key: key);
+
   @override
   _InfoPageState createState() => _InfoPageState();
 }
@@ -11,11 +13,11 @@ class _InfoPageState extends State<InfoPage> {
   drawerBuilder() {
     return Drawer(
       child: Container(
-        decoration: BoxDecoration(color: Colors.blueGrey),
+        decoration: const BoxDecoration(color: Colors.blueGrey),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
+            const DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.deepPurple,
               ),
@@ -24,63 +26,63 @@ class _InfoPageState extends State<InfoPage> {
                 size: 100,
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 24,
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () {},
-                  label: Text(
+                  label: const Text(
                     'Notifications: On/Off',
                     style: TextStyle(color: Colors.green),
                   ),
-                  icon: Icon(Icons.notifications)),
+                  icon: const Icon(Icons.notifications)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () {},
-                  label: Text(
+                  label: const Text(
                     'Engine Notification: On/Off',
                     style: TextStyle(color: Colors.green),
                   ),
-                  icon: Icon(Icons.notifications)),
+                  icon: const Icon(Icons.notifications)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () {},
-                  label: Text(
+                  label: const Text(
                     'Oil Notification: On/Off',
                     style: TextStyle(color: Colors.green),
                   ),
-                  icon: Icon(Icons.notifications)),
+                  icon: const Icon(Icons.notifications)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () {},
-                  label: Text(
+                  label: const Text(
                     'Water Notification: On/Off',
                     style: TextStyle(color: Colors.green),
                   ),
-                  icon: Icon(Icons.notifications)),
+                  icon: const Icon(Icons.notifications)),
             ),
             Container(
               alignment: Alignment.topLeft,
-              decoration: BoxDecoration(color: Colors.black87),
+              decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () {},
-                  label: Text(
+                  label: const Text(
                     'Minimize to tray: On/Off',
                     style: TextStyle(color: Colors.green),
                   ),
-                  icon: Icon(Icons.minimize_rounded)),
+                  icon: const Icon(Icons.minimize_rounded)),
             ),
           ],
         ),
@@ -95,7 +97,7 @@ class _InfoPageState extends State<InfoPage> {
       appBar: AppBar(
         backgroundColor: Colors.blueAccent,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pushReplacementNamed(context, '/home');
           },
@@ -124,7 +126,7 @@ class _InfoPageState extends State<InfoPage> {
           Builder(
             builder: (BuildContext context) {
               return IconButton(
-                icon: Icon(Icons.list),
+                icon: const Icon(Icons.list),
                 onPressed: () {
                   Scaffold.of(context).openDrawer();
                 },
@@ -133,7 +135,7 @@ class _InfoPageState extends State<InfoPage> {
           ),
         ],
         centerTitle: true,
-        title: Text(
+        title: const Text(
           'Information Page',
           style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
         ),
@@ -160,13 +162,13 @@ class _InfoPageState extends State<InfoPage> {
         onPressed: () {
           ScaffoldMessenger.of(context)
             ..removeCurrentSnackBar()
-            ..showSnackBar(SnackBar(
+            ..showSnackBar(const SnackBar(
               content: Text(
                   'This button will toggle all notifications with one click.'),
               duration: Duration(seconds: 5),
             ));
         },
-        child: Icon(Icons.notifications),
+        child: const Icon(Icons.notifications),
       ),
     );
   }
@@ -176,7 +178,7 @@ class _InfoPageState extends State<InfoPage> {
       child: Container(
         height: 60,
         decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
                 Color.fromRGBO(10, 25, 123, 0.5),
                 Color.fromRGBO(200, 200, 200, 0.5),
@@ -192,7 +194,7 @@ class _InfoPageState extends State<InfoPage> {
                 color: Colors.pink.withOpacity(0.2),
                 spreadRadius: 4,
                 blurRadius: 10,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               )
             ]),
         child: Expanded(
@@ -202,12 +204,12 @@ class _InfoPageState extends State<InfoPage> {
                 ..removeCurrentSnackBar()
                 ..showSnackBar(SnackBar(
                   content: Text(buttonText),
-                  duration: Duration(seconds: 5),
+                  duration: const Duration(seconds: 5),
                 ));
             },
             child: Text(
               text,
-              style: TextStyle(fontSize: 27, color: Colors.pink),
+              style: const TextStyle(fontSize: 27, color: Colors.pink),
             ),
           ),
         ),
@@ -223,7 +225,7 @@ class _InfoPageState extends State<InfoPage> {
             ..removeCurrentSnackBar()
             ..showSnackBar(SnackBar(
               content: Text(buttonText),
-              duration: Duration(seconds: 5),
+              duration: const Duration(seconds: 5),
             ));
         },
         icon: Icon(buttonIcon, color: buttonColor),

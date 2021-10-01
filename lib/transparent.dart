@@ -6,11 +6,11 @@ import 'package:blinking_text/blinking_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
-import 'package:wtbgassistant/stateReceiver.dart';
+import 'package:wtbgassistant/state_receiver.dart';
 
-import 'Home.dart';
 import 'damage_event.dart';
-import 'indicatorReceiver.dart';
+import 'home.dart';
+import 'indicator_receiver.dart';
 
 class TransparentPage extends StatefulWidget {
   @override
