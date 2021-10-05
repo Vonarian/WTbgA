@@ -1,22 +1,24 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
-import 'package:wtbgassistant/info.dart';
-import 'package:wtbgassistant/transparent.dart';
 
 import 'home.dart';
+import 'info.dart';
+import 'transparent.dart';
 
 ToastService? service;
 // final response = ResponseUI.instance;
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Use it only after calling `hiddenWindowAtLaunch`
   // Must add this line.
   WidgetsFlutterBinding.ensureInitialized();
   Acrylic.initialize();
@@ -68,16 +70,16 @@ void main() async {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => Loading(),
-        '/home': (context) => Home(),
+        '/': (context) => const Loading(),
+        '/home': (context) => const Home(),
         '/info': (context) => const InfoPage(),
         '/transparent': (context) => TransparentPage()
       },
     ),
   );
-  doWhenWindowReady(() {
-    final win = appWindow;
-    win.title = "WTbgA";
-    win.show();
-  });
+  // doWhenWindowReady(() {
+  //   final win = appWindow;
+  //   win.title = "WTbgA";
+  //   win.show();
+  // });
 }

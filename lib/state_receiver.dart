@@ -17,6 +17,7 @@ class ToolDataState {
   double? climb;
   bool valid;
   double? load;
+  double? aoa;
   ToolDataState(
       {required this.ias,
       required this.tas,
@@ -29,7 +30,8 @@ class ToolDataState {
       required this.valid,
       this.climb,
       this.gear,
-      this.load});
+      this.load,
+      this.aoa});
 
   static Future<ToolDataState> getState() async {
     try {
@@ -48,7 +50,8 @@ class ToolDataState {
           valid: data['valid'],
           climb: data['Vy, m/s'],
           gear: data['gear, %'],
-          load: data['Ny']);
+          load: data['Ny'],
+          aoa: data['AoA, deg']);
     } catch (e, stackTrace) {
       log('Encountered error: $e', stackTrace: stackTrace);
       rethrow;

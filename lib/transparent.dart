@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:blinking_text/blinking_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
@@ -249,14 +248,6 @@ class _TransparentPageState extends State<TransparentPage> {
     updateMsgId();
     keyRegister();
 
-    doWhenWindowReady(() async {
-      final win = appWindow;
-      win.alignment = Alignment.center;
-      win.title = "WTbgA";
-      win.show();
-      bool isAlwaysOnTop = await windowManager.isAlwaysOnTop();
-      windowManager.setAlwaysOnTop(isAlwaysOnTop);
-    });
     const _timer = Duration(milliseconds: 2000);
     Timer.periodic(_timer, (Timer t) {
       updateData();

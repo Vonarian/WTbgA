@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:blinking_text/blinking_text.dart';
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/foundation.dart';
@@ -228,7 +228,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   void userRedLineFlap() {
-    if (!mounted) return;
+    if (stateData.flap == null) return;
     if (stateData.ias != null && _textForIasFlap.value != null) {
       if (stateData.ias >= _textForIasFlap.value &&
           isUserIasFlapNew &&
@@ -539,6 +539,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   // }
 
   void flapChecker() {
+    if (indicatorData.flap1 == null) return;
     if (((indicatorData.flap1 != indicatorData.flap2) ||
         msgData == 'Asymmetric flap extension' && isDamageIDNew)) {
       Toast toast = Toast(
@@ -558,68 +559,61 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     }
   }
 
-  void highAcceleration() {
-    if (!mounted) return;
-    if (secondSpeed == null) {
-      return;
-    }
-    double? avgTAS = ((secondSpeed! - firstSpeed!) / 2);
-    if (avgTAS >= 10 && counter == 0) {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳WARNING!!',
-          subtitle: 'Very high acceleration, be careful',
-          image: File(warningLogo));
-      service!.show(toast);
-      toast.dispose();
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
-      player.play();
-    }
-    if (counter == 1) {
-      Future.delayed(const Duration(seconds: 6), () {
-        setState(() {
-          counter = 0;
-        });
-      });
-    }
-  }
+  // void highAcceleration() {
+  //   if (!mounted) return;
+  //   if (secondSpeed == null) {
+  //     return;
+  //   }
+  //   double? avgTAS = ((secondSpeed! - firstSpeed!) / 2);
+  //   if (avgTAS >= 10 && counter == 0) {
+  //     Toast toast = Toast(
+  //         type: ToastType.imageAndText02,
+  //         title: '😳WARNING!!',
+  //         subtitle: 'Very high acceleration, be careful',
+  //         image: File(warningLogo));
+  //     service!.show(toast);
+  //     toast.dispose();
+  //     service?.stream.listen((event) {
+  //       if (event is ToastActivated) {
+  //         windowManager.show();
+  //       }
+  //     });
+  //     player.play();
+  //     counter++;
+  //   }
+  //   if (counter == 1) {
+  //     Future.delayed(const Duration(seconds: 6), () {
+  //       setState(() {
+  //         counter = 0;
+  //       });
+  //     });
+  //   }
+  // }
 
-  Future averageTasForStall() async {
+  Future averageIasForStall() async {
     if (!mounted) return;
     if (secondSpeed == null) return;
-    if (stateData.tas != null) {
+    if (stateData.ias != null) {
       setState(() {
-        firstSpeed = stateData.tas;
+        firstSpeed = stateData.ias;
       });
       Future.delayed(const Duration(seconds: 2), () {
         setState(() {
-          secondSpeed = stateData.tas;
+          secondSpeed = stateData.ias;
         });
-        return avgTAS = ((secondSpeed! - firstSpeed!) / 2);
       });
-      Future.delayed(
-          const Duration(milliseconds: 2500), () => highAcceleration());
     }
   }
 
-  Future<void> averageTAS() async {
-    if (!mounted) return;
-    if (stateData.tas != null && stateData.tas >= 450 && stateData.flap > 0) {
-      setState(() {
-        firstSpeed = stateData.tas;
-      });
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          secondSpeed = stateData.tas;
-        });
-        return avgTAS = ((secondSpeed! - firstSpeed!) / 2);
-      });
-      Future.delayed(
-          const Duration(milliseconds: 2500), () => highAcceleration());
+  Future<void> critAoaChecker() async {
+    // print(stateData.aoa);
+    // print(critAoa);
+    if (stateData.aoa == null || critAoa == null) return;
+    if (stateData.gear > 0) return;
+
+    if (critAoa != null && (stateData.aoa >= (critAoa! * -1))) {
+      pullUpPlayer.play();
+      print('pullUpPlayed');
     }
   }
 
@@ -777,14 +771,18 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       flapChecker();
       updateChat();
       chatSettingsManager();
+      critAoaChecker();
+      // print(stateData.aoa);
       // updateRam();
     });
     const oneSec = Duration(milliseconds: 200);
-    Timer.periodic(oneSec, (Timer t) => updateStateIndicator());
+    Timer.periodic(oneSec, (Timer t) {
+      updateStateIndicator();
+    });
     const averageTimer = Duration(milliseconds: 2000);
     Timer.periodic(averageTimer, (Timer t) {
-      averageTAS();
-      averageTasForStall();
+      // averageTAS();
+      averageIasForStall();
       hostChecker();
     });
     windowManager.addListener(this);
@@ -822,12 +820,39 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       userRedLineGear();
       loadChecker();
       pullUpChecker();
+      _csvThing();
     });
     Future.delayed(const Duration(milliseconds: 250), () {
       widget1Opacity = 1;
     });
     receiveDiskValues();
   }
+
+  Future<void> _csvThing() async {
+    final csvString = File(csvPath).readAsStringSync();
+    Future.delayed(const Duration(milliseconds: 250), () {
+      critAoa = convertCsvFileToMap(
+          csvString)[indicatorData.name.toString().toLowerCase()];
+      // print(convertCsvFileToMap(
+      //     csvString)[indicatorData.name.toString().toLowerCase()]);
+
+      // print(indicatorData.name.toString().toLowerCase());
+      // print(convertCsvFileToMap(csvString).containsKey('f_5e'));
+    });
+    // a-20g: -13.0
+    // a-26b: -12.0
+    // a-26b_10: -12.0
+    // a-26c: -12.0
+    // a2d: -17.2
+    // a5m4: -20.0
+  }
+
+  Map<String, double> convertCsvFileToMap(String csvString) => {
+        for (final columns in LineSplitter.split(csvString)
+            .skip(1)
+            .map((line) => line.split(';')))
+          columns.first: double.parse(columns.last.split(',').last)
+      };
 
   Future<void> _trayInit() async {
     await TrayManager.instance.setIcon(
@@ -894,20 +919,20 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         ), keyDownHandler: (_) {
       windowManager.terminate();
     });
-    bool isAlwaysOnTop = await windowManager.isAlwaysOnTop();
+    // bool isAlwaysOnTop = await windowManager.isAlwaysOnTop();
 
-    HotKeyManager.instance.register(
-      HotKey(
-        KeyCode.digit2,
-        modifiers: [KeyModifier.alt],
-      ),
-      keyDownHandler: (_) async {
-        windowManager.setAlwaysOnTop(!isAlwaysOnTop);
-        Future.delayed(const Duration(milliseconds: 200));
-        isAlwaysOnTop = await windowManager.isAlwaysOnTop();
-        windowManager.setCustomFrame(isFrameless: true);
-      },
-    );
+    // HotKeyManager.instance.register(
+    //   HotKey(
+    //     KeyCode.digit2,
+    //     modifiers: [KeyModifier.alt],
+    //   ),
+    //   keyDownHandler: (_) async {
+    //     windowManager.setAlwaysOnTop(!isAlwaysOnTop);
+    //     Future.delayed(const Duration(milliseconds: 200));
+    //     isAlwaysOnTop = await windowManager.isAlwaysOnTop();
+    //     windowManager.setCustomFrame(isFrameless: true);
+    //   },
+    // );
     HotKeyManager.instance
         .register(HotKey(KeyCode.backspace, modifiers: [KeyModifier.alt]),
             keyDownHandler: (_) {
@@ -976,16 +1001,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 onPressed: () {
                   showFuel = !showFuel;
                 },
-                label: Expanded(
-                  child: Text(
-                    'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 2,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+                label: Text(
+                  'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
                 ),
               )
             : stateData.minFuel != null &&
@@ -996,17 +1019,15 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     onPressed: () {
                       showFuel = !showFuel;
                     },
-                    label: Expanded(
-                      child: BlinkText(
-                        'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 20,
-                            letterSpacing: 2,
-                            color: textColor,
-                            fontWeight: FontWeight.bold),
-                        endColor: Colors.red,
-                      ),
+                    label: BlinkText(
+                      'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: textColor,
+                          fontWeight: FontWeight.bold),
+                      endColor: Colors.red,
                     ),
                   )
                 : TextButton.icon(
@@ -1014,16 +1035,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     onPressed: () {
                       showFuel = !showFuel;
                     },
-                    label: Expanded(
-                      child: Text(
-                        'No Data.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 20,
-                            letterSpacing: 2,
-                            color: textColor,
-                            fontWeight: FontWeight.bold),
-                      ),
+                    label: Text(
+                      'No Data.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: textColor,
+                          fontWeight: FontWeight.bold),
                     ),
                   ));
   }
@@ -1060,16 +1079,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 onPressed: () {
                   showWaterTemp = !showWaterTemp;
                 },
-                label: Expanded(
-                  child: Text(
-                    'Not water-cooled / No data available!  ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 2,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+                label: Text(
+                  'Not water-cooled / No data available!  ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
                 ),
               )
             : TextButton.icon(
@@ -1077,16 +1094,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 onPressed: () {
                   showWaterTemp = !showWaterTemp;
                 },
-                label: Expanded(
-                  child: Text(
-                    'Water Temp = ${stateData.water!} degrees  ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 2,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+                label: Text(
+                  'Water Temp = ${stateData.water!} degrees  ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
                 ),
               ));
   }
@@ -1123,34 +1138,30 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             showAlt = !showAlt;
           },
           label: stateData.height != null
-              ? Expanded(
-                  child: Text(
-                    'Altitude: ${stateData.height} meters ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 2,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+              ? Text(
+                  'Altitude: ${stateData.height} meters ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
                 )
-              : Expanded(
-                  child: Text(
-                    'No data available. ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 2,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+              : Text(
+                  'No data available. ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
                 ),
         ));
   }
 
   Widget climbRate() {
     ToolDataState.getState();
-    averageTasForStall();
+    averageIasForStall();
     return AnimatedContainer(
       duration: const Duration(seconds: 2),
       height: MediaQuery.of(context).size.height >= 235
@@ -1196,8 +1207,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           stateData.climb < 10) &&
                       stateData.ias != 0 &&
                       stateData.height > 250
-              ? Expanded(
-                  child: BlinkText(
+              ? BlinkText(
                   'Absolute Climb rate = ${stateData.climb} m/s (Possible stall!)',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -1206,10 +1216,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                       color: textColor,
                       fontWeight: FontWeight.bold),
                   endColor: Colors.red,
-                ))
+                )
               : stateData.climb != null && stateData.climb != 0.0
-                  ? Expanded(
-                      child: Text(
+                  ? Text(
                       'Absolute Climb rate = ${stateData.climb} m/s',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -1217,9 +1226,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           letterSpacing: 2,
                           color: textColor,
                           fontWeight: FontWeight.bold),
-                    ))
-                  : Expanded(
-                      child: Text(
+                    )
+                  : Text(
                       'No Data. ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -1227,7 +1235,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           letterSpacing: 2,
                           color: textColor,
                           fontWeight: FontWeight.bold),
-                    ))),
+                    )),
     );
   }
 
@@ -1263,16 +1271,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 onPressed: () {
                   showIas = !showIas;
                 },
-                label: Expanded(
-                  child: Text(
-                    'Stationary / No data!  ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 2,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+                label: Text(
+                  'Stationary / No data!  ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
                 ),
               )
             : indicatorData.mach != null &&
@@ -1283,16 +1289,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     onPressed: () {
                       showIas = !showIas;
                     },
-                    label: Expanded(
-                      child: Text(
-                        'IAS = ${stateData.ias!} km/h (Above Mach) ',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 20,
-                            letterSpacing: 2,
-                            color: textColor,
-                            fontWeight: FontWeight.bold),
-                      ),
+                    label: Text(
+                      'IAS = ${stateData.ias!} km/h (Above Mach) ',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: textColor,
+                          fontWeight: FontWeight.bold),
                     ),
                   )
                 : TextButton.icon(
@@ -1300,16 +1304,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     onPressed: () {
                       showIas = !showIas;
                     },
-                    label: Expanded(
-                      child: Text(
-                        'IAS = ${stateData.ias!} km/h ',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 20,
-                            letterSpacing: 2,
-                            color: textColor,
-                            fontWeight: FontWeight.bold),
-                      ),
+                    label: Text(
+                      'IAS = ${stateData.ias!} km/h ',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: textColor,
+                          fontWeight: FontWeight.bold),
                     ),
                   ));
   }
@@ -1346,16 +1348,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 onPressed: () {
                   showCompass = !showCompass;
                 },
-                label: Expanded(
-                  child: Text(
-                    'No data.  ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 2,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+                label: Text(
+                  'No data.  ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
                 ),
               )
             : TextButton.icon(
@@ -1363,16 +1363,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 onPressed: () {
                   showCompass = !showCompass;
                 },
-                label: Expanded(
-                  child: Text(
-                    'Compass = ${indicatorData.compass?.toStringAsFixed(0)} degrees ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 2,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+                label: Text(
+                  'Compass = ${indicatorData.compass?.toStringAsFixed(0)} degrees ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 2,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
                 ),
               ));
   }
@@ -1408,40 +1406,39 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   ]),
               child: TextButton.icon(
                 icon: const Icon(Icons.airplanemode_active),
-                label: Expanded(
-                    child: _isFullNotifOn &&
-                            msgData == 'Engine overheated' &&
-                            run &&
-                            indicatorData.engine != 'nul' &&
-                            indicatorData.engine != null
-                        ? BlinkText(
-                            'Engine Temp= ${(indicatorData!.engine.toStringAsFixed(0))} degrees  ',
+                label: _isFullNotifOn &&
+                        msgData == 'Engine overheated' &&
+                        run &&
+                        indicatorData.engine != 'nul' &&
+                        indicatorData.engine != null
+                    ? BlinkText(
+                        'Engine Temp= ${(indicatorData!.engine.toStringAsFixed(0))} degrees  ',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 20,
+                            letterSpacing: 2,
+                            color: textColor,
+                            fontWeight: FontWeight.bold),
+                        endColor: Colors.red,
+                        times: 13,
+                        duration: const Duration(milliseconds: 300),
+                      )
+                    : indicatorData.engine != null
+                        ? Text(
+                            'Engine Temp= ${(indicatorData.engine.toStringAsFixed(0))} degrees  ',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontSize: 20,
                                 letterSpacing: 2,
                                 color: textColor,
-                                fontWeight: FontWeight.bold),
-                            endColor: Colors.red,
-                            times: 13,
-                            duration: const Duration(milliseconds: 300),
-                          )
-                        : indicatorData.engine != null
-                            ? Text(
-                                'Engine Temp= ${(indicatorData.engine.toStringAsFixed(0))} degrees  ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold))
-                            : Text('No data.  ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    color: textColor,
-                                    fontWeight: FontWeight.bold))),
+                                fontWeight: FontWeight.bold))
+                        : Text('No data.  ',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 20,
+                                letterSpacing: 2,
+                                color: textColor,
+                                fontWeight: FontWeight.bold)),
                 onPressed: () {
                   showEngineTemp = !showEngineTemp;
                 },
@@ -1481,38 +1478,40 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             child: TextButton.icon(
               icon: const Icon(Icons.airplanemode_active),
               label: MediaQuery.of(context).size.height >= 235
-                  ? Expanded(
-                      child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
-                          ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  letterSpacing: 2,
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold))
-                          : Text('No data.  ',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  letterSpacing: 2,
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold)))
-                  : Expanded(
-                      child: indicatorData.throttle != 'null' && indicatorData.throttle != 'nul'
-                          ? Text('Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  letterSpacing: 2,
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold))
-                          : Text('No data.  ',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  letterSpacing: 2,
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold))),
+                  ? indicatorData.throttle != 'null' &&
+                          indicatorData.throttle != 'nul'
+                      ? Text(
+                          'Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 20,
+                              letterSpacing: 2,
+                              color: textColor,
+                              fontWeight: FontWeight.bold))
+                      : Text('No data.  ',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 20,
+                              letterSpacing: 2,
+                              color: textColor,
+                              fontWeight: FontWeight.bold))
+                  : indicatorData.throttle != 'null' &&
+                          indicatorData.throttle != 'nul'
+                      ? Text(
+                          'Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 20,
+                              letterSpacing: 2,
+                              color: textColor,
+                              fontWeight: FontWeight.bold))
+                      : Text('No data.  ',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 13,
+                              letterSpacing: 2,
+                              color: textColor,
+                              fontWeight: FontWeight.bold)),
               onPressed: () {
                 showThrottle = !showThrottle;
               },
@@ -1552,38 +1551,37 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                 ]),
             child: TextButton.icon(
               icon: const Icon(Icons.airplanemode_active),
-              label: Expanded(
-                  child: (stateData.oil != null && stateData.oil != 15) &&
-                          _isFullNotifOn &&
-                          msgData == "Oil overheated" &&
-                          run
-                      ? BlinkText(
-                          'Oil Temp= ${stateData.oil} degrees  ',
+              label: (stateData.oil != null && stateData.oil != 15) &&
+                      _isFullNotifOn &&
+                      msgData == "Oil overheated" &&
+                      run
+                  ? BlinkText(
+                      'Oil Temp= ${stateData.oil} degrees  ',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          letterSpacing: 2,
+                          color: textColor,
+                          fontWeight: FontWeight.bold),
+                      endColor: Colors.red,
+                      times: 13,
+                      duration: const Duration(milliseconds: 200),
+                    )
+                  : stateData.oil != null && stateData.oil != 15
+                      ? Text('Oil Temp= ${stateData.oil} degrees  ',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 20,
                               letterSpacing: 2,
                               color: textColor,
-                              fontWeight: FontWeight.bold),
-                          endColor: Colors.red,
-                          times: 13,
-                          duration: const Duration(milliseconds: 200),
-                        )
-                      : stateData.oil != null && stateData.oil != 15
-                          ? Text('Oil Temp= ${stateData.oil} degrees  ',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  letterSpacing: 2,
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold))
-                          : Text('No data.  ',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  letterSpacing: 2,
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold))),
+                              fontWeight: FontWeight.bold))
+                      : Text('No data.  ',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 20,
+                              letterSpacing: 2,
+                              color: textColor,
+                              fontWeight: FontWeight.bold)),
               onPressed: () {
                 showOilTemp = !showOilTemp;
               },
@@ -1713,7 +1711,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           style: TextStyle(color: Colors.red),
                         ),
                   icon: _isFullNotifOn
-                      ? const Icon(MaterialCommunityIcons.water)
+                      ? const Icon(Icons.notifications)
                       : const Icon(Icons.notifications_off)),
             ),
             Container(
@@ -1938,36 +1936,39 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Widget homeWidgetColumn() {
-    return ListView(
-      children: [
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showThrottle ? engineThrottleText() : null),
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showEngineTemp ? engineTempText() : null),
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showFuel ? fuelIndicator() : null),
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showAlt ? altitudeText() : null),
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showCompass ? compassText() : null),
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showIas ? iasText() : null),
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showClimb ? climbRate() : null),
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showOilTemp ? oilTempText() : null),
-        AnimatedSwitcher(
-            duration: const Duration(seconds: 3),
-            child: showWaterTemp ? waterTempText() : null)
-      ],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showThrottle ? engineThrottleText() : null),
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showEngineTemp ? engineTempText() : null),
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showFuel ? fuelIndicator() : null),
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showAlt ? altitudeText() : null),
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showCompass ? compassText() : null),
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showIas ? iasText() : null),
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showClimb ? climbRate() : null),
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showOilTemp ? oilTempText() : null),
+          AnimatedSwitcher(
+              duration: const Duration(seconds: 3),
+              child: showWaterTemp ? waterTempText() : null)
+        ],
+      ),
     );
   }
 
@@ -2071,16 +2072,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
             icon:
                 const Icon(Icons.signal_wifi_statusbar_connected_no_internet_4),
             onPressed: () {},
-            label: const Expanded(
-              child: Text(
-                'No Data.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 50,
-                    letterSpacing: 2,
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.bold),
-              ),
+            label: const Text(
+              'No Data.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 50,
+                  letterSpacing: 2,
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold),
             ),
           )),
     );
@@ -2122,6 +2121,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     'data/flutter_assets/assets',
     'WARNING.png'
   ]);
+  var csvPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'fm_data_db.csv'
+  ]);
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
@@ -2157,6 +2161,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool? chatEnemyFirst;
   double? fuelPercent;
   double? avgTAS;
+  double? critAoa;
   double boxShadowOpacity = 0.07;
   double widget1Opacity = 0.0;
   double normalHeight = 60;
@@ -2168,186 +2173,128 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   int? secondSpeed;
   Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
-
   final windowManager = WindowManager.instance;
-
   @override
   Widget build(BuildContext context) {
-    return WindowBorder(
-      color: borderColor,
-      child: Flex(
-        direction: Axis.vertical,
-        children: [
-          WindowTitleBarBox(
-            child: MoveWindow(
-              child: Container(
-                color: Colors.red,
-                width: MediaQuery.of(context).size.width,
-                height: 56,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    MinimizeWindowButton(
-                      animate: true,
-                      colors: WindowButtonColors(
-                          iconNormal: Colors.white,
-                          mouseOver: Colors.white.withOpacity(0.1),
-                          mouseDown: Colors.white.withOpacity(0.2),
-                          iconMouseOver: Colors.white,
-                          iconMouseDown: Colors.white),
-                      onPressed: () {
-                        _handleClickMinimize();
-                        _isTrayEnabled ? windowManager.hide() : null;
-                      },
-                    ),
-                    MaximizeWindowButton(
-                      animate: true,
-                      colors: WindowButtonColors(
-                          iconNormal: Colors.white,
-                          mouseOver: Colors.white.withOpacity(0.1),
-                          mouseDown: Colors.white.withOpacity(0.2),
-                          iconMouseOver: Colors.white,
-                          iconMouseDown: Colors.white),
-                    ),
-                    CloseWindowButton(
-                      animate: true,
-                      onPressed: () {
-                        windowManager.terminate();
-                      },
-                      colors: WindowButtonColors(
-                          mouseOver: const Color(0xFFD32F2F),
-                          mouseDown: const Color(0xFFB71C1C),
-                          iconNormal: Colors.white,
-                          iconMouseOver: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-              child: Stack(children: [
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
-              child: Image.asset(
-                'assets/event_korean_war.jpg',
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Scaffold(
-                drawer: drawerBuilder(),
-                backgroundColor: Colors.transparent,
-                resizeToAvoidBottomInset: true,
-                appBar: MediaQuery.of(context).size.height >= 300
-                    ? AppBar(
-                        actions: [
-                            IconButton(
-                                onPressed: () async {
-                                  wakeLock = !wakeLock;
-                                  setState(() {
-                                    Wakelock.toggle(enable: wakeLock);
-                                  });
-                                  bool wakeLockEnabled = await Wakelock.enabled;
-                                  if (!wakeLockEnabled) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(const SnackBar(
-                                      content: Text("Screen timeout enabled"),
-                                      duration: Duration(seconds: 3),
-                                    ));
-                                  } else {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(const SnackBar(
-                                      content: Text("Screen timeout disabled"),
-                                      duration: Duration(seconds: 3),
-                                    ));
-                                  }
-                                },
-                                icon: wakeLock
-                                    ? const Icon(
-                                        Icons.timelapse_outlined,
-                                        color: Colors.green,
-                                      )
-                                    : const Icon(
-                                        Icons.timelapse_outlined,
-                                        color: Colors.red,
-                                      ))
-                          ],
-                        leading: Builder(
-                          builder: (BuildContext context) {
-                            return IconButton(
-                              icon: const Icon(Icons.list),
-                              onPressed: () {
-                                Scaffold.of(context).openDrawer();
-                              },
-                            );
-                          },
-                        ),
-                        automaticallyImplyLeading: false,
-                        elevation: 0.75,
-                        backgroundColor: Colors.transparent,
-                        centerTitle: true,
-                        title: indicatorData.name != 'NULL'
-                            ? Text("You're flying ${indicatorData.name}")
-                            : (stateData.height == 32 &&
-                                    stateData.minFuel == 0 &&
-                                    stateData.flap == 0)
-                                ? const Text("You're in Hangar...")
-                                : const Text(
-                                    'No vehicle data available / Not flying.'))
-                    : null,
-                body: AnimatedOpacity(
-                    duration: const Duration(seconds: 3),
-                    opacity: widget1Opacity,
-                    child: MediaQuery.of(context).size.height >= 235 &&
-                            (indicatorData.valid == true &&
-                                indicatorData.valid != null)
-                        ? homeWidgetColumn()
-                        : MediaQuery.of(context).size.height < 235 &&
-                                (indicatorData.valid == true &&
-                                    indicatorData.valid != null)
-                            ? homeWidgetRow()
-                            : homeWidgetNoData())
-                // floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
-                //         MediaQuery.of(context).size.width >= 450
-                //     ? FloatingActionButton(
-                //         backgroundColor: Colors.red,
-                //         tooltip: isFullNotifOn
-                //             ? 'Toggle overheat notifier(On)'
-                //             : 'Toggle overheat notifier(Off)',
-                //         child: isFullNotifOn
-                //             ? Icon(
-                //                 Icons.notifications,
-                //                 color: Colors.green[400],
-                //               )
-                //             : Icon(
-                //                 Icons.notifications_off,
-                //                 color: Colors.black,
-                //               ),
-                // onPressed: () {
-                //           setState(() {
-                //             isFullNotifOn = !isFullNotifOn;
-                //           });
-                //           ScaffoldMessenger.of(context)
-                //             ..removeCurrentSnackBar()
-                //             ..showSnackBar(SnackBar(
-                //                 content: isFullNotifOn
-                //                     ? Text(
-                //                         'Notifications are now enabled',
-                //                         style: TextStyle(color: Colors.green),
-                //                       )
-                //                     : Text(
-                //                         'Notifications are now disabled',
-                //                         style: TextStyle(color: Colors.red),
-                //                       )));
-                //         })
-                //     : null,
-                ),
-          ])),
-        ],
+    return Stack(children: [
+      ImageFiltered(
+        imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+        child: Image.asset(
+          'assets/event_korean_war.jpg',
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          fit: BoxFit.cover,
+        ),
       ),
-    );
+      Scaffold(
+          drawer: drawerBuilder(),
+          backgroundColor: Colors.transparent,
+          resizeToAvoidBottomInset: true,
+          appBar: MediaQuery.of(context).size.height >= 300
+              ? AppBar(
+                  actions: [
+                      IconButton(
+                          onPressed: () async {
+                            wakeLock = !wakeLock;
+                            setState(() {
+                              Wakelock.toggle(enable: wakeLock);
+                            });
+                            bool wakeLockEnabled = await Wakelock.enabled;
+                            if (!wakeLockEnabled) {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                content: Text("Screen timeout enabled"),
+                                duration: Duration(seconds: 3),
+                              ));
+                            } else {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                content: Text("Screen timeout disabled"),
+                                duration: Duration(seconds: 3),
+                              ));
+                            }
+                          },
+                          icon: wakeLock
+                              ? const Icon(
+                                  Icons.timelapse_outlined,
+                                  color: Colors.green,
+                                )
+                              : const Icon(
+                                  Icons.timelapse_outlined,
+                                  color: Colors.red,
+                                ))
+                    ],
+                  leading: Builder(
+                    builder: (BuildContext context) {
+                      return IconButton(
+                        icon: const Icon(Icons.list),
+                        onPressed: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                      );
+                    },
+                  ),
+                  automaticallyImplyLeading: false,
+                  elevation: 0.75,
+                  backgroundColor: Colors.transparent,
+                  centerTitle: true,
+                  title: indicatorData.name != 'NULL'
+                      ? Text("You're flying ${indicatorData.name}")
+                      : (stateData.height == 32 &&
+                              stateData.minFuel == 0 &&
+                              stateData.flap == 0)
+                          ? const Text("You're in Hangar...")
+                          : const Text(
+                              'No vehicle data available / Not flying.'))
+              : null,
+          body: AnimatedOpacity(
+              duration: const Duration(seconds: 3),
+              opacity: widget1Opacity,
+              child: MediaQuery.of(context).size.height >= 235 &&
+                      (indicatorData.valid == true &&
+                          indicatorData.valid != null)
+                  ? homeWidgetColumn()
+                  : MediaQuery.of(context).size.height < 235 &&
+                          (indicatorData.valid == true &&
+                              indicatorData.valid != null)
+                      ? homeWidgetRow()
+                      : homeWidgetNoData())
+          // floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
+          //         MediaQuery.of(context).size.width >= 450
+          //     ? FloatingActionButton(
+          //         backgroundColor: Colors.red,
+          //         tooltip: isFullNotifOn
+          //             ? 'Toggle overheat notifier(On)'
+          //             : 'Toggle overheat notifier(Off)',
+          //         child: isFullNotifOn
+          //             ? Icon(
+          //                 Icons.notifications,
+          //                 color: Colors.green[400],
+          //               )
+          //             : Icon(
+          //                 Icons.notifications_off,
+          //                 color: Colors.black,
+          //               ),
+          // onPressed: () {
+          //           setState(() {
+          //             isFullNotifOn = !isFullNotifOn;
+          //           });
+          //           ScaffoldMessenger.of(context)
+          //             ..removeCurrentSnackBar()
+          //             ..showSnackBar(SnackBar(
+          //                 content: isFullNotifOn
+          //                     ? Text(
+          //                         'Notifications are now enabled',
+          //                         style: TextStyle(color: Colors.green),
+          //                       )
+          //                     : Text(
+          //                         'Notifications are now disabled',
+          //                         style: TextStyle(color: Colors.red),
+          //                       )));
+          //         })
+          //     : null,
+          ),
+    ]);
   }
 
   @override
@@ -2390,12 +2337,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   @override
   void onWindowMinimize() async {
+    windowManager.hide();
     _trayInit();
   }
 
   @override
   void onWindowRestore() async {
     if (_removeIconAfterRestored) {
+      windowManager.show();
       _trayUnInit();
     }
   }
