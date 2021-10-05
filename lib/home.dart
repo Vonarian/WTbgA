@@ -614,6 +614,10 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     if (critAoa != null && (stateData.aoa >= (critAoa! * -1))) {
       pullUpPlayer.play();
       print('pullUpPlayed');
+      critAoaBool = true;
+    }
+    if (!(critAoa != null && (stateData.aoa >= (critAoa! * -1)))) {
+      critAoaBool = false;
     }
   }
 
@@ -1192,21 +1196,21 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           onPressed: () {
             showClimb = !showClimb;
           },
-          label: indicatorData.vertical != null &&
-                      stateData.ias != null &&
-                      stateData.climb != null &&
-                      (stateData.ias < 250 &&
+          label: critAoaBool ||
+                  (indicatorData.vertical != null &&
+                          stateData.ias != null &&
                           stateData.climb != null &&
-                          stateData.climb != null &&
-                          stateData.climb < 60 &&
-                          indicatorData.vertical >= -135 &&
-                          indicatorData.vertical <= -50) ||
-                  (stateData.ias != null &&
-                          stateData.ias < 180 &&
-                          stateData.climb != null &&
-                          stateData.climb < 10) &&
-                      stateData.ias != 0 &&
-                      stateData.height > 250
+                          (stateData.ias < 250 &&
+                              stateData.climb != null &&
+                              stateData.climb < 60 &&
+                              indicatorData.vertical >= -135 &&
+                              indicatorData.vertical <= -50) ||
+                      (stateData.ias != null &&
+                              stateData.ias < 180 &&
+                              stateData.climb != null &&
+                              stateData.climb < 10) &&
+                          stateData.ias != 0 &&
+                          stateData.height > 250)
               ? BlinkText(
                   'Absolute Climb rate = ${stateData.climb} m/s (Possible stall!)',
                   textAlign: TextAlign.center,
@@ -2121,7 +2125,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     'data/flutter_assets/assets',
     'WARNING.png'
   ]);
-  var csvPath = p.joinAll([
+  String csvPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'fm_data_db.csv'
@@ -2159,6 +2163,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool wakeLock = false;
   bool? chatEnemySecond;
   bool? chatEnemyFirst;
+  bool critAoaBool = false;
   double? fuelPercent;
   double? avgTAS;
   double? critAoa;
