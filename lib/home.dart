@@ -610,8 +610,13 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     // print(critAoa);
     if (stateData.aoa == null || critAoa == null) return;
     if (stateData.gear > 0) return;
+    if (secondSpeed == null || firstSpeed == null) return;
+    int averageIas = secondSpeed! - firstSpeed!;
+    if (averageIas <= 10) return;
 
-    if (critAoa != null && (stateData.aoa >= (critAoa! * -1))) {
+    if (critAoa != null &&
+        (stateData.aoa >= (critAoa! * -1)) &&
+        playStallWarning) {
       pullUpPlayer.play();
       print('pullUpPlayed');
       critAoaBool = true;
@@ -635,9 +640,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     _textForIasFlap.removeListener((userRedLineFlap));
   }
 
-  Future<void> _handleClickMinimize() async {
-    windowManager.minimize();
-  }
+  // Future<void> _handleClickMinimize() async {
+  //   windowManager.minimize();
+  // }
 
   Future<void> _handleClickRestore() async {
     windowManager.restore();
@@ -722,9 +727,36 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     }
   }
 
+  Future<void> startServer() async {
+    var server =
+        await HttpServer.bind(InternetAddress.tryParse('192.168.43.8'), 8080);
+    print("Server running on IP : " +
+        server.address.toString() +
+        " On Port : " +
+        server.port.toString());
+    HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
+      server.listen((HttpRequest request) {
+        Map<String, dynamic> serverData = {
+          "'vehicleName'": indicatorData.name,
+          "\n'ias'": stateData.ias,
+          "\n'tas'": stateData.tas,
+          "\n'climb'": stateData.climb,
+          "\n'damageId'": idData.value,
+          "\n'damageMsg'": msgData,
+          "\n'critAoa'": critAoa,
+        };
+        request.response.write(serverData);
+        request.response.close();
+      });
+    });
+  }
+
   void receiveDiskValues() {
     _prefs.then((SharedPreferences prefs) {
       _isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
+    });
+    _prefs.then((SharedPreferences prefs) {
+      playStallWarning = (prefs.getBool('playStallWarning') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
       _isTrayEnabled = (prefs.getBool('isTrayEnabled') ?? true);
@@ -760,14 +792,15 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   @override
   void initState() {
+    updateStateIndicator();
     // updateRam();
     keyRegister();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
     updateMsgId();
-    updateStateIndicator();
     updateChat();
     chatSettingsManager();
+    startServer();
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) {
@@ -1908,12 +1941,37 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                  label: const Text('Enter transparent mode'),
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/transparent');
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
+                    bool _playStallWarning =
+                        (prefs.getBool('playStallWarning') ?? true);
+                    _playStallWarning = !_playStallWarning;
+                    setState(() {
+                      playStallWarning = _playStallWarning;
+                    });
+                    prefs.setBool("playStallWarning", _playStallWarning);
                   },
-                  icon: const Icon(MaterialCommunityIcons.dock_window)),
+                  label: playStallWarning
+                      ? const Text(
+                          'Play stall warning sound: On',
+                          style: TextStyle(color: Colors.green),
+                        )
+                      : const Text(
+                          'Play stall warning sound: Off',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                  icon: const Icon(MaterialCommunityIcons.shield_airplane)),
             ),
+            // Container(
+            //   alignment: Alignment.topLeft,
+            //   decoration: const BoxDecoration(color: Colors.black87),
+            //   child: TextButton.icon(
+            //       label: const Text('Enter transparent mode'),
+            //       onPressed: () {
+            //         Navigator.pushReplacementNamed(context, '/transparent');
+            //       },
+            //       icon: const Icon(MaterialCommunityIcons.dock_window)),
+            // ),
             Container(
               alignment: Alignment.topCenter,
               decoration: const BoxDecoration(color: Colors.black87),
@@ -2115,6 +2173,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   String? chatModeSecond;
   String? chatPrefixFirst;
   String? chatPrefixSecond;
+  String statusText = "Start Server";
   String logoPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
@@ -2161,6 +2220,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool showClimb = true;
   bool showFuel = true;
   bool wakeLock = false;
+  bool playStallWarning = true;
   bool? chatEnemySecond;
   bool? chatEnemyFirst;
   bool critAoaBool = false;
@@ -2227,7 +2287,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                               : const Icon(
                                   Icons.timelapse_outlined,
                                   color: Colors.red,
-                                ))
+                                )),
                     ],
                   leading: Builder(
                     builder: (BuildContext context) {
