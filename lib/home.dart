@@ -738,7 +738,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       server.listen((HttpRequest request) {
         Map<String, dynamic> serverData = {
           "'vehicleName'": indicatorData.name,
-          "\n'ias'": stateData.ias,
+          '\nias': stateData.ias,
           "\n'tas'": stateData.tas,
           "\n'climb'": stateData.climb,
           "\n'damageId'": idData.value,
