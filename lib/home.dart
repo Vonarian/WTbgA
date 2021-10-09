@@ -737,13 +737,13 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
       server.listen((HttpRequest request) {
         Map<String, dynamic> serverData = {
-          "'vehicleName'": indicatorData.name,
-          '\nias': stateData.ias,
-          "\n'tas'": stateData.tas,
-          "\n'climb'": stateData.climb,
-          "\n'damageId'": idData.value,
-          "\n'damageMsg'": msgData,
-          "\n'critAoa'": critAoa,
+          "vehicleName": indicatorData.name,
+          "\nias": stateData.ias,
+          "\ntas": stateData.tas,
+          "\nclimb": stateData.climb,
+          "\ndamageId": idData.value,
+          "\ndamageMsg": msgData,
+          "\ncritAoa": critAoa,
         };
         request.response.write(serverData);
         request.response.close();
