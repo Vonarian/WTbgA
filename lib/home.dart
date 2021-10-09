@@ -745,7 +745,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           "\ndamageMsg": msgData,
           "\ncritAoa": critAoa,
         };
-        request.response.write(serverData);
+        request.response.write(serverData.toString());
         request.response.close();
       });
     });
@@ -2406,6 +2406,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     _trayInit();
   }
 
+  @override
   @override
   void onWindowRestore() async {
     if (_removeIconAfterRestored) {
