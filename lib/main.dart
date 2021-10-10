@@ -2,6 +2,7 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:desktoasts/desktoasts.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
@@ -15,7 +16,14 @@ import 'transparent.dart';
 ToastService? service;
 // final response = ResponseUI.instance;
 
+void _enablePlatformOverrideForDesktop() {
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+    debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
+  }
+}
+
 void main() async {
+  _enablePlatformOverrideForDesktop();
   WidgetsFlutterBinding.ensureInitialized();
 
   // Use it only after calling `hiddenWindowAtLaunch`

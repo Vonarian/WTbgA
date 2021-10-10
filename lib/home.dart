@@ -633,11 +633,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   @override
   void dispose() {
     super.dispose();
-    // _timer?.cancel();
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
     _textForIasFlap.removeListener((userRedLineFlap));
+    _textForIasGear.removeListener((userRedLineGear));
+    _textForGLoad.removeListener((loadChecker));
+    chatIdFirst.removeListener(() {});
+    chatIdSecond.removeListener(() {});
   }
 
   // Future<void> _handleClickMinimize() async {
@@ -728,8 +731,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Future<void> startServer() async {
-    var server =
-        await HttpServer.bind(InternetAddress.tryParse('192.168.43.8'), 8080);
+    var server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
     print("Server running on IP : " +
         server.address.toString() +
         " On Port : " +
@@ -738,14 +740,23 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       server.listen((HttpRequest request) {
         Map<String, dynamic> serverData = {
           "vehicleName": indicatorData.name,
-          "\nias": stateData.ias,
-          "\ntas": stateData.tas,
-          "\nclimb": stateData.climb,
-          "\ndamageId": idData.value,
-          "\ndamageMsg": msgData,
-          "\ncritAoa": critAoa,
+          "ias": stateData.ias,
+          "tas": stateData.tas,
+          "climb": stateData.climb,
+          "damageId": idData.value,
+          "damageMsg": msgData,
+          "critAoa": critAoa,
+          "aoa": stateData.aoa,
+          "throttle": indicatorData.throttle,
+          "engineTemp": indicatorData.engine,
+          "oil": stateData.oil,
+          "water": stateData.water,
+          "altitude": stateData.height,
+          "minFuel": stateData.minFuel,
+          "maxFuel": stateData.maxFuel,
+          "gear": stateData.gear,
         };
-        request.response.write(serverData.toString());
+        request.response.write(jsonEncode(serverData));
         request.response.close();
       });
     });
@@ -790,6 +801,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     });
   }
 
+  Future giveIps() async {
+    for (var interface in await NetworkInterface.list()) {
+      for (var addr in interface.addresses) {
+        ipAddress = addr.address;
+      }
+    }
+  }
+
   @override
   void initState() {
     updateStateIndicator();
@@ -804,6 +823,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) {
+      giveIps();
       updateMsgId();
       flapChecker();
       updateChat();
@@ -817,8 +837,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       updateStateIndicator();
     });
     const averageTimer = Duration(milliseconds: 2000);
-    Timer.periodic(averageTimer, (Timer t) {
-      // averageTAS();
+    Timer.periodic(averageTimer, (Timer t) async {
       averageIasForStall();
       hostChecker();
     });
@@ -1713,17 +1732,27 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              curve: Curves.bounceIn,
-              duration: Duration(seconds: 12),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple,
+            Stack(children: [
+              const DrawerHeader(
+                curve: Curves.bounceIn,
+                duration: Duration(seconds: 12),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple,
+                ),
+                child: Icon(
+                  Icons.settings,
+                  size: 100,
+                ),
               ),
-              child: Icon(
-                Icons.settings,
-                size: 100,
+              Container(
+                alignment: Alignment.topLeft,
+                decoration: const BoxDecoration(color: Colors.transparent),
+                child: Text(
+                  ipAddress.toString(),
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
               ),
-            ),
+            ]),
             Container(
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
@@ -1750,6 +1779,31 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   icon: _isFullNotifOn
                       ? const Icon(Icons.notifications)
                       : const Icon(Icons.notifications_off)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: const BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
+                    bool _playStallWarning =
+                        (prefs.getBool('playStallWarning') ?? true);
+                    _playStallWarning = !_playStallWarning;
+                    setState(() {
+                      playStallWarning = _playStallWarning;
+                    });
+                    prefs.setBool("playStallWarning", _playStallWarning);
+                  },
+                  label: playStallWarning
+                      ? const Text(
+                          'Play stall warning sound: On',
+                          style: TextStyle(color: Colors.green),
+                        )
+                      : const Text(
+                          'Play stall warning sound: Off',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                  icon: const Icon(MaterialCommunityIcons.shield_airplane)),
             ),
             Container(
               alignment: Alignment.topLeft,
@@ -1937,31 +1991,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     color: Colors.amber,
                   )),
             ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    bool _playStallWarning =
-                        (prefs.getBool('playStallWarning') ?? true);
-                    _playStallWarning = !_playStallWarning;
-                    setState(() {
-                      playStallWarning = _playStallWarning;
-                    });
-                    prefs.setBool("playStallWarning", _playStallWarning);
-                  },
-                  label: playStallWarning
-                      ? const Text(
-                          'Play stall warning sound: On',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : const Text(
-                          'Play stall warning sound: Off',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                  icon: const Icon(MaterialCommunityIcons.shield_airplane)),
-            ),
+
             // Container(
             //   alignment: Alignment.topLeft,
             //   decoration: const BoxDecoration(color: Colors.black87),
@@ -1984,6 +2014,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               child:
                   chatBuilder(chatSenderFirst, chatMsgFirst, chatPrefixFirst),
             ),
+
             // Container(
             //     alignment: Alignment.topLeft,
             //     decoration: BoxDecoration(color: Colors.black87),
@@ -2238,6 +2269,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   int? secondSpeed;
   Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
+  dynamic ipAddress;
   final windowManager = WindowManager.instance;
   @override
   Widget build(BuildContext context) {
