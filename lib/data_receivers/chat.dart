@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 
-
 class ChatEvents {
   int? id;
   String? msg;
