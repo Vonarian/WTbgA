@@ -608,7 +608,10 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   Future<void> critAoaChecker() async {
     // print(stateData.aoa);
     // print(critAoa);
-    if (stateData.aoa == null || critAoa == null) return;
+    if (stateData.aoa == null || critAoa == null || stateData.gear == null) {
+      return;
+    }
+
     if (stateData.gear > 0) return;
     if (secondSpeed == null || firstSpeed == null) return;
     int averageIas = secondSpeed! - firstSpeed!;
@@ -618,7 +621,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         (stateData.aoa >= (critAoa! * -1)) &&
         playStallWarning) {
       pullUpPlayer.play();
-      print('pullUpPlayed');
       critAoaBool = true;
     }
     if (!(critAoa != null && (stateData.aoa >= (critAoa! * -1)))) {
@@ -649,6 +651,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   Future<void> _handleClickRestore() async {
     windowManager.restore();
+    windowManager.show();
   }
   // Future<void> initSystemTray() async {
   //   String? path;
@@ -731,11 +734,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Future<void> startServer() async {
-    var server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
-    print("Server running on IP : " +
-        server.address.toString() +
-        " On Port : " +
-        server.port.toString());
+    // var server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
     HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
       server.listen((HttpRequest request) {
         Map<String, dynamic> serverData = {
@@ -755,6 +754,16 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           "minFuel": stateData.minFuel,
           "maxFuel": stateData.maxFuel,
           "gear": stateData.gear,
+          "chat1": chatMsgFirst,
+          "chatId1": chatIdFirst.value,
+          "chat2": chatMsgSecond,
+          "chatId2": chatIdSecond.value,
+          "chatMode1": chatModeFirst,
+          "chatMode2": chatModeSecond,
+          "chatSender1": chatSenderFirst,
+          "chatSender2": chatSenderSecond,
+          "chatEnemy1": chatEnemyFirst,
+          "chatEnemy2": chatEnemySecond,
         };
         request.response.write(jsonEncode(serverData));
         request.response.close();
@@ -763,6 +772,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   void receiveDiskValues() {
+    _prefs.then((SharedPreferences prefs) {
+      lastId = (prefs.getInt('lastId') ?? 0);
+    });
     _prefs.then((SharedPreferences prefs) {
       _isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
     });
@@ -812,7 +824,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   @override
   void initState() {
     updateStateIndicator();
-    // updateRam();
+    receiveDiskValues();
     keyRegister();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
@@ -846,10 +858,14 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       stateData = ModalRoute.of(context)?.settings.arguments;
       indicatorData = ModalRoute.of(context)?.settings.arguments;
     });
-    idData.addListener(() {
-      setState(() {
+    idData.addListener(() async {
+      if (lastId != idData.value) {
         isDamageIDNew = true;
-      });
+      }
+      SharedPreferences prefs = await _prefs;
+      lastId = (prefs.getInt('lastId') ?? 0);
+      lastId = idData.value;
+      prefs.setInt('lastId', lastId!);
       vehicleStateCheck();
       run = false;
     });
@@ -881,7 +897,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     Future.delayed(const Duration(milliseconds: 250), () {
       widget1Opacity = 1;
     });
-    receiveDiskValues();
   }
 
   Future<void> _csvThing() async {
@@ -1980,7 +1995,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                     _textForGLoad.value = await Navigator.of(context)
                         .push(dialogBuilderOverG(context));
                     int textForGLoad = (prefs.getInt('textForGLoad') ?? 12);
-
                     setState(() {
                       textForGLoad = _textForGLoad.value!;
                     });
@@ -2265,6 +2279,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   double normalFont = 20;
   double smallFont = 17;
   int counter = 0;
+  int? lastId;
   int? firstSpeed;
   int? secondSpeed;
   Color borderColor = const Color(0xFF805306);
@@ -2273,6 +2288,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   final windowManager = WindowManager.instance;
   @override
   Widget build(BuildContext context) {
+    updateStateIndicator();
     return Stack(children: [
       ImageFiltered(
         imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
