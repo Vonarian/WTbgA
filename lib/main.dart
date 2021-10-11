@@ -7,6 +7,7 @@ import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
+import 'package:wtbgassistant/screens/loading.dart';
 
 import 'screens/home.dart';
 import 'screens/info.dart';

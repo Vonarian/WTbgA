@@ -2,11 +2,8 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:http/http.dart' as http;
-import 'package:json_annotation/json_annotation.dart';
 
-part 'chat.g.dart';
 
-@JsonSerializable()
 class ChatEvents {
   int? id;
   String? msg;
