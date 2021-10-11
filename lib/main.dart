@@ -2,36 +2,24 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:desktoasts/desktoasts.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 
-import 'home.dart';
-import 'info.dart';
-import 'transparent.dart';
+import 'screens/home.dart';
+import 'screens/info.dart';
 
 ToastService? service;
 // final response = ResponseUI.instance;
 
-void _enablePlatformOverrideForDesktop() {
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
-    debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
-  }
-}
-
 void main() async {
-  _enablePlatformOverrideForDesktop();
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Use it only after calling `hiddenWindowAtLaunch`
-  // Must add this line.
   WidgetsFlutterBinding.ensureInitialized();
   Acrylic.initialize();
 
-  // For hot reload, `unregisterAll()` needs to be called.
   HotKeyManager.instance.unregisterAll();
   var warningPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
@@ -81,7 +69,6 @@ void main() async {
         '/': (context) => const Loading(),
         '/home': (context) => const Home(),
         '/info': (context) => const InfoPage(),
-        '/transparent': (context) => TransparentPage()
       },
     ),
   );

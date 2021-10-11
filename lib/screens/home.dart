@@ -16,14 +16,13 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:wakelock/wakelock.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'chat.dart';
-import 'damage_event.dart';
-import 'indicator_receiver.dart';
-import 'main.dart';
-import 'state_receiver.dart';
+import '../data_receivers/chat.dart';
+import '../data_receivers/damage_event.dart';
+import '../data_receivers/indicator_receiver.dart';
+import '../data_receivers/state_receiver.dart';
+import '../main.dart';
 
 final windowManager = WindowManager.instance;
 
@@ -35,14 +34,12 @@ class Loading extends StatefulWidget {
 }
 
 class _LoadingState extends State<Loading> {
-  setupToolData() async {
+  Future<void> setupToolData() async {
     ToolDataState stateData = await ToolDataState.getState();
     ToolDataIndicator indicatorData = await ToolDataIndicator.getIndicator();
-    List<Damage> dataForId = await Damage.getDamage();
-    List<Damage> dataForMsg = await Damage.getDamage();
 
     Navigator.pushReplacementNamed(context, '/home',
-        arguments: {stateData, indicatorData, dataForMsg, dataForId});
+        arguments: {stateData, indicatorData});
   }
 
   // hostChecker() async {
@@ -65,7 +62,7 @@ class _LoadingState extends State<Loading> {
     super.initState();
   }
 
-  void _launchURL() async => await launch(_url);
+  Future<void> _launchURL() => launch(_url);
   final _url =
       'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga';
 
@@ -250,6 +247,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         isUserIasFlapNew = false;
       }
       if (stateData.ias < _textForIasFlap.value) {
+        if (!mounted) return;
         setState(() {
           isUserIasFlapNew = true;
         });
@@ -2305,38 +2303,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           resizeToAvoidBottomInset: true,
           appBar: MediaQuery.of(context).size.height >= 300
               ? AppBar(
-                  actions: [
-                      IconButton(
-                          onPressed: () async {
-                            wakeLock = !wakeLock;
-                            setState(() {
-                              Wakelock.toggle(enable: wakeLock);
-                            });
-                            bool wakeLockEnabled = await Wakelock.enabled;
-                            if (!wakeLockEnabled) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                content: Text("Screen timeout enabled"),
-                                duration: Duration(seconds: 3),
-                              ));
-                            } else {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                content: Text("Screen timeout disabled"),
-                                duration: Duration(seconds: 3),
-                              ));
-                            }
-                          },
-                          icon: wakeLock
-                              ? const Icon(
-                                  Icons.timelapse_outlined,
-                                  color: Colors.green,
-                                )
-                              : const Icon(
-                                  Icons.timelapse_outlined,
-                                  color: Colors.red,
-                                )),
-                    ],
                   leading: Builder(
                     builder: (BuildContext context) {
                       return IconButton(
