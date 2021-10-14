@@ -644,8 +644,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Future<void> startServer() async {
-    var imageLogo = await getFileAsBase64String(
-        '$path/data/flutter_assets/assets/logoWTbgA.jpg');
+    await screenShot();
     // var server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
     var imageData = await getFileAsBase64String('$path/shot.png');
     HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
@@ -680,7 +679,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           "chatSender2": chatSenderSecond,
           "chatEnemy1": chatEnemyFirst,
           "chatEnemy2": chatEnemySecond,
-          "image": sendScreen ? imageData : imageLogo,
+          "image": !sendScreen ? 'iVB' : imageData,
           "active": sendScreen
         };
         request.response.write(jsonEncode(serverData));
@@ -741,8 +740,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   @override
   void initState() {
-    final _url =
-        'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga';
+    startServer();
+    final _url = 'http://localhost:8111';
     updateStateIndicator();
     receiveDiskValues();
     keyRegister();
@@ -751,7 +750,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     updateMsgId();
     updateChat();
     chatSettingsManager();
-    startServer();
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
     // Timer.periodic(Duration(milliseconds: 16500), (timer) async {
