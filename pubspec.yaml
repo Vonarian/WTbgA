@@ -24,21 +24,19 @@ dependencies:
     sdk: flutter
   http: ^0.13.3
   flutter_spinkit: "^5.0.0"
+#  image:
   desktoasts: ^0.0.2
   blinking_text: ^1.0.1+2
   json_annotation:
   url_launcher: ^6.0.9
   path: ^1.8.0
   window_manager: ^0.0.4
-  tray_manager: ^0.0.2
+  tray_manager: ^0.1.0
   shared_preferences: ^2.0.7
   hotkey_manager: ^0.1.1
   libwinmedia:
     git:
       url: https://github.com/libwinmedia/libwinmedia.dart.git
-  flutter_acrylic:
-    git:
-      url: https://github.com/alexmercerind/flutter_acrylic.git
   flutter_vector_icons: ^1.0.0
     #  response: ^1.0.0
 
@@ -77,7 +75,7 @@ flutter:
   assets:
     - assets/event_korean_war.jpg
     - assets/WARNING.png
-#    - assets/beep.mp3
+    - assets/shot.bat
     - assets/warning_female.mp3
     - assets/logoWTbgA.jpg
     - assets/OverG.mp3

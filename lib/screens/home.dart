@@ -16,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:wtbgassistant/services/read_image.dart';
 
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
@@ -643,9 +644,15 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   Future<void> startServer() async {
+    var imageLogo = await getFileAsBase64String(
+        '$path/data/flutter_assets/assets/logoWTbgA.jpg');
     // var server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
+    var imageData = await getFileAsBase64String('$path/shot.png');
     HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
-      server.listen((HttpRequest request) {
+      server.listen((HttpRequest request) async {
+        if (sendScreen) await screenShot();
+        if (sendScreen)
+          imageData = await getFileAsBase64String('$path/shot.png');
         Map<String, dynamic> serverData = {
           "vehicleName": indicatorData.name,
           "ias": stateData.ias,
@@ -673,6 +680,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           "chatSender2": chatSenderSecond,
           "chatEnemy1": chatEnemyFirst,
           "chatEnemy2": chatEnemySecond,
+          "image": sendScreen ? imageData : imageLogo,
+          "active": sendScreen
         };
         request.response.write(jsonEncode(serverData));
         request.response.close();
@@ -732,6 +741,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   @override
   void initState() {
+    final _url =
+        'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga';
     updateStateIndicator();
     receiveDiskValues();
     keyRegister();
@@ -743,22 +754,27 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     startServer();
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
-    Timer.periodic(twoSec, (Timer t) {
+    // Timer.periodic(Duration(milliseconds: 16500), (timer) async {
+    // });
+    Timer.periodic(twoSec, (Timer t) async {
+      if (!await canLaunch(_url)) return;
       giveIps();
       updateMsgId();
       flapChecker();
       updateChat();
       chatSettingsManager();
       critAoaChecker();
-      // print(stateData.aoa);
-      // updateRam();
     });
     const oneSec = Duration(milliseconds: 200);
-    Timer.periodic(oneSec, (Timer t) {
+    Timer.periodic(oneSec, (Timer t) async {
+      if (!await canLaunch(_url)) return;
+
       updateStateIndicator();
     });
     const averageTimer = Duration(milliseconds: 2000);
     Timer.periodic(averageTimer, (Timer t) async {
+      if (!await canLaunch(_url)) return;
+
       averageIasForStall();
       hostChecker();
     });
@@ -791,12 +807,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
       isUserGLoadNew = true;
     });
     chatIdFirst.addListener(() {
-      setState(() {
-        chatSettingsManager();
-      });
+      chatSettingsManager();
     });
     const redLineTimer = Duration(milliseconds: 1500);
-    Timer.periodic(redLineTimer, (Timer t) {
+    Timer.periodic(redLineTimer, (Timer t) async {
+      if (!await canLaunch(_url)) return;
+
       userRedLineFlap();
       userRedLineGear();
       loadChecker();
@@ -840,10 +856,10 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     );
     List<MenuItem> menuItems = [
       MenuItem(
-        identifier: 'exit-app',
+        key: 'exit-app',
         title: 'Exit',
       ),
-      MenuItem(identifier: 'show-app', title: 'Show')
+      MenuItem(key: 'show-app', title: 'Show')
     ];
     await TrayManager.instance.setContextMenu(menuItems);
   }
@@ -899,20 +915,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
         ), keyDownHandler: (_) {
       windowManager.terminate();
     });
-    // bool isAlwaysOnTop = await windowManager.isAlwaysOnTop();
 
-    // HotKeyManager.instance.register(
-    //   HotKey(
-    //     KeyCode.digit2,
-    //     modifiers: [KeyModifier.alt],
-    //   ),
-    //   keyDownHandler: (_) async {
-    //     windowManager.setAlwaysOnTop(!isAlwaysOnTop);
-    //     Future.delayed(const Duration(milliseconds: 200));
-    //     isAlwaysOnTop = await windowManager.isAlwaysOnTop();
-    //     windowManager.setCustomFrame(isFrameless: true);
-    //   },
-    // );
     HotKeyManager.instance
         .register(HotKey(KeyCode.backspace, modifiers: [KeyModifier.alt]),
             keyDownHandler: (_) {
@@ -1838,13 +1841,13 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                label: const Text('Go to information page'),
+                label: const Text('Go to transparent page'),
                 icon: const Icon(
                   Icons.info,
                   color: Colors.cyanAccent,
                 ),
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/info');
+                  Navigator.pushReplacementNamed(context, '/transparent');
                 },
               ),
             ),
@@ -2101,6 +2104,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     );
   }
 
+  Future<void> screenShot() async {
+    await Process.run(shotPath, ['$path/shot.png']);
+  }
   // final buttonColors = WindowButtonColors(
   //     iconNormal: const Color(0xFF805306),
   //     mouseOver: const Color(0xFFF6A00C),
@@ -2127,7 +2133,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   String? chatModeSecond;
   String? chatPrefixFirst;
   String? chatPrefixSecond;
-  String statusText = "Start Server";
+  String path = p.dirname(Platform.resolvedExecutable);
+  String shotPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'shot.bat'
+  ]);
   String logoPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
@@ -2173,7 +2184,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool showThrottle = true;
   bool showClimb = true;
   bool showFuel = true;
-  bool wakeLock = false;
+  bool sendScreen = false;
   bool playStallWarning = true;
   bool? chatEnemySecond;
   bool? chatEnemyFirst;
@@ -2214,6 +2225,23 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           resizeToAvoidBottomInset: true,
           appBar: MediaQuery.of(context).size.height >= 300
               ? AppBar(
+                  actions: [
+                      IconButton(
+                        onPressed: () {
+                          sendScreen = !sendScreen;
+                        },
+                        icon: sendScreen
+                            ? Icon(
+                                Icons.wifi_rounded,
+                                color: Colors.green,
+                              )
+                            : Icon(
+                                Icons.wifi_rounded,
+                                color: Colors.red,
+                              ),
+                        tooltip: 'Toggle screen sender',
+                      )
+                    ],
                   leading: Builder(
                     builder: (BuildContext context) {
                       return IconButton(
@@ -2315,7 +2343,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   void onTrayMenuItemClick(MenuItem menuItem) async {
     print(menuItem.toJson());
 
-    switch (menuItem.identifier) {
+    switch (menuItem.key) {
       case "exit-app":
         windowManager.terminate();
         break;
@@ -2331,7 +2359,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     _trayInit();
   }
 
-  @override
   @override
   void onWindowRestore() async {
     if (_removeIconAfterRestored) {

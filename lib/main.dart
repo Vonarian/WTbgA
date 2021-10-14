@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
@@ -19,7 +18,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   WidgetsFlutterBinding.ensureInitialized();
-  Acrylic.initialize();
 
   HotKeyManager.instance.unregisterAll();
   var warningPath = p.joinAll([
@@ -43,7 +41,7 @@ void main() async {
     'PullUp.mp3'
   ]);
 
-  var path = 'C:/src/wtbgassistant/build/windows/runner/Debug/libwinmedia.dll';
+  var path = 'C:/src/libwinmedia.dll';
   LWM.initialize(DynamicLibrary.open(path));
   var player = Player(id: 0);
   var overGPlayer = Player(id: 1);
@@ -70,6 +68,7 @@ void main() async {
         '/': (context) => const Loading(),
         '/home': (context) => const Home(),
         '/info': (context) => const InfoPage(),
+        // '/transparent': (context) => const Transparent()
       },
     ),
   );

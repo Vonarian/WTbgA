@@ -50,7 +50,12 @@ class _LoadingState extends State<Loading> {
   Widget build(BuildContext context) {
     return Stack(children: [
       ImageFiltered(
-          child: Image.asset('assets/event_korean_war.jpg'),
+          child: Image.asset(
+            'assets/event_korean_war.jpg',
+            fit: BoxFit.cover,
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+          ),
           imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0)),
       Scaffold(
         backgroundColor: Colors.transparent,
