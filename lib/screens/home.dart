@@ -21,6 +21,7 @@ import 'package:wtbgassistant/services/read_image.dart';
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
 import '../data_receivers/indicator_receiver.dart';
+import '../data_receivers/phone.dart';
 import '../data_receivers/state_receiver.dart';
 import '../main.dart';
 
@@ -35,7 +36,8 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> with WindowListener, TrayListener {
+class _HomeState extends State<Home>
+    with WindowListener, TrayListener, TickerProviderStateMixin {
   static Route<int> dialogBuilderIasFlap(BuildContext context) {
     TextEditingController userInputIasFlap = TextEditingController();
     return DialogRoute(
@@ -132,6 +134,37 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                           .pop(int.parse(userInputIasGear.text));
                     },
                     child: const Text('Notify'))
+              ],
+            ));
+  }
+
+  static Route<String> dialogBuilderIP(BuildContext context) {
+    TextEditingController userInputIP = TextEditingController();
+    return DialogRoute(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              content: TextField(
+                onChanged: (value) {},
+                controller: userInputIP,
+                decoration: const InputDecoration(hintText: '192.168.X.Y'),
+              ),
+              title:
+                  const Text('Red line notifier (Enter red line gear speed). '),
+              actions: [
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Cancel')),
+                ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context)
+                        ..removeCurrentSnackBar()
+                        ..showSnackBar(SnackBar(
+                            content: Text('Phone IP address has been update')));
+                      Navigator.of(context).pop(userInputIP.text);
+                    },
+                    child: const Text('Update'))
               ],
             ));
   }
@@ -374,10 +407,19 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool? emptyBool;
   ValueNotifier<int?> idData = ValueNotifier<int?>(null);
 
+  Future<void> updatePhone() async {
+    int i = 0;
+    if (i == 0) {
+      Future.delayed(const Duration(milliseconds: 4000), () async {
+        var dataForPhone = await getData(phoneIP.value);
+        phoneConnected.value = dataForPhone!;
+      });
+    }
+  }
+
   Future<void> updateStateIndicator() async {
     ToolDataState dataForState = await ToolDataState.getState();
     ToolDataIndicator dataForIndicator = await ToolDataIndicator.getIndicator();
-
     if (!mounted) return;
     setState(() {
       stateData = dataForState;
@@ -500,7 +542,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   //   }
   // }
 
-  Future averageIasForStall() async {
+  Future<void> averageIasForStall() async {
     if (!mounted) return;
     if (secondSpeed == null) return;
     if (stateData.ias != null) {
@@ -553,6 +595,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     _textForGLoad.removeListener((loadChecker));
     chatIdFirst.removeListener(() {});
     chatIdSecond.removeListener(() {});
+    phoneConnected.removeListener(() {});
+    phoneIP.removeListener(() {});
   }
 
   // Future<void> _handleClickMinimize() async {
@@ -643,15 +687,20 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     }
   }
 
+  Future<void> screenShot() async {
+    await Process.run(shotPath, ['$path/shot.png']);
+  }
+
   Future<void> startServer() async {
     await screenShot();
     // var server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
     var imageData = await getFileAsBase64String('$path/shot.png');
     HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
       server.listen((HttpRequest request) async {
-        if (sendScreen) await screenShot();
-        if (sendScreen)
+        if (sendScreen) {
+          await screenShot();
           imageData = await getFileAsBase64String('$path/shot.png');
+        }
         Map<String, dynamic> serverData = {
           "vehicleName": indicatorData.name,
           "ias": stateData.ias,
@@ -679,7 +728,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           "chatSender2": chatSenderSecond,
           "chatEnemy1": chatEnemyFirst,
           "chatEnemy2": chatEnemySecond,
-          "image": !sendScreen ? 'iVB' : imageData,
+          "image": !sendScreen ? 'iVBN' : imageData,
           "active": sendScreen
         };
         request.response.write(jsonEncode(serverData));
@@ -689,6 +738,9 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   }
 
   void receiveDiskValues() {
+    _prefs.then((SharedPreferences prefs) {
+      phoneIP.value = (prefs.getString('phoneIP') ?? '');
+    });
     _prefs.then((SharedPreferences prefs) {
       lastId = (prefs.getInt('lastId') ?? 0);
     });
@@ -744,6 +796,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     final _url = 'http://localhost:8111';
     updateStateIndicator();
     receiveDiskValues();
+    updatePhone();
     keyRegister();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
@@ -752,8 +805,10 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     chatSettingsManager();
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
-    // Timer.periodic(Duration(milliseconds: 16500), (timer) async {
-    // });
+    Timer.periodic(Duration(milliseconds: 4000), (timer) async {
+      await updatePhone();
+      // print('waited');
+    });
     Timer.periodic(twoSec, (Timer t) async {
       if (!await canLaunch(_url)) return;
       giveIps();
@@ -766,13 +821,11 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     const oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) async {
       if (!await canLaunch(_url)) return;
-
       updateStateIndicator();
     });
     const averageTimer = Duration(milliseconds: 2000);
     Timer.periodic(averageTimer, (Timer t) async {
       if (!await canLaunch(_url)) return;
-
       averageIasForStall();
       hostChecker();
     });
@@ -780,6 +833,46 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     WidgetsBinding.instance!.addPostFrameCallback((_) {
       stateData = ModalRoute.of(context)?.settings.arguments;
       indicatorData = ModalRoute.of(context)?.settings.arguments;
+    });
+    phoneIP.addListener(() {
+      setState(() {});
+    });
+    phoneConnected.addListener(() {
+      if (phoneConnected.value) {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+              duration: Duration(seconds: 3),
+              content: BlinkText(
+                'Phone connected!',
+                style: TextStyle(color: Colors.blue),
+                endColor: Colors.red,
+              )));
+        Toast toast = Toast(
+            type: ToastType.imageAndText02,
+            title: '⚠Connection detected!',
+            subtitle: 'WTbgA Mobile connection detected',
+            image: File(warningLogo));
+        service!.show(toast);
+        toast.dispose();
+      } else {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+              duration: Duration(seconds: 3),
+              content: BlinkText(
+                'Phone disconnected!',
+                style: TextStyle(color: Colors.blue),
+                endColor: Colors.red,
+              )));
+        Toast toast = Toast(
+            type: ToastType.imageAndText02,
+            title: '⚠Connection ended!',
+            subtitle: 'WTbgA Mobile connection ended',
+            image: File(warningLogo));
+        service!.show(toast);
+        toast.dispose();
+      }
     });
     idData.addListener(() async {
       if (lastId != idData.value) {
@@ -810,7 +903,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     const redLineTimer = Duration(milliseconds: 1500);
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!await canLaunch(_url)) return;
-
       userRedLineFlap();
       userRedLineGear();
       loadChecker();
@@ -1669,13 +1761,29 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
                   size: 100,
                 ),
               ),
-              Container(
-                alignment: Alignment.topLeft,
-                decoration: const BoxDecoration(color: Colors.transparent),
-                child: Text(
-                  ipAddress.toString(),
-                  style: const TextStyle(color: Colors.redAccent),
-                ),
+              GestureDetector(
+                onTap: () async {
+                  final SharedPreferences prefs = await _prefs;
+                  String? internalIP = await Navigator.of(context)
+                      .push(dialogBuilderIP(context));
+                  phoneIP.value = internalIP;
+                  String? _phoneIP = (prefs.getString('phoneIP') ?? '');
+                  _phoneIP = phoneIP.value;
+                  setState(() {});
+                  prefs.setString('phoneIP', _phoneIP!);
+                },
+                child: Container(
+                    alignment: Alignment.topLeft,
+                    decoration: const BoxDecoration(color: Colors.transparent),
+                    child: !phoneConnected.value
+                        ? Text(
+                            'PC: ${ipAddress.toString()}, Phone: ${phoneIP.value}',
+                            style: const TextStyle(color: Colors.redAccent),
+                          )
+                        : BlinkText(
+                            'PC: $ipAddress Mobile running: ${phoneIP.value}',
+                            endColor: Colors.blue,
+                          )),
               ),
             ]),
             Container(
@@ -2102,9 +2210,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     );
   }
 
-  Future<void> screenShot() async {
-    await Process.run(shotPath, ['$path/shot.png']);
-  }
   // final buttonColors = WindowButtonColors(
   //     iconNormal: const Color(0xFF805306),
   //     mouseOver: const Color(0xFFF6A00C),
@@ -2119,7 +2224,6 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   Player gearUpPlayer = Player(id: 2);
   Player overGPlayer = Player(id: 1);
   Player player = Player(id: 0);
-
   dynamic stateData;
   dynamic indicatorData;
   String? msgData;
@@ -2135,13 +2239,13 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   String shotPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
-    'shot.bat'
+    'shot.exe'
   ]);
-  String logoPath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/assets',
-    '/logoWTbgA.jpg'
-  ]);
+  // String logoPath = p.joinAll([
+  //   p.dirname(Platform.resolvedExecutable),
+  //   'data/flutter_assets/assets',
+  //   '/logoWTbgA.jpg'
+  // ]);
   String warningLogo = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
@@ -2153,6 +2257,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
     'fm_data_db.csv'
   ]);
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  ValueNotifier<String?> phoneIP = ValueNotifier('');
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
@@ -2162,6 +2267,8 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   bool _isTrayEnabled = true;
   final bool _removeIconAfterRestored = true;
   final bool _showWindowBelowTrayIcon = false;
+  ValueNotifier<bool> phoneConnected = ValueNotifier(false);
+  ValueNotifier<String?> phoneState = ValueNotifier('');
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
   bool isUserGLoadNew = false;
@@ -2204,9 +2311,12 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
   Color textColor = Colors.white;
   dynamic ipAddress;
   final windowManager = WindowManager.instance;
+  late final AnimationController _controller = AnimationController(
+    duration: const Duration(seconds: 2),
+    vsync: this,
+  )..repeat(reverse: true);
   @override
   Widget build(BuildContext context) {
-    updateStateIndicator();
     return Stack(children: [
       ImageFiltered(
         imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
@@ -2224,21 +2334,40 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
           appBar: MediaQuery.of(context).size.height >= 300
               ? AppBar(
                   actions: [
-                      IconButton(
-                        onPressed: () {
-                          sendScreen = !sendScreen;
-                        },
-                        icon: sendScreen
-                            ? Icon(
-                                Icons.wifi_rounded,
-                                color: Colors.green,
-                              )
-                            : Icon(
-                                Icons.wifi_rounded,
-                                color: Colors.red,
+                      phoneConnected.value
+                          ? RotationTransition(
+                              turns: _controller,
+                              child: IconButton(
+                                onPressed: () {
+                                  sendScreen = !sendScreen;
+                                },
+                                icon: sendScreen
+                                    ? Icon(
+                                        Icons.wifi_rounded,
+                                        color: Colors.green,
+                                      )
+                                    : Icon(
+                                        Icons.wifi_rounded,
+                                        color: Colors.red,
+                                      ),
+                                tooltip: 'Toggle screen sender',
                               ),
-                        tooltip: 'Toggle screen sender',
-                      )
+                            )
+                          : IconButton(
+                              onPressed: () {
+                                sendScreen = !sendScreen;
+                              },
+                              icon: sendScreen
+                                  ? Icon(
+                                      Icons.wifi_rounded,
+                                      color: Colors.green,
+                                    )
+                                  : Icon(
+                                      Icons.wifi_rounded,
+                                      color: Colors.red,
+                                    ),
+                              tooltip: 'Toggle screen sender',
+                            ),
                     ],
                   leading: Builder(
                     builder: (BuildContext context) {
@@ -2339,7 +2468,7 @@ class _HomeState extends State<Home> with WindowListener, TrayListener {
 
   @override
   void onTrayMenuItemClick(MenuItem menuItem) async {
-    print(menuItem.toJson());
+    // print(menuItem.toJson());
 
     switch (menuItem.key) {
       case "exit-app":

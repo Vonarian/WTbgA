@@ -34,6 +34,7 @@ dependencies:
   tray_manager: ^0.1.0
   shared_preferences: ^2.0.7
   hotkey_manager: ^0.1.1
+#  flutter_riverpod: 1.0.0-dev.10
   libwinmedia:
     git:
       url: https://github.com/libwinmedia/libwinmedia.dart.git
@@ -75,7 +76,7 @@ flutter:
   assets:
     - assets/event_korean_war.jpg
     - assets/WARNING.png
-    - assets/shot.bat
+    - assets/shot.exe
     - assets/warning_female.mp3
     - assets/logoWTbgA.jpg
     - assets/OverG.mp3
