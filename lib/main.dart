@@ -61,6 +61,7 @@ void main() async {
   );
   runApp(
     MaterialApp(
+      darkTheme: ThemeData(brightness: Brightness.dark),
       title: "WarThunderbgAssistant",
       debugShowCheckedModeBanner: false,
       initialRoute: '/',

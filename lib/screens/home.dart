@@ -21,7 +21,6 @@ import 'package:wtbgassistant/services/read_image.dart';
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
 import '../data_receivers/indicator_receiver.dart';
-import '../data_receivers/phone.dart';
 import '../data_receivers/state_receiver.dart';
 import '../main.dart';
 
@@ -62,7 +61,6 @@ class _HomeState extends State<Home>
         ],
         title: const Text('Red line notifier (Enter red line flap speed). '),
         content: TextField(
-          // onSubmitted: onSubmit,
           onChanged: (value) {},
           controller: userInputIasFlap,
           decoration: const InputDecoration(hintText: "Enter the IAS in km/h"),
@@ -138,36 +136,36 @@ class _HomeState extends State<Home>
             ));
   }
 
-  static Route<String> dialogBuilderIP(BuildContext context) {
-    TextEditingController userInputIP = TextEditingController();
-    return DialogRoute(
-        context: context,
-        builder: (BuildContext context) => AlertDialog(
-              content: TextField(
-                onChanged: (value) {},
-                controller: userInputIP,
-                decoration: const InputDecoration(hintText: '192.168.X.Y'),
-              ),
-              title:
-                  const Text('Red line notifier (Enter red line gear speed). '),
-              actions: [
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Cancel')),
-                ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context)
-                        ..removeCurrentSnackBar()
-                        ..showSnackBar(SnackBar(
-                            content: Text('Phone IP address has been update')));
-                      Navigator.of(context).pop(userInputIP.text);
-                    },
-                    child: const Text('Update'))
-              ],
-            ));
-  }
+  // static Route<String> dialogBuilderIP(BuildContext context) {
+  //   TextEditingController userInputIP = TextEditingController();
+  //   return DialogRoute(
+  //       context: context,
+  //       builder: (BuildContext context) => AlertDialog(
+  //             content: TextField(
+  //               onChanged: (value) {},
+  //               controller: userInputIP,
+  //               decoration: const InputDecoration(hintText: '192.168.X.Y'),
+  //             ),
+  //             title:
+  //                 const Text('Red line notifier (Enter red line gear speed). '),
+  //             actions: [
+  //               ElevatedButton(
+  //                   onPressed: () {
+  //                     Navigator.pop(context);
+  //                   },
+  //                   child: const Text('Cancel')),
+  //               ElevatedButton(
+  //                   onPressed: () {
+  //                     ScaffoldMessenger.of(context)
+  //                       ..removeCurrentSnackBar()
+  //                       ..showSnackBar(SnackBar(
+  //                           content: Text('Phone IP address has been update')));
+  //                     Navigator.of(context).pop(userInputIP.text);
+  //                   },
+  //                   child: const Text('Update'))
+  //             ],
+  //           ));
+  // }
 
   void userRedLineFlap() {
     if (stateData.flap == null) return;
@@ -407,15 +405,13 @@ class _HomeState extends State<Home>
   bool? emptyBool;
   ValueNotifier<int?> idData = ValueNotifier<int?>(null);
 
-  Future<void> updatePhone() async {
-    int i = 0;
-    if (i == 0) {
-      Future.delayed(const Duration(milliseconds: 4000), () async {
-        var dataForPhone = await getData(phoneIP.value);
-        phoneConnected.value = dataForPhone!;
-      });
-    }
-  }
+  // Future<void> updatePhone() async {
+  //   Timer.periodic(const Duration(milliseconds: 4000), (_) async {
+  //     PhoneData dataForPhone = await PhoneData.getPhoneData(phoneIP.value);
+  //     phoneConnected.value = dataForPhone.active!;
+  //     phoneState.value = dataForPhone.state;
+  //   });
+  // }
 
   Future<void> updateStateIndicator() async {
     ToolDataState dataForState = await ToolDataState.getState();
@@ -481,15 +477,6 @@ class _HomeState extends State<Home>
     });
   }
 
-  // Future<void> updateRam() async {
-  //   var ramTotalReceive = MemInfo().mem_total_gb;
-  //   var ramUsageReceive = MemInfo().swap_total_gb;
-  //   setState(() {
-  //     ramUsage = ramUsageReceive;
-  //     ramTotal = ramTotalReceive;
-  //   });
-  // }
-
   void flapChecker() {
     if (indicatorData.flap1 == null) return;
     if (((indicatorData.flap1 != indicatorData.flap2) ||
@@ -511,37 +498,6 @@ class _HomeState extends State<Home>
     }
   }
 
-  // void highAcceleration() {
-  //   if (!mounted) return;
-  //   if (secondSpeed == null) {
-  //     return;
-  //   }
-  //   double? avgTAS = ((secondSpeed! - firstSpeed!) / 2);
-  //   if (avgTAS >= 10 && counter == 0) {
-  //     Toast toast = Toast(
-  //         type: ToastType.imageAndText02,
-  //         title: '😳WARNING!!',
-  //         subtitle: 'Very high acceleration, be careful',
-  //         image: File(warningLogo));
-  //     service!.show(toast);
-  //     toast.dispose();
-  //     service?.stream.listen((event) {
-  //       if (event is ToastActivated) {
-  //         windowManager.show();
-  //       }
-  //     });
-  //     player.play();
-  //     counter++;
-  //   }
-  //   if (counter == 1) {
-  //     Future.delayed(const Duration(seconds: 6), () {
-  //       setState(() {
-  //         counter = 0;
-  //       });
-  //     });
-  //   }
-  // }
-
   Future<void> averageIasForStall() async {
     if (!mounted) return;
     if (secondSpeed == null) return;
@@ -558,8 +514,6 @@ class _HomeState extends State<Home>
   }
 
   Future<void> critAoaChecker() async {
-    // print(stateData.aoa);
-    // print(critAoa);
     if (stateData.aoa == null || critAoa == null || stateData.gear == null) {
       return;
     }
@@ -580,10 +534,6 @@ class _HomeState extends State<Home>
     }
   }
 
-  // final SystemTray _systemTray = SystemTray();
-  // Timer? _timer;
-  // bool _toggleTrayIcon = true;
-
   @override
   void dispose() {
     super.dispose();
@@ -599,82 +549,13 @@ class _HomeState extends State<Home>
     phoneIP.removeListener(() {});
   }
 
-  // Future<void> _handleClickMinimize() async {
-  //   windowManager.minimize();
-  // }
-
   Future<void> _handleClickRestore() async {
     windowManager.restore();
     windowManager.show();
   }
-  // Future<void> initSystemTray() async {
-  //   String? path;
-  //   if (Platform.isWindows) {
-  //     path = p.joinAll([
-  //       p.dirname(Platform.resolvedExecutable),
-  //       'data/flutter_assets/assets',
-  //       'logoWTbgA.jpg'
-  //     ]);
-  //   } else if (Platform.isMacOS) {
-  //     path = p.joinAll(['AppIcon']);
-  //   }
-  //
-  //   // We first init the systray menu and then add the menu entries
-  //   await _systemTray.initSystemTray('Tray', toolTip: 'Help', iconPath: path);
-  //
-  //   await _systemTray.setContextMenu(
-  //     [
-  //       MenuItem(
-  //         label: 'Show',
-  //         onClicked: () {
-  //           // appWindow.show();
-  //         },
-  //       ),
-  //       MenuSeparator(),
-  //       SubMenu(
-  //         label: "SubMenu",
-  //         children: [
-  //           MenuItem(
-  //             label: 'SubItem1',
-  //             enabled: false,
-  //             onClicked: () {
-  //               print("click SubItem1");
-  //             },
-  //           ),
-  //           MenuItem(label: 'SubItem2'),
-  //           MenuItem(label: 'SubItem3'),
-  //         ],
-  //       ),
-  //       MenuSeparator(),
-  //       MenuItem(
-  //         label: 'Exit',
-  //         onClicked: () {
-  //           // appWindow.close();
-  //         },
-  //       ),
-  //     ],
-  //   );
-  //
-  //   // flash tray icon
-  //   _timer = Timer.periodic(
-  //     const Duration(milliseconds: 500),
-  //     (timer) {
-  //       _toggleTrayIcon = !_toggleTrayIcon;
-  //       _systemTray.setSystemTrayInfo(
-  //         iconPath: _toggleTrayIcon ? "" : path,
-  //       );
-  //     },
-  //   );
-  //
-  //   // handle system tray event
-  //   _systemTray.registerSystemTrayEventHandler((eventName) {
-  //     print("eventName: $eventName");
-  //   });
-  // }
 
   Future<void> hostChecker() async {
-    if (await canLaunch('http://localhost:8111')) {
-    } else {
+    if (!await canLaunch('http://localhost:8111')) {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(const SnackBar(
@@ -692,47 +573,76 @@ class _HomeState extends State<Home>
   }
 
   Future<void> startServer() async {
+    Stopwatch timer = Stopwatch();
     await screenShot();
-    // var server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
     var imageData = await getFileAsBase64String('$path/shot.png');
     HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
-      server.listen((HttpRequest request) async {
-        if (sendScreen) {
-          await screenShot();
-          imageData = await getFileAsBase64String('$path/shot.png');
+      timer.start();
+      Timer.periodic(Duration(seconds: 1), (_) {
+        if (timer.elapsedMilliseconds >= 6500) {
+          print(timer.elapsedMilliseconds);
+          phoneConnected.value = false;
+          print(phoneConnected.value);
         }
-        Map<String, dynamic> serverData = {
-          "vehicleName": indicatorData.name,
-          "ias": stateData.ias,
-          "tas": stateData.tas,
-          "climb": stateData.climb,
-          "damageId": idData.value,
-          "damageMsg": msgData,
-          "critAoa": critAoa,
-          "aoa": stateData.aoa,
-          "throttle": indicatorData.throttle,
-          "engineTemp": indicatorData.engine,
-          "oil": stateData.oil,
-          "water": stateData.water,
-          "altitude": stateData.height,
-          "minFuel": stateData.minFuel,
-          "maxFuel": stateData.maxFuel,
-          "gear": stateData.gear,
-          "chat1": chatMsgFirst,
-          "chatId1": chatIdFirst.value,
-          "chat2": chatMsgSecond,
-          "chatId2": chatIdSecond.value,
-          "chatMode1": chatModeFirst,
-          "chatMode2": chatModeSecond,
-          "chatSender1": chatSenderFirst,
-          "chatSender2": chatSenderSecond,
-          "chatEnemy1": chatEnemyFirst,
-          "chatEnemy2": chatEnemySecond,
-          "image": !sendScreen ? 'iVBN' : imageData,
-          "active": sendScreen
-        };
-        request.response.write(jsonEncode(serverData));
-        request.response.close();
+      });
+      server.listen((HttpRequest request) async {
+        ContentType? contentType = request.headers.contentType;
+        if (request.method == 'POST' &&
+            contentType!.mimeType == 'application/json') {
+          timer.reset();
+          String content = await utf8.decoder.bind(request).join();
+          Map<String?, dynamic> data = jsonDecode(content);
+          phoneConnected.value = data['WTbgA'];
+          phoneState.value = data['state'];
+          nonePost = false;
+          headerColor = Colors.deepPurple;
+          drawerIcon = Icons.settings;
+          if (sendScreen) {
+            await screenShot();
+            imageData = await getFileAsBase64String('$path/shot.png');
+          }
+          Map<String, dynamic> serverData = {
+            "vehicleName": indicatorData.name,
+            "ias": stateData.ias,
+            "tas": stateData.tas,
+            "climb": stateData.climb,
+            "damageId": idData.value,
+            "damageMsg": msgData,
+            "critAoa": critAoa,
+            "aoa": stateData.aoa,
+            "throttle": indicatorData.throttle,
+            "engineTemp": indicatorData.engine,
+            "oil": stateData.oil,
+            "water": stateData.water,
+            "altitude": stateData.height,
+            "minFuel": stateData.minFuel,
+            "maxFuel": stateData.maxFuel,
+            "gear": stateData.gear,
+            "chat1": chatMsgFirst,
+            "chatId1": chatIdFirst.value,
+            "chat2": chatMsgSecond,
+            "chatId2": chatIdSecond.value,
+            "chatMode1": chatModeFirst,
+            "chatMode2": chatModeSecond,
+            "chatSender1": chatSenderFirst,
+            "chatSender2": chatSenderSecond,
+            "chatEnemy1": chatEnemyFirst,
+            "chatEnemy2": chatEnemySecond,
+            "image":
+                !sendScreen || phoneState.value != 'home' ? 'iVBN' : imageData,
+            "active": sendScreen
+          };
+          request.response.write(jsonEncode(serverData));
+          request.response.close();
+        } else {
+          phoneConnected.value = false;
+          String serverData = 'ACCESS DENIED';
+          nonePost = true;
+          headerColor = Colors.red;
+          drawerIcon = Icons.warning;
+          request.response.write(serverData);
+          request.response.close();
+        }
       });
     });
   }
@@ -796,7 +706,7 @@ class _HomeState extends State<Home>
     final _url = 'http://localhost:8111';
     updateStateIndicator();
     receiveDiskValues();
-    updatePhone();
+    // updatePhone();
     keyRegister();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
@@ -805,10 +715,9 @@ class _HomeState extends State<Home>
     chatSettingsManager();
     super.initState();
     const twoSec = Duration(milliseconds: 2000);
-    Timer.periodic(Duration(milliseconds: 4000), (timer) async {
-      await updatePhone();
-      // print('waited');
-    });
+    // Timer.periodic(Duration(milliseconds: 4000), (timer) async {
+    //   await updatePhone();
+    // });
     Timer.periodic(twoSec, (Timer t) async {
       if (!await canLaunch(_url)) return;
       giveIps();
@@ -834,10 +743,13 @@ class _HomeState extends State<Home>
       stateData = ModalRoute.of(context)?.settings.arguments;
       indicatorData = ModalRoute.of(context)?.settings.arguments;
     });
-    phoneIP.addListener(() {
-      setState(() {});
+    phoneState.addListener(() {
+      if (phoneState.value == 'home') {
+        sendScreen = false;
+        setState(() {});
+      }
     });
-    phoneConnected.addListener(() {
+    phoneConnected.addListener(() async {
       if (phoneConnected.value) {
         ScaffoldMessenger.of(context)
           ..removeCurrentSnackBar()
@@ -919,18 +831,7 @@ class _HomeState extends State<Home>
     Future.delayed(const Duration(milliseconds: 250), () {
       critAoa = convertCsvFileToMap(
           csvString)[indicatorData.name.toString().toLowerCase()];
-      // print(convertCsvFileToMap(
-      //     csvString)[indicatorData.name.toString().toLowerCase()]);
-
-      // print(indicatorData.name.toString().toLowerCase());
-      // print(convertCsvFileToMap(csvString).containsKey('f_5e'));
     });
-    // a-20g: -13.0
-    // a-26b: -12.0
-    // a-26b_10: -12.0
-    // a-26c: -12.0
-    // a2d: -17.2
-    // a5m4: -20.0
   }
 
   Map<String, double> convertCsvFileToMap(String csvString) => {
@@ -958,31 +859,6 @@ class _HomeState extends State<Home>
     await TrayManager.instance.destroy();
   }
 
-  // Future<void> oilNotify() async {
-  //   await ToolDataState.getData();
-  //   if (int.parse(data.oil) >= int.parse(text1.value) &&
-  //       text1.value != '-20' &&
-  //       data.oil != 'null' &&
-  //       run) {
-  //     Toast toast = new Toast(
-  //         type: ToastType.imageAndText02,
-  //         title: 'Warning!',
-  //         subtitle: 'Oil temperature reached red line level!',
-  //         image: new File('C:/src/untitled112/assets/Engine.jpg'));
-  //     service?.show(toast);
-  //     setState(() {
-  //       run = false;
-  //     });
-  //   }
-  //   if (int.parse(data.oil) < int.parse(text1.value)) {
-  //     setState(() {
-  //       run = true;
-  //     });
-  //   }
-  // }
-
-// dialogBuilderBuilder() =>
-// void Function(String text) onSubmit
   Future<void> keyRegister() async {
     HotKeyManager.instance.register(
       HotKey(
@@ -1021,22 +897,6 @@ class _HomeState extends State<Home>
         showFuel = true;
       });
     });
-    // bool isFullScreen = await windowManager.isFullScreen();
-    // HotKeyManager.instance.register(
-    //   HotKey(
-    //     KeyCode.digit3,
-    //     modifiers: [KeyModifier.alt],
-    //   ),
-    //   keyDownHandler: (_) async {
-    //     if (!isFullScreen) {
-    //       await Window.enterFullscreen();
-    //     }
-    //     if (isFullScreen) {
-    //       await Window.exitFullscreen();
-    //     }
-    //     print(isFullScreen);
-    //   },
-    // );
   }
 
   Widget fuelIndicator() {
@@ -1742,50 +1602,39 @@ class _HomeState extends State<Home>
     });
   }
 
+  Color headerColor = Colors.deepPurple;
+  IconData drawerIcon = Icons.settings;
   Widget drawerBuilder() {
     return Drawer(
       child: Container(
-        decoration: const BoxDecoration(color: Colors.deepPurple),
+        decoration: const BoxDecoration(color: Colors.black),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            Stack(children: [
-              const DrawerHeader(
-                curve: Curves.bounceIn,
-                duration: Duration(seconds: 12),
-                decoration: BoxDecoration(
-                  color: Colors.deepPurple,
-                ),
-                child: Icon(
-                  Icons.settings,
-                  size: 100,
-                ),
+            DrawerHeader(
+              curve: Curves.bounceIn,
+              duration: Duration(seconds: 4),
+              decoration: BoxDecoration(
+                color: headerColor,
               ),
-              GestureDetector(
-                onTap: () async {
-                  final SharedPreferences prefs = await _prefs;
-                  String? internalIP = await Navigator.of(context)
-                      .push(dialogBuilderIP(context));
-                  phoneIP.value = internalIP;
-                  String? _phoneIP = (prefs.getString('phoneIP') ?? '');
-                  _phoneIP = phoneIP.value;
-                  setState(() {});
-                  prefs.setString('phoneIP', _phoneIP!);
-                },
-                child: Container(
-                    alignment: Alignment.topLeft,
-                    decoration: const BoxDecoration(color: Colors.transparent),
-                    child: !phoneConnected.value
-                        ? Text(
-                            'PC: ${ipAddress.toString()}, Phone: ${phoneIP.value}',
-                            style: const TextStyle(color: Colors.redAccent),
-                          )
-                        : BlinkText(
-                            'PC: $ipAddress Mobile running: ${phoneIP.value}',
-                            endColor: Colors.blue,
-                          )),
+              child: Icon(
+                drawerIcon,
+                size: 100,
               ),
-            ]),
+            ),
+            Container(
+                padding: EdgeInsets.only(left: 12),
+                alignment: Alignment.topLeft,
+                decoration: const BoxDecoration(color: Colors.black87),
+                child: !phoneConnected.value
+                    ? Text(
+                        'PC IP: ${ipAddress.toString()}',
+                        style: const TextStyle(color: Colors.redAccent),
+                      )
+                    : BlinkText(
+                        'PC IP: $ipAddress',
+                        endColor: Colors.green,
+                      )),
             Container(
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
@@ -2023,17 +1872,6 @@ class _HomeState extends State<Home>
                     color: Colors.amber,
                   )),
             ),
-
-            // Container(
-            //   alignment: Alignment.topLeft,
-            //   decoration: const BoxDecoration(color: Colors.black87),
-            //   child: TextButton.icon(
-            //       label: const Text('Enter transparent mode'),
-            //       onPressed: () {
-            //         Navigator.pushReplacementNamed(context, '/transparent');
-            //       },
-            //       icon: const Icon(MaterialCommunityIcons.dock_window)),
-            // ),
             Container(
               alignment: Alignment.topCenter,
               decoration: const BoxDecoration(color: Colors.black87),
@@ -2046,14 +1884,6 @@ class _HomeState extends State<Home>
               child:
                   chatBuilder(chatSenderFirst, chatMsgFirst, chatPrefixFirst),
             ),
-
-            // Container(
-            //     alignment: Alignment.topLeft,
-            //     decoration: BoxDecoration(color: Colors.black87),
-            //     child: Text(
-            //       '$ramUsage/$ramTotal GB used',
-            //       style: TextStyle(color: Colors.green),
-            //     )),
           ],
         ),
       ),
@@ -2210,13 +2040,6 @@ class _HomeState extends State<Home>
     );
   }
 
-  // final buttonColors = WindowButtonColors(
-  //     iconNormal: const Color(0xFF805306),
-  //     mouseOver: const Color(0xFFF6A00C),
-  //     mouseDown: const Color(0xFF805306),
-  //     iconMouseOver: const Color(0xFF805306),
-  //     iconMouseDown: const Color(0xFFFFD500));
-
   Color? chatColorFirst;
   Color? chatColorSecond;
 
@@ -2241,11 +2064,7 @@ class _HomeState extends State<Home>
     'data/flutter_assets/assets',
     'shot.exe'
   ]);
-  // String logoPath = p.joinAll([
-  //   p.dirname(Platform.resolvedExecutable),
-  //   'data/flutter_assets/assets',
-  //   '/logoWTbgA.jpg'
-  // ]);
+
   String warningLogo = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
@@ -2257,7 +2076,7 @@ class _HomeState extends State<Home>
     'fm_data_db.csv'
   ]);
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  ValueNotifier<String?> phoneIP = ValueNotifier('');
+  ValueNotifier<String> phoneIP = ValueNotifier('');
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
@@ -2294,6 +2113,7 @@ class _HomeState extends State<Home>
   bool? chatEnemySecond;
   bool? chatEnemyFirst;
   bool critAoaBool = false;
+  bool nonePost = false;
   double? fuelPercent;
   double? avgTAS;
   double? critAoa;
@@ -2315,6 +2135,7 @@ class _HomeState extends State<Home>
     duration: const Duration(seconds: 2),
     vsync: this,
   )..repeat(reverse: true);
+
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
@@ -2339,7 +2160,19 @@ class _HomeState extends State<Home>
                               turns: _controller,
                               child: IconButton(
                                 onPressed: () {
-                                  sendScreen = !sendScreen;
+                                  if (phoneState.value == 'image') {
+                                    print(phoneState.value);
+                                    sendScreen = !sendScreen;
+                                  } else {
+                                    ScaffoldMessenger.of(context)
+                                      ..removeCurrentSnackBar()
+                                      ..showSnackBar(SnackBar(
+                                          content: BlinkText(
+                                        'Phone is not in image mode',
+                                        endColor: Colors.red,
+                                        style: TextStyle(color: Colors.cyan),
+                                      )));
+                                  }
                                 },
                                 icon: sendScreen
                                     ? Icon(
@@ -2355,7 +2188,16 @@ class _HomeState extends State<Home>
                             )
                           : IconButton(
                               onPressed: () {
-                                sendScreen = !sendScreen;
+                                if (phoneState.value == 'image') {
+                                  print(phoneState.value);
+                                  sendScreen = !sendScreen;
+                                } else {
+                                  ScaffoldMessenger.of(context)
+                                    ..removeCurrentSnackBar()
+                                    ..showSnackBar(SnackBar(
+                                        content: BlinkText(
+                                            'Phone is not in image mode')));
+                                }
                               },
                               icon: sendScreen
                                   ? Icon(
@@ -2366,7 +2208,7 @@ class _HomeState extends State<Home>
                                       Icons.wifi_rounded,
                                       color: Colors.red,
                                     ),
-                              tooltip: 'Toggle screen sender',
+                              tooltip: 'Toggle Stream Mode',
                             ),
                     ],
                   leading: Builder(
@@ -2403,42 +2245,7 @@ class _HomeState extends State<Home>
                           (indicatorData.valid == true &&
                               indicatorData.valid != null)
                       ? homeWidgetRow()
-                      : homeWidgetNoData())
-          // floatingActionButton: MediaQuery.of(context).size.height >= 450 &&
-          //         MediaQuery.of(context).size.width >= 450
-          //     ? FloatingActionButton(
-          //         backgroundColor: Colors.red,
-          //         tooltip: isFullNotifOn
-          //             ? 'Toggle overheat notifier(On)'
-          //             : 'Toggle overheat notifier(Off)',
-          //         child: isFullNotifOn
-          //             ? Icon(
-          //                 Icons.notifications,
-          //                 color: Colors.green[400],
-          //               )
-          //             : Icon(
-          //                 Icons.notifications_off,
-          //                 color: Colors.black,
-          //               ),
-          // onPressed: () {
-          //           setState(() {
-          //             isFullNotifOn = !isFullNotifOn;
-          //           });
-          //           ScaffoldMessenger.of(context)
-          //             ..removeCurrentSnackBar()
-          //             ..showSnackBar(SnackBar(
-          //                 content: isFullNotifOn
-          //                     ? Text(
-          //                         'Notifications are now enabled',
-          //                         style: TextStyle(color: Colors.green),
-          //                       )
-          //                     : Text(
-          //                         'Notifications are now disabled',
-          //                         style: TextStyle(color: Colors.red),
-          //                       )));
-          //         })
-          //     : null,
-          ),
+                      : homeWidgetNoData())),
     ]);
   }
 
@@ -2468,8 +2275,6 @@ class _HomeState extends State<Home>
 
   @override
   void onTrayMenuItemClick(MenuItem menuItem) async {
-    // print(menuItem.toJson());
-
     switch (menuItem.key) {
       case "exit-app":
         windowManager.terminate();
