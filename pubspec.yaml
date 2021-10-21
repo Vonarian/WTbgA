@@ -30,10 +30,14 @@ dependencies:
   json_annotation:
   url_launcher: ^6.0.9
   path: ^1.8.0
-  window_manager: ^0.0.4
+  window_manager: ^0.0.5
+#  screen_recorder:
+#  dart_vlc:
   tray_manager: ^0.1.0
   shared_preferences: ^2.0.7
   hotkey_manager: ^0.1.1
+  web_socket_channel: ^2.1.0
+  flutter_acrylic:
 #  flutter_riverpod: 1.0.0-dev.10
   libwinmedia:
     git:
@@ -76,7 +80,6 @@ flutter:
   assets:
     - assets/event_korean_war.jpg
     - assets/WARNING.png
-    - assets/shot.exe
     - assets/warning_female.mp3
     - assets/logoWTbgA.jpg
     - assets/OverG.mp3
@@ -85,7 +88,7 @@ flutter:
     - assets/PullUp.mp3
     - assets/app_icon.ico
     - assets/fm_data_db.csv
-
+    - assets/screencapture.cpp
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:blinking_text/blinking_text.dart';
+// import 'package:dart_vlc/dart_vlc.dart' as v;
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -16,7 +17,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/services/read_image.dart';
+
+// import 'package:wtbgassistant/services/read_image.dart';
 
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
@@ -417,23 +419,19 @@ class _HomeState extends State<Home>
     ToolDataState dataForState = await ToolDataState.getState();
     ToolDataIndicator dataForIndicator = await ToolDataIndicator.getIndicator();
     if (!mounted) return;
-    setState(() {
-      stateData = dataForState;
-      indicatorData = dataForIndicator;
-    });
+    stateData = dataForState;
+    indicatorData = dataForIndicator;
   }
 
   Future<void> updateMsgId() async {
     List<Damage> dataForId = await Damage.getDamage();
     List<Damage> dataForMsg = await Damage.getDamage();
     if (!mounted) return;
-    setState(() {
-      idData.value =
-          dataForId.isNotEmpty ? dataForId[dataForId.length - 1].id : emptyInt;
-      msgData = dataForMsg.isNotEmpty
-          ? dataForMsg[dataForMsg.length - 1].msg
-          : emptyString;
-    });
+    idData.value =
+        dataForId.isNotEmpty ? dataForId[dataForId.length - 1].id : emptyInt;
+    msgData = dataForMsg.isNotEmpty
+        ? dataForMsg[dataForMsg.length - 1].msg
+        : emptyString;
   }
 
   Future<void> updateChat() async {
@@ -443,38 +441,36 @@ class _HomeState extends State<Home>
     List<ChatEvents> dataForChatSender = await ChatEvents.getChat();
     List<ChatEvents> dataForChatMode = await ChatEvents.getChat();
     if (!mounted) return;
-    setState(() {
-      chatIdFirst.value = dataForChatId.isNotEmpty
-          ? dataForChatId[dataForChatId.length - 1].id
-          : emptyInt;
-      chatMsgFirst = dataForChatMsg.isNotEmpty
-          ? dataForChatMsg[dataForChatMsg.length - 1].msg
-          : emptyString;
-      chatModeFirst = dataForChatMode.isNotEmpty
-          ? dataForChatMode[dataForChatMode.length - 1].mode
-          : emptyString;
-      chatEnemyFirst = dataForChatEnemy.isNotEmpty
-          ? dataForChatEnemy[dataForChatEnemy.length - 1].enemy
-          : emptyBool;
-      chatSenderFirst = dataForChatSender.isNotEmpty
-          ? dataForChatSender[dataForChatSender.length - 1].sender
-          : emptyString;
-      chatIdSecond.value = dataForChatId.isNotEmpty
-          ? dataForChatId[dataForChatId.length - 2].id
-          : emptyInt;
-      chatMsgSecond = dataForChatMsg.isNotEmpty
-          ? dataForChatMsg[dataForChatMsg.length - 2].msg
-          : emptyString;
-      chatModeSecond = dataForChatMode.isNotEmpty
-          ? dataForChatMode[dataForChatMode.length - 2].mode
-          : emptyString;
-      chatEnemySecond = dataForChatEnemy.isNotEmpty
-          ? dataForChatEnemy[dataForChatEnemy.length - 2].enemy
-          : emptyBool;
-      chatSenderSecond = dataForChatSender.isNotEmpty
-          ? dataForChatSender[dataForChatSender.length - 2].sender
-          : emptyString;
-    });
+    chatIdFirst.value = dataForChatId.isNotEmpty
+        ? dataForChatId[dataForChatId.length - 1].id
+        : emptyInt;
+    chatMsgFirst = dataForChatMsg.isNotEmpty
+        ? dataForChatMsg[dataForChatMsg.length - 1].msg
+        : emptyString;
+    chatModeFirst = dataForChatMode.isNotEmpty
+        ? dataForChatMode[dataForChatMode.length - 1].mode
+        : emptyString;
+    chatEnemyFirst = dataForChatEnemy.isNotEmpty
+        ? dataForChatEnemy[dataForChatEnemy.length - 1].enemy
+        : emptyBool;
+    chatSenderFirst = dataForChatSender.isNotEmpty
+        ? dataForChatSender[dataForChatSender.length - 1].sender
+        : emptyString;
+    chatIdSecond.value = dataForChatId.isNotEmpty
+        ? dataForChatId[dataForChatId.length - 2].id
+        : emptyInt;
+    chatMsgSecond = dataForChatMsg.isNotEmpty
+        ? dataForChatMsg[dataForChatMsg.length - 2].msg
+        : emptyString;
+    chatModeSecond = dataForChatMode.isNotEmpty
+        ? dataForChatMode[dataForChatMode.length - 2].mode
+        : emptyString;
+    chatEnemySecond = dataForChatEnemy.isNotEmpty
+        ? dataForChatEnemy[dataForChatEnemy.length - 2].enemy
+        : emptyBool;
+    chatSenderSecond = dataForChatSender.isNotEmpty
+        ? dataForChatSender[dataForChatSender.length - 2].sender
+        : emptyString;
   }
 
   void flapChecker() {
@@ -568,83 +564,92 @@ class _HomeState extends State<Home>
     }
   }
 
-  Future<void> screenShot() async {
-    await Process.run(shotPath, ['$path/shot.png']);
-  }
-
   Future<void> startServer() async {
-    Stopwatch timer = Stopwatch();
-    await screenShot();
-    var imageData = await getFileAsBase64String('$path/shot.png');
-    HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
-      timer.start();
-      Timer.periodic(Duration(seconds: 1), (_) {
-        if (timer.elapsedMilliseconds >= 6500) {
-          print(timer.elapsedMilliseconds);
-          phoneConnected.value = false;
-          print(phoneConnected.value);
-        }
-      });
-      server.listen((HttpRequest request) async {
-        ContentType? contentType = request.headers.contentType;
-        if (request.method == 'POST' &&
-            contentType!.mimeType == 'application/json') {
-          timer.reset();
-          String content = await utf8.decoder.bind(request).join();
-          Map<String?, dynamic> data = jsonDecode(content);
-          phoneConnected.value = data['WTbgA'];
-          phoneState.value = data['state'];
-          nonePost = false;
-          headerColor = Colors.deepPurple;
-          drawerIcon = Icons.settings;
-          if (sendScreen) {
-            await screenShot();
-            imageData = await getFileAsBase64String('$path/shot.png');
-          }
-          Map<String, dynamic> serverData = {
-            "vehicleName": indicatorData.name,
-            "ias": stateData.ias,
-            "tas": stateData.tas,
-            "climb": stateData.climb,
-            "damageId": idData.value,
-            "damageMsg": msgData,
-            "critAoa": critAoa,
-            "aoa": stateData.aoa,
-            "throttle": indicatorData.throttle,
-            "engineTemp": indicatorData.engine,
-            "oil": stateData.oil,
-            "water": stateData.water,
-            "altitude": stateData.height,
-            "minFuel": stateData.minFuel,
-            "maxFuel": stateData.maxFuel,
-            "gear": stateData.gear,
-            "chat1": chatMsgFirst,
-            "chatId1": chatIdFirst.value,
-            "chat2": chatMsgSecond,
-            "chatId2": chatIdSecond.value,
-            "chatMode1": chatModeFirst,
-            "chatMode2": chatModeSecond,
-            "chatSender1": chatSenderFirst,
-            "chatSender2": chatSenderSecond,
-            "chatEnemy1": chatEnemyFirst,
-            "chatEnemy2": chatEnemySecond,
-            "image":
-                !sendScreen || phoneState.value != 'home' ? 'iVBN' : imageData,
-            "active": sendScreen
-          };
-          request.response.write(jsonEncode(serverData));
-          request.response.close();
-        } else {
-          phoneConnected.value = false;
-          String serverData = 'ACCESS DENIED';
-          nonePost = true;
-          headerColor = Colors.red;
-          drawerIcon = Icons.warning;
-          request.response.write(serverData);
-          request.response.close();
-        }
-      });
+    Future.delayed(Duration(milliseconds: 800), () {
+      HttpServer.bind(InternetAddress.anyIPv4, 55200).then((HttpServer server) {
+        print('[+]WebSocket listening at -- ws://$ipAddress:55200');
+        server.listen((HttpRequest request) {
+          WebSocketTransformer.upgrade(request).then((WebSocket ws) {
+            ws.listen(
+              (data) {
+                Map<String, dynamic> serverData = {
+                  "vehicleName": indicatorData.name,
+                  "ias": stateData.ias,
+                  "tas": stateData.tas,
+                  "climb": stateData.climb,
+                  "damageId": idData.value,
+                  "damageMsg": msgData,
+                  "critAoa": critAoa,
+                  "aoa": stateData.aoa,
+                  "throttle": indicatorData.throttle,
+                  "engineTemp": indicatorData.engine,
+                  "oil": stateData.oil,
+                  "water": stateData.water,
+                  "altitude": stateData.height,
+                  "minFuel": stateData.minFuel,
+                  "maxFuel": stateData.maxFuel,
+                  "gear": stateData.gear,
+                  "chat1": chatMsgFirst,
+                  "chatId1": chatIdFirst.value,
+                  "chat2": chatMsgSecond,
+                  "chatId2": chatIdSecond.value,
+                  "chatMode1": chatModeFirst,
+                  "chatMode2": chatModeSecond,
+                  "chatSender1": chatSenderFirst,
+                  "chatSender2": chatSenderSecond,
+                  "chatEnemy1": chatEnemyFirst,
+                  "chatEnemy2": chatEnemySecond,
+                };
+                var internalData = jsonDecode(data);
+                phoneConnected.value = (internalData['WTbgA']);
+                phoneState.value = (internalData['state']);
+                Timer(Duration(seconds: 1), () {
+                  if (ws.readyState == WebSocket.open)
+                    // checking connection state helps to avoid unprecedented errors
+                    ws.add(json.encode(serverData));
+                });
+              },
+              onDone: () {
+                ws.addError("Error");
+                print('[+]Done :)');
+                phoneConnected.value = false;
+              },
+              onError: (err) => print('[!]Error -- ${err.toString()}'),
+              cancelOnError: false,
+            );
+          }, onError: (err) => print('[!]Error -- ${err.toString()}'));
+        }, onError: (err) => print('[!]Error -- ${err.toString()}'));
+      }, onError: (err) => print('[!]Error -- ${err.toString()}'));
     });
+    //
+
+    // WebSocket.connect('ws://192.168.43.8:55200').then((WebSocket ws) {
+    //   // our websocket server runs on ws://localhost:8000
+    //   if (ws.readyState == WebSocket.open) {
+    //     // as soon as websocket is connected and ready for use, we can start talking to other end
+    //     ws.add(
+    //         "Received Data"); // this is the JSON data format to be transmitted
+    //     ws.listen(
+    //       // gives a StreamSubscription
+    //       (data) {
+    //         data = Map<String, dynamic>.from(json.decode(data));
+    //         print(
+    //             '\t\t -- ${data}'); // listen for incoming data and show when it arrives
+    //         Timer(Duration(seconds: 1), () {
+    //           if (ws.readyState ==
+    //               WebSocket
+    //                   .open) // checking whether connection is open or not, is required before writing anything on socket
+    //             ws.add("Received data");
+    //         });
+    //       },
+    //       onDone: () => print('[+]Done :)'),
+    //       onError: (err) => print('[!]Error -- ${err.toString()}'),
+    //       cancelOnError: false,
+    //     );
+    //   } else
+    //     print('[!]Connection Denied');
+    //   // in case, if serer is not running now
+    // }, onError: (err) => print('[!]Error -- ${err.toString()}'));
   }
 
   void receiveDiskValues() {
@@ -686,13 +691,13 @@ class _HomeState extends State<Home>
     });
     _prefs.then((SharedPreferences prefs) {
       _textForGLoad.value = (prefs.getInt('textForGLoad') ?? 12);
-      if (_textForGLoad.value != 12) {
+      if (_textForGLoad.value != 200) {
         isUserGLoadNew = true;
       }
     });
   }
 
-  Future giveIps() async {
+  Future<void> giveIps() async {
     for (var interface in await NetworkInterface.list()) {
       for (var addr in interface.addresses) {
         ipAddress = addr.address;
@@ -702,6 +707,7 @@ class _HomeState extends State<Home>
 
   @override
   void initState() {
+    giveIps();
     startServer();
     final _url = 'http://localhost:8111';
     updateStateIndicator();
@@ -729,8 +735,9 @@ class _HomeState extends State<Home>
     });
     const oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) async {
-      if (!await canLaunch(_url)) return;
       updateStateIndicator();
+      if (!mounted) return;
+      setState(() {});
     });
     const averageTimer = Duration(milliseconds: 2000);
     Timer.periodic(averageTimer, (Timer t) async {
@@ -746,7 +753,6 @@ class _HomeState extends State<Home>
     phoneState.addListener(() {
       if (phoneState.value == 'home') {
         sendScreen = false;
-        setState(() {});
       }
     });
     phoneConnected.addListener(() async {
@@ -885,17 +891,15 @@ class _HomeState extends State<Home>
     HotKeyManager.instance
         .register(HotKey(KeyCode.backspace, modifiers: [KeyModifier.alt]),
             keyDownHandler: (_) {
-      setState(() {
-        showIas = true;
-        showAlt = true;
-        showCompass = true;
-        showEngineTemp = true;
-        showOilTemp = true;
-        showWaterTemp = true;
-        showThrottle = true;
-        showClimb = true;
-        showFuel = true;
-      });
+      showIas = true;
+      showAlt = true;
+      showCompass = true;
+      showEngineTemp = true;
+      showOilTemp = true;
+      showWaterTemp = true;
+      showThrottle = true;
+      showClimb = true;
+      showFuel = true;
     });
   }
 
@@ -1556,50 +1560,46 @@ class _HomeState extends State<Home>
 
   chatSettingsManager() {
     if (!mounted) return;
-    setState(() {
-      if (chatModeFirst == 'All') {
-        chatPrefixFirst = '[ALL]';
-      }
-      if (chatModeFirst == 'Team') {
-        chatPrefixFirst = '[Team]';
-      }
-      if (chatModeFirst == 'Squad') {
-        chatPrefixFirst = '[Squad]';
-      }
-      if (chatModeFirst == null) {
-        chatPrefixFirst = null;
-      }
-      if (chatSenderFirst == null) {
-        chatSenderFirst == emptyString;
-      }
-      if (chatEnemyFirst == true) {
-        chatColorFirst = Colors.red;
-      } else {
-        chatColorFirst = Colors.lightBlueAccent;
-      }
-    });
-    setState(() {
-      if (chatModeSecond == 'All') {
-        chatPrefixSecond = '[ALL]';
-      }
-      if (chatModeSecond == 'Team') {
-        chatPrefixSecond = '[Team]';
-      }
-      if (chatModeSecond == 'Squad') {
-        chatPrefixSecond = '[Squad]';
-      }
-      if (chatModeSecond == null) {
-        chatPrefixSecond = null;
-      }
-      if (chatSenderSecond == null) {
-        chatSenderSecond == emptyString;
-      }
-      if (chatEnemyFirst == true) {
-        chatColorSecond = Colors.red;
-      } else {
-        chatColorSecond = Colors.lightBlueAccent;
-      }
-    });
+    if (chatModeFirst == 'All') {
+      chatPrefixFirst = '[ALL]';
+    }
+    if (chatModeFirst == 'Team') {
+      chatPrefixFirst = '[Team]';
+    }
+    if (chatModeFirst == 'Squad') {
+      chatPrefixFirst = '[Squad]';
+    }
+    if (chatModeFirst == null) {
+      chatPrefixFirst = null;
+    }
+    if (chatSenderFirst == null) {
+      chatSenderFirst == emptyString;
+    }
+    if (chatEnemyFirst == true) {
+      chatColorFirst = Colors.red;
+    } else {
+      chatColorFirst = Colors.lightBlueAccent;
+    }
+    if (chatModeSecond == 'All') {
+      chatPrefixSecond = '[ALL]';
+    }
+    if (chatModeSecond == 'Team') {
+      chatPrefixSecond = '[Team]';
+    }
+    if (chatModeSecond == 'Squad') {
+      chatPrefixSecond = '[Squad]';
+    }
+    if (chatModeSecond == null) {
+      chatPrefixSecond = null;
+    }
+    if (chatSenderSecond == null) {
+      chatSenderSecond == emptyString;
+    }
+    if (chatEnemyFirst == true) {
+      chatColorSecond = Colors.red;
+    } else {
+      chatColorSecond = Colors.lightBlueAccent;
+    }
   }
 
   Color headerColor = Colors.deepPurple;
@@ -1632,7 +1632,7 @@ class _HomeState extends State<Home>
                         style: const TextStyle(color: Colors.redAccent),
                       )
                     : BlinkText(
-                        'PC IP: $ipAddress',
+                        'PC IP: ${ipAddress.toString()}',
                         endColor: Colors.green,
                       )),
             Container(
@@ -1792,20 +1792,20 @@ class _HomeState extends State<Home>
                         ),
                   icon: const Icon(MaterialCommunityIcons.tray)),
             ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                label: const Text('Go to transparent page'),
-                icon: const Icon(
-                  Icons.info,
-                  color: Colors.cyanAccent,
-                ),
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/transparent');
-                },
-              ),
-            ),
+            // Container(
+            //   alignment: Alignment.topLeft,
+            //   decoration: const BoxDecoration(color: Colors.black87),
+            //   child: TextButton.icon(
+            //     label: const Text('Go to transparent page'),
+            //     icon: const Icon(
+            //       Icons.info,
+            //       color: Colors.cyanAccent,
+            //     ),
+            //     onPressed: () {
+            //       Navigator.pushReplacementNamed(context, '/transparent');
+            //     },
+            //   ),
+            // ),
             Container(
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
@@ -2082,7 +2082,7 @@ class _HomeState extends State<Home>
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   final ValueNotifier<int?> _textForIasFlap = ValueNotifier(2000);
   final ValueNotifier<int?> _textForIasGear = ValueNotifier(2000);
-  final ValueNotifier<int?> _textForGLoad = ValueNotifier(12);
+  final ValueNotifier<int?> _textForGLoad = ValueNotifier(200);
   bool _isTrayEnabled = true;
   final bool _removeIconAfterRestored = true;
   final bool _showWindowBelowTrayIcon = false;
@@ -2134,13 +2134,13 @@ class _HomeState extends State<Home>
   late final AnimationController _controller = AnimationController(
     duration: const Duration(seconds: 2),
     vsync: this,
-  )..repeat(reverse: true);
+  )..repeat(reverse: false);
 
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
       ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+        imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
         child: Image.asset(
           'assets/event_korean_war.jpg',
           height: MediaQuery.of(context).size.height,
@@ -2155,59 +2155,53 @@ class _HomeState extends State<Home>
           appBar: MediaQuery.of(context).size.height >= 300
               ? AppBar(
                   actions: [
+                      // IconButton(
+                      //     onPressed: () {
+                      //       channel.sink.add('Hello!');
+                      //     },
+                      //     icon: Icon(Icons.add)),
                       phoneConnected.value
                           ? RotationTransition(
                               turns: _controller,
                               child: IconButton(
                                 onPressed: () {
-                                  if (phoneState.value == 'image') {
-                                    print(phoneState.value);
-                                    sendScreen = !sendScreen;
-                                  } else {
-                                    ScaffoldMessenger.of(context)
-                                      ..removeCurrentSnackBar()
-                                      ..showSnackBar(SnackBar(
-                                          content: BlinkText(
-                                        'Phone is not in image mode',
-                                        endColor: Colors.red,
-                                        style: TextStyle(color: Colors.cyan),
-                                      )));
-                                  }
+                                  // if (phoneState.value == 'image') {
+                                  //   print(phoneState.value);
+                                  //   sendScreen = !sendScreen;
+                                  // } else {
+                                  //   ScaffoldMessenger.of(context)
+                                  //     ..removeCurrentSnackBar()
+                                  //     ..showSnackBar(SnackBar(
+                                  //         content: BlinkText(
+                                  //       'Phone is not in image mode',
+                                  //       endColor: Colors.red,
+                                  //       style: TextStyle(color: Colors.cyan),
+                                  //     )));
+                                  // }
                                 },
-                                icon: sendScreen
-                                    ? Icon(
-                                        Icons.wifi_rounded,
-                                        color: Colors.green,
-                                      )
-                                    : Icon(
-                                        Icons.wifi_rounded,
-                                        color: Colors.red,
-                                      ),
-                                tooltip: 'Toggle screen sender',
+                                icon: Icon(
+                                  Icons.wifi_rounded,
+                                  color: Colors.green,
+                                ),
+                                tooltip:
+                                    'Phone Connected = ${phoneConnected.value}',
                               ),
                             )
                           : IconButton(
                               onPressed: () {
-                                if (phoneState.value == 'image') {
-                                  print(phoneState.value);
-                                  sendScreen = !sendScreen;
-                                } else {
-                                  ScaffoldMessenger.of(context)
-                                    ..removeCurrentSnackBar()
-                                    ..showSnackBar(SnackBar(
-                                        content: BlinkText(
-                                            'Phone is not in image mode')));
-                                }
+                                // ScaffoldMessenger.of(context)
+                                //   ..removeCurrentSnackBar()
+                                //   ..showSnackBar(SnackBar(
+                                //       content: BlinkText(
+                                //     'Phone is not in image mode',
+                                //     endColor: Colors.red,
+                                //     style: TextStyle(color: Colors.cyan),
+                                //   )));
                               },
-                              icon: sendScreen
-                                  ? Icon(
-                                      Icons.wifi_rounded,
-                                      color: Colors.green,
-                                    )
-                                  : Icon(
-                                      Icons.wifi_rounded,
-                                      color: Colors.red,
-                                    ),
+                              icon: Icon(
+                                Icons.wifi_rounded,
+                                color: Colors.red,
+                              ),
                               tooltip: 'Toggle Stream Mode',
                             ),
                     ],

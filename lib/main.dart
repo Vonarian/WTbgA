@@ -1,8 +1,10 @@
 import 'dart:ffi';
-import 'dart:io';
+import 'dart:io' show Platform;
 
+// import 'package:dart_vlc/dart_vlc.dart' show DartVLC;
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
@@ -12,12 +14,25 @@ import 'screens/home.dart';
 import 'screens/info.dart';
 
 ToastService? service;
-// final response = ResponseUI.instance;
 
+// typedef hello_world_func = ffi.Void Function();
+// typedef HelloWorld = void Function();
+// var libPath = p.joinAll([
+//   p.dirname(Platform.resolvedExecutable),
+//   'data/flutter_assets/assets',
+//   'screencapture.cpp'
+// ]);
+// late final dylib = ffi.DynamicLibrary.open(libPath);
+// final HelloWorld hello = dylib
+//     .lookup<ffi.NativeFunction<hello_world_func>>('hello_world')
+//     .asFunction();
 void main() async {
+  // hello;
   WidgetsFlutterBinding.ensureInitialized();
+  // DartVLC.initialize();
 
-  WidgetsFlutterBinding.ensureInitialized();
+  Acrylic.initialize();
+  await windowManager.ensureInitialized();
 
   HotKeyManager.instance.unregisterAll();
   var warningPath = p.joinAll([
@@ -62,6 +77,8 @@ void main() async {
   runApp(
     MaterialApp(
       darkTheme: ThemeData(brightness: Brightness.dark),
+      theme:
+          (ThemeData(brightness: Brightness.dark, primaryColor: Colors.black)),
       title: "WarThunderbgAssistant",
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
@@ -69,7 +86,7 @@ void main() async {
         '/': (context) => const Loading(),
         '/home': (context) => const Home(),
         '/info': (context) => const InfoPage(),
-        // '/transparent': (context) => const Transparent()
+        // '/transparent': (context) => TransparentPage()
       },
     ),
   );

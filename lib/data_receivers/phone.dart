@@ -1,32 +1,51 @@
-// import 'dart:convert';
-// import 'dart:developer';
+// import 'dart:math';
 //
-// import 'package:http/http.dart';
+// import 'package:flutter/material.dart';
 //
-// class PhoneData {
-//   bool? active;
-//   String? state;
-//   PhoneData({
-//     this.active,
-//     this.state,
-//   });
-//   static Future<PhoneData> getPhoneData(ip) async {
-//     try {
-//       Response? response = await get(Uri.parse("http://$ip:54338"));
-//       Map<String?, dynamic> data = jsonDecode(response.body);
-//       return PhoneData(active: data['active'], state: data['state']);
-//     } catch (e, stackTrace) {
-//       log('Encountered error: $e', stackTrace: stackTrace);
-//       rethrow;
-//     }
-//   }
+// Random random = Random();
+//
+// class RandomNum extends StatefulWidget {
+//   const RandomNum({Key? key}) : super(key: key);
+//
+//   @override
+//   _RandomNumState createState() => _RandomNumState();
 // }
-
-// getData(url) async {
-//   if (await canLaunch("http://$url:54338")) {
-//     print(await canLaunch("http://$url:54338"));
-//     return true;
-//   } else {
-//     return false;
+//
+// class _RandomNumState extends State<RandomNum> {
+//   List<Color> someColors = [
+//     Colors.indigo,
+//     Colors.purple,
+//     Colors.redAccent,
+//     Colors.green,
+//     Colors.teal,
+//   ];
+//   List<String> facts = [
+//     "A crocodile cannot stick its tongue out.",
+//     "A shrimp's heart is in its head.",
+//     "You burn more calories sleeping than you do watching television.",
+//     "A shrimp's heart is in its head.",
+//     "It is physically impossible for pigs to look up into the sky.",
+//     "In the course of an average lifetime, while sleeping you might eat around 70 assorted insects and 10 spiders, or more."
+//   ];
+//   String getRandomElement(List<String> list) {
+//     var i = random.nextInt(list.length);
+//     return list[i];
+//   }
+//
+//   late var elementText = getRandomElement(facts);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       color: someColors[Random().nextInt(someColors.length)],
+//       child: ElevatedButton(
+//         onPressed: () {
+//           setState(() {
+//             elementText = getRandomElement(facts);
+//           });
+//         },
+//         child: Text(elementText),
+//       ),
+//     );
 //   }
 // }

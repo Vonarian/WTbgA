@@ -1,5 +1,6 @@
 # This is a generated file; do not edit or check into version control.
 desktoasts=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\desktoasts-0.0.2\\
+flutter_acrylic=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\flutter_acrylic-0.0.3\\
 hotkey_manager=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\hotkey_manager-0.1.1\\
 path_provider_linux=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\path_provider_linux-2.0.2\\
 path_provider_windows=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\path_provider_windows-2.0.3\\
@@ -14,4 +15,4 @@ url_launcher_linux=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\url_l
 url_launcher_macos=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\url_launcher_macos-2.0.2\\
 url_launcher_web=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\url_launcher_web-2.0.4\\
 url_launcher_windows=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\url_launcher_windows-2.0.2\\
-window_manager=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\window_manager-0.0.4\\
+window_manager=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\window_manager-0.0.5\\
