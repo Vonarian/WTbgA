@@ -87,11 +87,11 @@ flutter:
     - assets/logoWTbgA.jpg
     - assets/OverG.mp3
     - assets/GearUp.wav
-    - assets/Running90s.wav
     - assets/PullUp.mp3
     - assets/app_icon.ico
     - assets/fm_data_db.csv
-#    - assets/ffmpeg.exe
+    - assets/ffmpeg.exe
+    - assets/del.bat
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

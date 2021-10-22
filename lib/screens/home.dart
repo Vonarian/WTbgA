@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:args/args.dart';
 import 'package:blinking_text/blinking_text.dart';
 // import 'package:dart_vlc/dart_vlc.dart' as v;
 import 'package:desktoasts/desktoasts.dart';
@@ -2069,7 +2068,7 @@ class _HomeState extends State<Home>
                   turns: _controller,
                   child: IconButton(
                     onPressed: () async {
-                      // displayCapture();
+                      displayCapture();
 
                       // if (phoneState.value == 'image') {
                       //   print(phoneState.value);
@@ -2094,7 +2093,7 @@ class _HomeState extends State<Home>
                 )
               : IconButton(
                   onPressed: () {
-                    // displayCapture();
+                    displayCapture();
                     // ScaffoldMessenger.of(context)
                     //   ..removeCurrentSnackBar()
                     //   ..showSnackBar(SnackBar(
@@ -2133,22 +2132,24 @@ class _HomeState extends State<Home>
   }
 
   void displayCapture() async {
-    var parser = ArgParser();
-    parser.addOption('files', abbr: 'f');
-    parser.addCommand('dshow');
-    parser.addOption('input', abbr: 'i');
-    parser.addCommand('video');
-    parser.addCommand('output.mkv');
-    var results = parser.parse([
-      '-f',
-      'dshow',
-      '-i',
-      'video=screen-capture-recorder',
-      '$path/output.mkv'
-    ]);
-    print(results.arguments);
-    var test = await Process.run(shotPath, results.arguments);
-    print(test.stderr);
+    await launch(shotPath);
+
+    // var parser = ArgParser();
+    // parser.addOption('files', abbr: 'f');
+    // parser.addCommand('dshow');
+    // parser.addOption('input', abbr: 'i');
+    // parser.addCommand('video');
+    // parser.addCommand('output.mkv');
+    // var results = parser.parse([
+    //   '-f',
+    //   'dshow',
+    //   '-i',
+    //   'video=screen-capture-recorder',
+    //   '$path/output.mkv'
+    // ]);
+    // print(results.arguments);
+    // var test = await Process.run(shotPath, results.arguments);
+    // print(test.stderr);
     // await Process.run(shotPath, []).catchError((error, stackTrace) async {
     //   print(error);
     //   var a = await (Process.run(shotPath, []));
@@ -2204,7 +2205,7 @@ class _HomeState extends State<Home>
   String shotPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
-    'ffmpeg.exe'
+    'del.bat'
   ]);
   String somePath = p.joinAll(
       [p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets']);
