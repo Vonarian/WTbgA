@@ -65,7 +65,7 @@ class Damage {
     try {
       final response = await http
           .get(Uri.parse('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=0'));
-      final damageEvents = jsonDecode(response.body)["damage"]
+      final damageEvents = jsonDecode(response.body)['damage']
           .map<Damage>((model) => Damage.fromMap(model))
           .toList();
       return damageEvents;

@@ -113,6 +113,7 @@ class _InfoPageState extends State<InfoPage> {
               Colors.deepPurple),
           appbarButtonBuilder(
               'G load limit',
+              // ignore: prefer_single_quotes
               "This button in the home screen allows you to enter allowed G load before you get a warning. ",
               Icons.warning,
               Colors.amber),

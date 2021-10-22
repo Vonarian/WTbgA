@@ -24,19 +24,19 @@ class ChatEvents {
   }
 
   ChatEvents.fromJson(Map<String, dynamic> json) {
-    id = json["id"]?.toInt();
-    msg = json["msg"]?.toString();
-    sender = json["sender"]?.toString();
-    enemy = json["enemy"];
-    mode = json["mode"]?.toString();
+    id = json['id']?.toInt();
+    msg = json['msg']?.toString();
+    sender = json['sender']?.toString();
+    enemy = json['enemy'];
+    mode = json['mode']?.toString();
   }
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = Map<String, dynamic>();
-    data["id"] = id;
-    data["msg"] = msg;
-    data["sender"] = sender;
-    data["enemy"] = enemy;
-    data["mode"] = mode;
+    data['id'] = id;
+    data['msg'] = msg;
+    data['sender'] = sender;
+    data['enemy'] = enemy;
+    data['mode'] = mode;
     return data;
   }
 

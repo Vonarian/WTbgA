@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:args/args.dart';
 import 'package:blinking_text/blinking_text.dart';
 // import 'package:dart_vlc/dart_vlc.dart' as v;
 import 'package:desktoasts/desktoasts.dart';
@@ -17,8 +18,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
-
-// import 'package:wtbgassistant/services/read_image.dart';
 
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
@@ -65,7 +64,7 @@ class _HomeState extends State<Home>
         content: TextField(
           onChanged: (value) {},
           controller: userInputIasFlap,
-          decoration: const InputDecoration(hintText: "Enter the IAS in km/h"),
+          decoration: const InputDecoration(hintText: 'Enter the IAS in km/h'),
         ),
       ),
     );
@@ -170,11 +169,9 @@ class _HomeState extends State<Home>
   // }
 
   void userRedLineFlap() {
-    if (stateData.flap == null) return;
-    if (stateData.ias != null && _textForIasFlap.value != null) {
-      if (stateData.ias >= _textForIasFlap.value &&
-          isUserIasFlapNew &&
-          stateData.flap > 0) {
+    if (flap == null) return;
+    if (ias != null) {
+      if (ias! >= _textForIasFlap.value && isUserIasFlapNew && flap! > 0) {
         Toast toast = Toast(
             type: ToastType.imageAndText02,
             title: '😳Flap WARNING!',
@@ -191,7 +188,7 @@ class _HomeState extends State<Home>
         player.play();
         isUserIasFlapNew = false;
       }
-      if (stateData.ias < _textForIasFlap.value) {
+      if (ias! < _textForIasFlap.value) {
         if (!mounted) return;
         setState(() {
           isUserIasFlapNew = true;
@@ -202,10 +199,8 @@ class _HomeState extends State<Home>
 
   void userRedLineGear() {
     if (!mounted) return;
-    if (stateData.ias != null && _textForIasGear.value != null) {
-      if (stateData.ias >= _textForIasGear.value! &&
-          isUserIasGearNew &&
-          stateData.gear > 0) {
+    if (ias != null) {
+      if (ias! >= _textForIasGear.value && isUserIasGearNew && gear! > 0) {
         Toast toast = Toast(
             type: ToastType.imageAndText02,
             title: '😳Gear WARNING!',
@@ -222,10 +217,10 @@ class _HomeState extends State<Home>
         gearUpPlayer.play();
         isUserIasGearNew = false;
       }
-      if (stateData.ias >= _textForIasGear.value! && stateData.gear > 0) {
+      if (ias! >= _textForIasGear.value && gear! > 0) {
         gearUpPlayer.play();
       }
-      if (stateData.ias < _textForIasGear.value!) {
+      if (ias! < _textForIasGear.value) {
         setState(() {
           isUserIasGearNew = true;
         });
@@ -235,23 +230,20 @@ class _HomeState extends State<Home>
 
   Future<void> pullUpChecker() async {
     if (!mounted) return;
-    if (indicatorData.vertical != null &&
-        (stateData.ias > 400 &&
-            stateData.climb != null &&
-            stateData.climb < -60 &&
-            indicatorData.vertical <= 135 &&
-            indicatorData.vertical >= 50) &&
-        stateData.height < 2200) {
+    if (vertical != null &&
+        (ias! > 400 &&
+            climb != null &&
+            climb! < -60 &&
+            vertical! <= 135 &&
+            vertical! >= 50) &&
+        altitude! < 2200) {
       pullUpPlayer.play();
     }
   }
 
   Future<void> loadChecker() async {
     if (!mounted) return;
-    if (_textForGLoad.value != null &&
-        isUserGLoadNew &&
-        stateData.load != null &&
-        stateData.load >= _textForGLoad.value!) {
+    if (isUserGLoadNew && load != null && load! >= _textForGLoad.value) {
       overGPlayer.play();
     }
   }
@@ -259,10 +251,10 @@ class _HomeState extends State<Home>
   Future<void> vehicleStateCheck() async {
     await Damage.getDamage();
     if (_isOilNotifOn &&
-        stateData.oil != 15 &&
+        oil != 15 &&
         _isFullNotifOn &&
         isDamageIDNew &&
-        msgData == "Engine died: no fuel" &&
+        msgData == 'Engine died: no fuel' &&
         isDamageMsgNew) {
       Toast toast = Toast(
           type: ToastType.imageAndText02,
@@ -280,10 +272,10 @@ class _HomeState extends State<Home>
       player.play();
     }
     if (_isOilNotifOn &&
-        stateData.oil != 15 &&
+        oil != 15 &&
         _isFullNotifOn &&
         isDamageIDNew &&
-        msgData == "Oil overheated") {
+        msgData == 'Oil overheated') {
       Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳OIL WARNING!',
@@ -300,7 +292,7 @@ class _HomeState extends State<Home>
       player.play();
     }
     if (isEngineNotifOn &&
-        stateData.oil != 15 &&
+        oil != 15 &&
         _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
@@ -320,7 +312,7 @@ class _HomeState extends State<Home>
       player.play();
     }
     if (_isWaterNotifOn &&
-        stateData.water != 15 &&
+        water != 15 &&
         _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
@@ -340,10 +332,10 @@ class _HomeState extends State<Home>
       player.play();
     }
     if (_isEngineDeathNotifOn &&
-        stateData.oil != 15 &&
+        oil != 15 &&
         _isFullNotifOn &&
         isDamageIDNew &&
-        msgData == "Engine died: overheating") {
+        msgData == 'Engine died: overheating') {
       Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
@@ -360,10 +352,10 @@ class _HomeState extends State<Home>
       player.play();
     }
     if (_isEngineDeathNotifOn &&
-        stateData.oil != 15 &&
+        oil != 15 &&
         _isFullNotifOn &&
         isDamageIDNew &&
-        msgData == "Engine died: propeller broken") {
+        msgData == 'Engine died: propeller broken') {
       Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
@@ -379,7 +371,7 @@ class _HomeState extends State<Home>
       isDamageIDNew = false;
       player.play();
     }
-    if (stateData.oil != 15 &&
+    if (oil != 15 &&
         _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'You are out of ammunition. Reloading is not possible.') {
@@ -416,11 +408,29 @@ class _HomeState extends State<Home>
   // }
 
   Future<void> updateStateIndicator() async {
-    ToolDataState dataForState = await ToolDataState.getState();
-    ToolDataIndicator dataForIndicator = await ToolDataIndicator.getIndicator();
+    ToolDataState state = await ToolDataState.getState();
+    ToolDataIndicator indicator = await ToolDataIndicator.getIndicator();
     if (!mounted) return;
-    stateData = dataForState;
-    indicatorData = dataForIndicator;
+    maxFuel = state.maxFuel;
+    minFuel = state.minFuel;
+    ias = state.ias;
+    oil = state.oil;
+    water = state.water;
+    altitude = state.height;
+    flap = state.flap;
+    gear = state.gear;
+    valid = state.valid;
+    load = state.load;
+    aoa = state.aoa;
+    climb = state.climb;
+    throttle = indicator.throttle;
+    mach = indicator.mach;
+    compass = indicator.compass;
+    engine = indicator.engine;
+    flap1 = indicator.flap1;
+    flap2 = indicator.flap2;
+    vertical = indicator.vertical;
+    vehicleName = indicator.name;
   }
 
   Future<void> updateMsgId() async {
@@ -474,8 +484,8 @@ class _HomeState extends State<Home>
   }
 
   void flapChecker() {
-    if (indicatorData.flap1 == null) return;
-    if (((indicatorData.flap1 != indicatorData.flap2) ||
+    if (flap1 == null) return;
+    if (((flap1 != flap2) ||
         msgData == 'Asymmetric flap extension' && isDamageIDNew)) {
       Toast toast = Toast(
           type: ToastType.imageAndText02,
@@ -497,35 +507,33 @@ class _HomeState extends State<Home>
   Future<void> averageIasForStall() async {
     if (!mounted) return;
     if (secondSpeed == null) return;
-    if (stateData.ias != null) {
+    if (ias != null) {
       setState(() {
-        firstSpeed = stateData.ias;
+        firstSpeed = ias;
       });
       Future.delayed(const Duration(seconds: 2), () {
         setState(() {
-          secondSpeed = stateData.ias;
+          secondSpeed = ias;
         });
       });
     }
   }
 
   Future<void> critAoaChecker() async {
-    if (stateData.aoa == null || critAoa == null || stateData.gear == null) {
+    if (aoa == null || critAoa == null || gear == null) {
       return;
     }
 
-    if (stateData.gear > 0) return;
+    if (gear! > 0) return;
     if (secondSpeed == null || firstSpeed == null) return;
     int averageIas = secondSpeed! - firstSpeed!;
     if (averageIas <= 10) return;
 
-    if (critAoa != null &&
-        (stateData.aoa >= (critAoa! * -1)) &&
-        playStallWarning) {
+    if (critAoa != null && (aoa! >= (critAoa! * -1)) && playStallWarning) {
       pullUpPlayer.play();
       critAoaBool = true;
     }
-    if (!(critAoa != null && (stateData.aoa >= (critAoa! * -1)))) {
+    if (!(critAoa != null && (aoa! >= (critAoa! * -1)))) {
       critAoaBool = false;
     }
   }
@@ -550,21 +558,21 @@ class _HomeState extends State<Home>
     windowManager.show();
   }
 
-  Future<void> hostChecker() async {
-    if (!await canLaunch('http://localhost:8111')) {
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-          content: BlinkText(
-            'Unable to connect to game server.',
-            endColor: Colors.red,
-          ),
-          duration: Duration(seconds: 10),
-        ));
-    }
-  }
+  // Future<void> hostChecker() async {
+  //   if (!await canLaunch('http://localhost:8111')) {
+  //     ScaffoldMessenger.of(context)
+  //       ..removeCurrentSnackBar()
+  //       ..showSnackBar(const SnackBar(
+  //         content: BlinkText(
+  //           'Unable to connect to game server.',
+  //           endColor: Colors.red,
+  //         ),
+  //         duration: Duration(seconds: 10),
+  //       ));
+  //   }
+  // }
 
-  Future<void> startServer() async {
+  void startServer() {
     Future.delayed(Duration(milliseconds: 800), () {
       HttpServer.bind(InternetAddress.anyIPv4, 55200).then((HttpServer server) {
         print('[+]WebSocket listening at -- ws://$ipAddress:55200');
@@ -573,32 +581,31 @@ class _HomeState extends State<Home>
             ws.listen(
               (data) {
                 Map<String, dynamic> serverData = {
-                  "vehicleName": indicatorData.name,
-                  "ias": stateData.ias,
-                  "tas": stateData.tas,
-                  "climb": stateData.climb,
-                  "damageId": idData.value,
-                  "damageMsg": msgData,
-                  "critAoa": critAoa,
-                  "aoa": stateData.aoa,
-                  "throttle": indicatorData.throttle,
-                  "engineTemp": indicatorData.engine,
-                  "oil": stateData.oil,
-                  "water": stateData.water,
-                  "altitude": stateData.height,
-                  "minFuel": stateData.minFuel,
-                  "maxFuel": stateData.maxFuel,
-                  "gear": stateData.gear,
-                  "chat1": chatMsgFirst,
-                  "chatId1": chatIdFirst.value,
-                  "chat2": chatMsgSecond,
-                  "chatId2": chatIdSecond.value,
-                  "chatMode1": chatModeFirst,
-                  "chatMode2": chatModeSecond,
-                  "chatSender1": chatSenderFirst,
-                  "chatSender2": chatSenderSecond,
-                  "chatEnemy1": chatEnemyFirst,
-                  "chatEnemy2": chatEnemySecond,
+                  'vehicleName': vehicleName,
+                  'ias': ias,
+                  'climb': climb,
+                  'damageId': idData.value,
+                  'damageMsg': msgData,
+                  'critAoa': critAoa,
+                  'aoa': aoa,
+                  'throttle': throttle,
+                  'engineTemp': engine,
+                  'oil': oil,
+                  'water': water,
+                  'altitude': altitude,
+                  'minFuel': minFuel,
+                  'maxFuel': maxFuel,
+                  'gear': gear,
+                  'chat1': chatMsgFirst,
+                  'chatId1': chatIdFirst.value,
+                  'chat2': chatMsgSecond,
+                  'chatId2': chatIdSecond.value,
+                  'chatMode1': chatModeFirst,
+                  'chatMode2': chatModeSecond,
+                  'chatSender1': chatSenderFirst,
+                  'chatSender2': chatSenderSecond,
+                  'chatEnemy1': chatEnemyFirst,
+                  'chatEnemy2': chatEnemySecond,
                 };
                 var internalData = jsonDecode(data);
                 phoneConnected.value = (internalData['WTbgA']);
@@ -610,7 +617,7 @@ class _HomeState extends State<Home>
                 });
               },
               onDone: () {
-                ws.addError("Error");
+                ws.addError('Error');
                 print('[+]Done :)');
                 phoneConnected.value = false;
               },
@@ -621,6 +628,18 @@ class _HomeState extends State<Home>
         }, onError: (err) => print('[!]Error -- ${err.toString()}'));
       }, onError: (err) => print('[!]Error -- ${err.toString()}'));
     });
+    // Future.delayed(Duration(milliseconds: 800), () {
+    //   HttpServer.bind(InternetAddress.anyIPv4, 30000).then((server) {
+    //     server.listen((HttpRequest request) async {
+    //       imageData = await getFileAsBase64String('$path/output.mkv');
+    //       Map<String, dynamic> serverData = {
+    //         'image': imageData,
+    //       };
+    //       request.response.write(jsonEncode(serverData));
+    //       request.response.close();
+    //     });
+    //   });
+    // });
     //
 
     // WebSocket.connect('ws://192.168.43.8:55200').then((WebSocket ws) {
@@ -743,13 +762,10 @@ class _HomeState extends State<Home>
     Timer.periodic(averageTimer, (Timer t) async {
       if (!await canLaunch(_url)) return;
       averageIasForStall();
-      hostChecker();
+      // hostChecker();
     });
     windowManager.addListener(this);
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
-      stateData = ModalRoute.of(context)?.settings.arguments;
-      indicatorData = ModalRoute.of(context)?.settings.arguments;
-    });
+
     phoneState.addListener(() {
       if (phoneState.value == 'home') {
         sendScreen = false;
@@ -835,8 +851,8 @@ class _HomeState extends State<Home>
   Future<void> _csvThing() async {
     final csvString = File(csvPath).readAsStringSync();
     Future.delayed(const Duration(milliseconds: 250), () {
-      critAoa = convertCsvFileToMap(
-          csvString)[indicatorData.name.toString().toLowerCase()];
+      critAoa =
+          convertCsvFileToMap(csvString)[vehicleName.toString().toLowerCase()];
     });
   }
 
@@ -904,8 +920,8 @@ class _HomeState extends State<Home>
   }
 
   Widget fuelIndicator() {
-    if (stateData.minFuel != null) {
-      fuelPercent = (stateData.minFuel / stateData.maxFuel) * 100;
+    if (minFuel != null) {
+      fuelPercent = (minFuel! / maxFuel!) * 100;
     }
     return AnimatedContainer(
         duration: const Duration(seconds: 2),
@@ -932,7 +948,7 @@ class _HomeState extends State<Home>
                 offset: const Offset(0, 3),
               )
             ]),
-        child: stateData.minFuel != null && fuelPercent! >= 15.00
+        child: minFuel != null && fuelPercent! >= 15.00
             ? TextButton.icon(
                 icon: const Icon(Icons.speed),
                 onPressed: () {
@@ -948,9 +964,9 @@ class _HomeState extends State<Home>
                       fontWeight: FontWeight.bold),
                 ),
               )
-            : stateData.minFuel != null &&
+            : minFuel != null &&
                     fuelPercent! < 15.00 &&
-                    (stateData.height != 32 && stateData.minFuel != 0)
+                    (altitude != 32 && minFuel != 0)
                 ? TextButton.icon(
                     icon: const Icon(Icons.speed),
                     onPressed: () {
@@ -1010,7 +1026,7 @@ class _HomeState extends State<Home>
                 offset: const Offset(0, 3),
               )
             ]),
-        child: stateData.water == null || stateData.water == 15
+        child: water == null || water == 15
             ? TextButton.icon(
                 icon: const Icon(Icons.water),
                 onPressed: () {
@@ -1032,7 +1048,7 @@ class _HomeState extends State<Home>
                   showWaterTemp = !showWaterTemp;
                 },
                 label: Text(
-                  'Water Temp = ${stateData.water!} degrees  ',
+                  'Water Temp = ${water!} degrees  ',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 20,
@@ -1074,9 +1090,9 @@ class _HomeState extends State<Home>
           onPressed: () {
             showAlt = !showAlt;
           },
-          label: stateData.height != null
+          label: altitude != null
               ? Text(
-                  'Altitude: ${stateData.height} meters ',
+                  'Altitude: ${altitude} meters ',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 20,
@@ -1130,22 +1146,22 @@ class _HomeState extends State<Home>
             showClimb = !showClimb;
           },
           label: critAoaBool ||
-                  (indicatorData.vertical != null &&
-                          stateData.ias != null &&
-                          stateData.climb != null &&
-                          (stateData.ias < 250 &&
-                              stateData.climb != null &&
-                              stateData.climb < 60 &&
-                              indicatorData.vertical >= -135 &&
-                              indicatorData.vertical <= -50) ||
-                      (stateData.ias != null &&
-                              stateData.ias < 180 &&
-                              stateData.climb != null &&
-                              stateData.climb < 10) &&
-                          stateData.ias != 0 &&
-                          stateData.height > 250)
+                  (vertical != null &&
+                          ias != null &&
+                          climb != null &&
+                          (ias! < 250 &&
+                              climb != null &&
+                              climb! < 60 &&
+                              vertical! >= -135 &&
+                              vertical! <= -50) ||
+                      (ias != null &&
+                              ias! < 180 &&
+                              climb != null &&
+                              climb! < 10) &&
+                          ias != 0 &&
+                          altitude! > 250)
               ? BlinkText(
-                  'Absolute Climb rate = ${stateData.climb} m/s (Possible stall!)',
+                  'Absolute Climb rate = ${climb} m/s (Possible stall!)',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 20,
@@ -1154,9 +1170,9 @@ class _HomeState extends State<Home>
                       fontWeight: FontWeight.bold),
                   endColor: Colors.red,
                 )
-              : stateData.climb != null && stateData.climb != 0.0
+              : climb != null && climb != 0.0
                   ? Text(
-                      'Absolute Climb rate = ${stateData.climb} m/s',
+                      'Absolute Climb rate = ${climb} m/s',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 20,
@@ -1202,7 +1218,7 @@ class _HomeState extends State<Home>
                 offset: const Offset(0, 3),
               )
             ]),
-        child: stateData.ias == null || stateData.ias == 0
+        child: ias == null || ias == 0
             ? TextButton.icon(
                 icon: const Icon(Icons.speed),
                 onPressed: () {
@@ -1218,16 +1234,14 @@ class _HomeState extends State<Home>
                       fontWeight: FontWeight.bold),
                 ),
               )
-            : indicatorData.mach != null &&
-                    indicatorData.mach >= 1 &&
-                    stateData.ias != null
+            : mach != null && mach! >= 1 && ias != null
                 ? TextButton.icon(
                     icon: const Icon(Icons.speed),
                     onPressed: () {
                       showIas = !showIas;
                     },
                     label: Text(
-                      'IAS = ${stateData.ias!} km/h (Above Mach) ',
+                      'IAS = ${ias!} km/h (Above Mach) ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 20,
@@ -1242,7 +1256,7 @@ class _HomeState extends State<Home>
                       showIas = !showIas;
                     },
                     label: Text(
-                      'IAS = ${stateData.ias!} km/h ',
+                      'IAS = ${ias!} km/h ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 20,
@@ -1279,7 +1293,7 @@ class _HomeState extends State<Home>
                 offset: const Offset(0, 3),
               )
             ]),
-        child: indicatorData.compass == '0' || indicatorData.compass == null
+        child: compass == '0' || compass == null
             ? TextButton.icon(
                 icon: const Icon(Icons.gps_fixed),
                 onPressed: () {
@@ -1301,7 +1315,7 @@ class _HomeState extends State<Home>
                   showCompass = !showCompass;
                 },
                 label: Text(
-                  'Compass = ${indicatorData.compass?.toStringAsFixed(0)} degrees ',
+                  'Compass = ${compass?.toStringAsFixed(0)} degrees ',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 20,
@@ -1346,10 +1360,10 @@ class _HomeState extends State<Home>
                 label: _isFullNotifOn &&
                         msgData == 'Engine overheated' &&
                         run &&
-                        indicatorData.engine != 'nul' &&
-                        indicatorData.engine != null
+                        engine != 'nul' &&
+                        engine != null
                     ? BlinkText(
-                        'Engine Temp= ${(indicatorData!.engine.toStringAsFixed(0))} degrees  ',
+                        'Engine Temp= ${(engine!.toStringAsFixed(0))} degrees  ',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 20,
@@ -1360,9 +1374,9 @@ class _HomeState extends State<Home>
                         times: 13,
                         duration: const Duration(milliseconds: 300),
                       )
-                    : indicatorData.engine != null
+                    : engine != null
                         ? Text(
-                            'Engine Temp= ${(indicatorData.engine.toStringAsFixed(0))} degrees  ',
+                            'Engine Temp= ${(engine!.toStringAsFixed(0))} degrees  ',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontSize: 20,
@@ -1415,10 +1429,9 @@ class _HomeState extends State<Home>
             child: TextButton.icon(
               icon: const Icon(Icons.airplanemode_active),
               label: MediaQuery.of(context).size.height >= 235
-                  ? indicatorData.throttle != 'null' &&
-                          indicatorData.throttle != 'nul'
+                  ? throttle != null && throttle != 'nul'
                       ? Text(
-                          'Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                          'Throttle= ${(throttle! * 100).toStringAsFixed(0)}%  ',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 20,
@@ -1432,10 +1445,9 @@ class _HomeState extends State<Home>
                               letterSpacing: 2,
                               color: textColor,
                               fontWeight: FontWeight.bold))
-                  : indicatorData.throttle != 'null' &&
-                          indicatorData.throttle != 'nul'
+                  : throttle != null && throttle != 'nul'
                       ? Text(
-                          'Throttle= ${(double.parse(indicatorData.throttle) * 100).toStringAsFixed(0)}%  ',
+                          'Throttle= ${((throttle)! * 100).toStringAsFixed(0)}%  ',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 20,
@@ -1488,12 +1500,12 @@ class _HomeState extends State<Home>
                 ]),
             child: TextButton.icon(
               icon: const Icon(Icons.airplanemode_active),
-              label: (stateData.oil != null && stateData.oil != 15) &&
+              label: (oil != null && oil != 15) &&
                       _isFullNotifOn &&
-                      msgData == "Oil overheated" &&
+                      msgData == 'Oil overheated' &&
                       run
                   ? BlinkText(
-                      'Oil Temp= ${stateData.oil} degrees  ',
+                      'Oil Temp= ${oil} degrees  ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 20,
@@ -1504,8 +1516,8 @@ class _HomeState extends State<Home>
                       times: 13,
                       duration: const Duration(milliseconds: 200),
                     )
-                  : stateData.oil != null && stateData.oil != 15
-                      ? Text('Oil Temp= ${stateData.oil} degrees  ',
+                  : oil != null && oil != 15
+                      ? Text('Oil Temp= ${oil} degrees  ',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 20,
@@ -1647,7 +1659,7 @@ class _HomeState extends State<Home>
                     setState(() {
                       _isFullNotifOn = isFullNotifOn;
                     });
-                    prefs.setBool("isFullNotifOn", isFullNotifOn);
+                    prefs.setBool('isFullNotifOn', isFullNotifOn);
                   },
                   label: _isFullNotifOn
                       ? const Text(
@@ -1674,7 +1686,7 @@ class _HomeState extends State<Home>
                     setState(() {
                       playStallWarning = _playStallWarning;
                     });
-                    prefs.setBool("playStallWarning", _playStallWarning);
+                    prefs.setBool('playStallWarning', _playStallWarning);
                   },
                   label: playStallWarning
                       ? const Text(
@@ -1699,7 +1711,7 @@ class _HomeState extends State<Home>
                     setState(() {
                       _isEngineDeathNotifOn = isEngineDeathNotifOn;
                     });
-                    prefs.setBool("isEngineDeathNotifOn", isEngineDeathNotifOn);
+                    prefs.setBool('isEngineDeathNotifOn', isEngineDeathNotifOn);
                   },
                   label: _isEngineDeathNotifOn
                       ? const Text(
@@ -1725,7 +1737,7 @@ class _HomeState extends State<Home>
                     setState(() {
                       _isOilNotifOn = isOilNotifOn;
                     });
-                    prefs.setBool("isOilNotifOn", isOilNotifOn);
+                    prefs.setBool('isOilNotifOn', isOilNotifOn);
                   },
                   label: _isOilNotifOn
                       ? const Text(
@@ -1752,7 +1764,7 @@ class _HomeState extends State<Home>
                     setState(() {
                       _isWaterNotifOn = isWaterNotifOn;
                     });
-                    prefs.setBool("isWaterNotifOn", isWaterNotifOn);
+                    prefs.setBool('isWaterNotifOn', isWaterNotifOn);
                   },
                   label: _isWaterNotifOn
                       ? const Text(
@@ -1779,7 +1791,7 @@ class _HomeState extends State<Home>
                     setState(() {
                       _isTrayEnabled = isTrayEnabled;
                     });
-                    prefs.setBool("isTrayEnabled", isTrayEnabled);
+                    prefs.setBool('isTrayEnabled', isTrayEnabled);
                   },
                   label: _isTrayEnabled
                       ? const Text(
@@ -1818,13 +1830,13 @@ class _HomeState extends State<Home>
                 ),
                 onPressed: () async {
                   final SharedPreferences prefs = await _prefs;
-                  _textForIasFlap.value = await Navigator.of(context)
-                      .push(dialogBuilderIasFlap(context));
+                  _textForIasFlap.value = (await Navigator.of(context)
+                      .push(dialogBuilderIasFlap(context)))!;
                   int textForIasFlap = (prefs.getInt('textForIasFlap') ?? 2000);
                   setState(() {
-                    textForIasFlap = _textForIasFlap.value!;
+                    textForIasFlap = _textForIasFlap.value;
                   });
-                  prefs.setInt("textForIasFlap", textForIasFlap);
+                  prefs.setInt('textForIasFlap', textForIasFlap);
                 },
               ),
             ),
@@ -1836,14 +1848,14 @@ class _HomeState extends State<Home>
                     'Current red line IAS for gears: ${_textForIasGear.value}Km/h'),
                 onPressed: () async {
                   final SharedPreferences prefs = await _prefs;
-                  _textForIasGear.value = await Navigator.of(context)
-                      .push(dialogBuilderIasGear(context));
+                  _textForIasGear.value = (await Navigator.of(context)
+                      .push(dialogBuilderIasGear(context)))!;
                   int textForIasGear = (prefs.getInt('textForIasGear') ?? 2000);
 
                   setState(() {
-                    textForIasGear = _textForIasGear.value!;
+                    textForIasGear = _textForIasGear.value;
                   });
-                  prefs.setInt("textForIasGear", textForIasGear);
+                  prefs.setInt('textForIasGear', textForIasGear);
                 },
                 icon: const Icon(
                   EvilIcons.gear,
@@ -1859,31 +1871,35 @@ class _HomeState extends State<Home>
                       Text('Current red line G load: ${_textForGLoad.value}G'),
                   onPressed: () async {
                     final SharedPreferences prefs = await _prefs;
-                    _textForGLoad.value = await Navigator.of(context)
-                        .push(dialogBuilderOverG(context));
+                    _textForGLoad.value = (await Navigator.of(context)
+                        .push(dialogBuilderOverG(context)))!;
                     int textForGLoad = (prefs.getInt('textForGLoad') ?? 12);
                     setState(() {
-                      textForGLoad = _textForGLoad.value!;
+                      textForGLoad = _textForGLoad.value;
                     });
-                    prefs.setInt("textForGLoad", textForGLoad);
+                    prefs.setInt('textForGLoad', textForGLoad);
                   },
                   icon: const Icon(
                     MaterialCommunityIcons.airplane_landing,
                     color: Colors.amber,
                   )),
             ),
-            Container(
-              alignment: Alignment.topCenter,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: chatBuilder(
-                  chatSenderSecond, chatMsgSecond, chatPrefixSecond),
-            ),
-            Container(
-              alignment: Alignment.topCenter,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child:
-                  chatBuilder(chatSenderFirst, chatMsgFirst, chatPrefixFirst),
-            ),
+            chatSenderFirst != null
+                ? Container(
+                    alignment: Alignment.topCenter,
+                    decoration: const BoxDecoration(color: Colors.black87),
+                    child: chatBuilder(
+                        chatSenderSecond, chatMsgSecond, chatPrefixSecond),
+                  )
+                : Container(),
+            chatSenderFirst != null
+                ? Container(
+                    alignment: Alignment.topCenter,
+                    decoration: const BoxDecoration(color: Colors.black87),
+                    child: chatBuilder(
+                        chatSenderFirst, chatMsgFirst, chatPrefixFirst),
+                  )
+                : Container(),
           ],
         ),
       ),
@@ -2040,15 +2056,141 @@ class _HomeState extends State<Home>
     );
   }
 
+  PreferredSizeWidget? homeAppBar(BuildContext context) {
+    return AppBar(
+        actions: [
+          // IconButton(
+          //     onPressed: () {
+          //       channel.sink.add('Hello!');
+          //     },
+          //     icon: Icon(Icons.add)),
+          phoneConnected.value
+              ? RotationTransition(
+                  turns: _controller,
+                  child: IconButton(
+                    onPressed: () async {
+                      // displayCapture();
+
+                      // if (phoneState.value == 'image') {
+                      //   print(phoneState.value);
+                      //   sendScreen = !sendScreen;
+                      // } else {
+                      //   ScaffoldMessenger.of(context)
+                      //     ..removeCurrentSnackBar()
+                      //     ..showSnackBar(SnackBar(
+                      //         content: BlinkText(
+                      //       'Phone is not in image mode',
+                      //       endColor: Colors.red,
+                      //       style: TextStyle(color: Colors.cyan),
+                      //     )));
+                      // }
+                    },
+                    icon: Icon(
+                      Icons.wifi_rounded,
+                      color: Colors.green,
+                    ),
+                    tooltip: 'Phone Connected = ${phoneConnected.value}',
+                  ),
+                )
+              : IconButton(
+                  onPressed: () {
+                    // displayCapture();
+                    // ScaffoldMessenger.of(context)
+                    //   ..removeCurrentSnackBar()
+                    //   ..showSnackBar(SnackBar(
+                    //       content: BlinkText(
+                    //     'Phone is not in image mode',
+                    //     endColor: Colors.red,
+                    //     style: TextStyle(color: Colors.cyan),
+                    //   )));
+                  },
+                  icon: Icon(
+                    Icons.wifi_rounded,
+                    color: Colors.red,
+                  ),
+                  tooltip: 'Toggle Stream Mode',
+                ),
+        ],
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.list),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+        automaticallyImplyLeading: false,
+        elevation: 0.75,
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
+        title: vehicleName != 'NULL' && vehicleName != null
+            ? Text("You're flying ${vehicleName}")
+            : (altitude == 32 && minFuel == 0 && flap == 0)
+                ? const Text("You're in Hangar...")
+                : const Text('No vehicle data available / Not flying.'));
+  }
+
+  void displayCapture() async {
+    var parser = ArgParser();
+    parser.addOption('files', abbr: 'f');
+    parser.addCommand('dshow');
+    parser.addOption('input', abbr: 'i');
+    parser.addCommand('video');
+    parser.addCommand('output.mkv');
+    var results = parser.parse([
+      '-f',
+      'dshow',
+      '-i',
+      'video=screen-capture-recorder',
+      '$path/output.mkv'
+    ]);
+    print(results.arguments);
+    var test = await Process.run(shotPath, results.arguments);
+    print(test.stderr);
+    // await Process.run(shotPath, []).catchError((error, stackTrace) async {
+    //   print(error);
+    //   var a = await (Process.run(shotPath, []));
+    //   return a;
+    // });
+  }
+
   Color? chatColorFirst;
   Color? chatColorSecond;
-
   Player pullUpPlayer = Player(id: 3);
   Player gearUpPlayer = Player(id: 2);
   Player overGPlayer = Player(id: 1);
   Player player = Player(id: 0);
-  dynamic stateData;
-  dynamic indicatorData;
+  int? maxFuel;
+  int? minFuel;
+  int? gear;
+  double? aoa;
+  double? climb;
+  double? engine;
+  double? fuelPercent;
+  double? avgTAS;
+  double? critAoa;
+  double boxShadowOpacity = 0.07;
+  double widget1Opacity = 0.0;
+  double normalHeight = 60;
+  double smallHeight = 45;
+  double normalFont = 20;
+  double smallFont = 17;
+  double? compass;
+  int counter = 0;
+  int? lastId;
+  int? firstSpeed;
+  int? secondSpeed;
+  int? ias;
+  int? flap;
+  double? flap1, flap2, vertical;
+  int? altitude;
+  double? load, throttle;
+  int? oil;
+  int? water;
+  double? mach;
+  String? vehicleName;
   String? msgData;
   String? chatMsgFirst;
   String? chatModeFirst;
@@ -2062,9 +2204,10 @@ class _HomeState extends State<Home>
   String shotPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
-    'shot.exe'
+    'ffmpeg.exe'
   ]);
-
+  String somePath = p.joinAll(
+      [p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets']);
   String warningLogo = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
@@ -2080,14 +2223,16 @@ class _HomeState extends State<Home>
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
   ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
-  final ValueNotifier<int?> _textForIasFlap = ValueNotifier(2000);
-  final ValueNotifier<int?> _textForIasGear = ValueNotifier(2000);
-  final ValueNotifier<int?> _textForGLoad = ValueNotifier(200);
+  final ValueNotifier<int> _textForIasFlap = ValueNotifier(2000);
+  final ValueNotifier<int> _textForIasGear = ValueNotifier(2000);
+  final ValueNotifier<int> _textForGLoad = ValueNotifier(200);
   bool _isTrayEnabled = true;
   final bool _removeIconAfterRestored = true;
   final bool _showWindowBelowTrayIcon = false;
   ValueNotifier<bool> phoneConnected = ValueNotifier(false);
   ValueNotifier<String?> phoneState = ValueNotifier('');
+  String? imageData;
+  bool? valid;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
   bool isUserGLoadNew = false;
@@ -2114,19 +2259,7 @@ class _HomeState extends State<Home>
   bool? chatEnemyFirst;
   bool critAoaBool = false;
   bool nonePost = false;
-  double? fuelPercent;
-  double? avgTAS;
-  double? critAoa;
-  double boxShadowOpacity = 0.07;
-  double widget1Opacity = 0.0;
-  double normalHeight = 60;
-  double smallHeight = 45;
-  double normalFont = 20;
-  double smallFont = 17;
-  int counter = 0;
-  int? lastId;
-  int? firstSpeed;
-  int? secondSpeed;
+
   Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
   dynamic ipAddress;
@@ -2135,7 +2268,7 @@ class _HomeState extends State<Home>
     duration: const Duration(seconds: 2),
     vsync: this,
   )..repeat(reverse: false);
-
+  int i = 0;
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
@@ -2153,91 +2286,16 @@ class _HomeState extends State<Home>
           backgroundColor: Colors.transparent,
           resizeToAvoidBottomInset: true,
           appBar: MediaQuery.of(context).size.height >= 300
-              ? AppBar(
-                  actions: [
-                      // IconButton(
-                      //     onPressed: () {
-                      //       channel.sink.add('Hello!');
-                      //     },
-                      //     icon: Icon(Icons.add)),
-                      phoneConnected.value
-                          ? RotationTransition(
-                              turns: _controller,
-                              child: IconButton(
-                                onPressed: () {
-                                  // if (phoneState.value == 'image') {
-                                  //   print(phoneState.value);
-                                  //   sendScreen = !sendScreen;
-                                  // } else {
-                                  //   ScaffoldMessenger.of(context)
-                                  //     ..removeCurrentSnackBar()
-                                  //     ..showSnackBar(SnackBar(
-                                  //         content: BlinkText(
-                                  //       'Phone is not in image mode',
-                                  //       endColor: Colors.red,
-                                  //       style: TextStyle(color: Colors.cyan),
-                                  //     )));
-                                  // }
-                                },
-                                icon: Icon(
-                                  Icons.wifi_rounded,
-                                  color: Colors.green,
-                                ),
-                                tooltip:
-                                    'Phone Connected = ${phoneConnected.value}',
-                              ),
-                            )
-                          : IconButton(
-                              onPressed: () {
-                                // ScaffoldMessenger.of(context)
-                                //   ..removeCurrentSnackBar()
-                                //   ..showSnackBar(SnackBar(
-                                //       content: BlinkText(
-                                //     'Phone is not in image mode',
-                                //     endColor: Colors.red,
-                                //     style: TextStyle(color: Colors.cyan),
-                                //   )));
-                              },
-                              icon: Icon(
-                                Icons.wifi_rounded,
-                                color: Colors.red,
-                              ),
-                              tooltip: 'Toggle Stream Mode',
-                            ),
-                    ],
-                  leading: Builder(
-                    builder: (BuildContext context) {
-                      return IconButton(
-                        icon: const Icon(Icons.list),
-                        onPressed: () {
-                          Scaffold.of(context).openDrawer();
-                        },
-                      );
-                    },
-                  ),
-                  automaticallyImplyLeading: false,
-                  elevation: 0.75,
-                  backgroundColor: Colors.transparent,
-                  centerTitle: true,
-                  title: indicatorData.name != 'NULL'
-                      ? Text("You're flying ${indicatorData.name}")
-                      : (stateData.height == 32 &&
-                              stateData.minFuel == 0 &&
-                              stateData.flap == 0)
-                          ? const Text("You're in Hangar...")
-                          : const Text(
-                              'No vehicle data available / Not flying.'))
+              ? homeAppBar(context)
               : null,
           body: AnimatedOpacity(
               duration: const Duration(seconds: 3),
               opacity: widget1Opacity,
               child: MediaQuery.of(context).size.height >= 235 &&
-                      (indicatorData.valid == true &&
-                          indicatorData.valid != null)
+                      (valid == true && valid != null)
                   ? homeWidgetColumn()
                   : MediaQuery.of(context).size.height < 235 &&
-                          (indicatorData.valid == true &&
-                              indicatorData.valid != null)
+                          (valid == true && valid != null)
                       ? homeWidgetRow()
                       : homeWidgetNoData())),
     ]);
@@ -2270,7 +2328,7 @@ class _HomeState extends State<Home>
   @override
   void onTrayMenuItemClick(MenuItem menuItem) async {
     switch (menuItem.key) {
-      case "exit-app":
+      case 'exit-app':
         windowManager.terminate();
         break;
       case 'show-app':

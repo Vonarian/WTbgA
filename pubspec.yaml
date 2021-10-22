@@ -23,7 +23,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.3
-  flutter_spinkit: "^5.0.0"
+#  flutter_spinkit: "^5.0.0"
 #  image:
   desktoasts: ^0.0.2
   blinking_text: ^1.0.1+2
@@ -31,8 +31,11 @@ dependencies:
   url_launcher: ^6.0.9
   path: ^1.8.0
   window_manager: ^0.0.5
-#  screen_recorder:
+  args: ^2.3.0
+
+  #  screen_recorder:
 #  dart_vlc:
+#  obs_websocket: ^2.2.7
   tray_manager: ^0.1.0
   shared_preferences: ^2.0.7
   hotkey_manager: ^0.1.1
@@ -88,7 +91,7 @@ flutter:
     - assets/PullUp.mp3
     - assets/app_icon.ico
     - assets/fm_data_db.csv
-    - assets/screencapture.cpp
+#    - assets/ffmpeg.exe
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

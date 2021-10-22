@@ -1,10 +1,8 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:wtbgassistant/data_receivers/indicator_receiver.dart';
-import 'package:wtbgassistant/data_receivers/state_receiver.dart';
 
 class Loading extends StatefulWidget {
   const Loading({Key? key}) : super(key: key);
@@ -15,11 +13,24 @@ class Loading extends StatefulWidget {
 
 class _LoadingState extends State<Loading> {
   Future<void> setupToolData() async {
-    ToolDataState stateData = await ToolDataState.getState();
-    ToolDataIndicator indicatorData = await ToolDataIndicator.getIndicator();
-
-    Navigator.pushReplacementNamed(context, '/home',
-        arguments: {stateData, indicatorData});
+    bool launch = await canLaunch('http://localhost:8111');
+    if (launch) {
+      Future.delayed(Duration(seconds: 1), () async {
+        Navigator.pushReplacementNamed(context, '/home');
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text(
+            "If you didn't go to the next screen, click on More Info"),
+        action: SnackBarAction(
+          label: 'More Info',
+          onPressed: () async {
+            _launchURL();
+          },
+        ),
+        duration: const Duration(seconds: 5),
+      ));
+    }
   }
 
   // hostChecker() async {
@@ -40,6 +51,9 @@ class _LoadingState extends State<Loading> {
   void initState() {
     setupToolData();
     super.initState();
+    Timer.periodic(Duration(seconds: 2), (timer) {
+      if (mounted) setupToolData();
+    });
   }
 
   Future<void> _launchURL() => launch(_url);
@@ -71,28 +85,10 @@ class _LoadingState extends State<Loading> {
           ),
         ),
         body: const Center(
-          child: SpinKitChasingDots(
+          child: CircularProgressIndicator(
+            backgroundColor: Colors.orange,
             color: Colors.redAccent,
-            size: 80.0,
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            setupToolData();
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: const Text(
-                  "If you didn't go to the next screen, click on More Info"),
-              action: SnackBarAction(
-                label: 'More Info',
-                onPressed: () async {
-                  _launchURL();
-                },
-              ),
-              duration: const Duration(seconds: 5),
-            ));
-          },
-          backgroundColor: Colors.red,
-          child: const Icon(Icons.refresh),
         ),
       ),
     ]);

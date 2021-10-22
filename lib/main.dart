@@ -79,7 +79,8 @@ void main() async {
       darkTheme: ThemeData(brightness: Brightness.dark),
       theme:
           (ThemeData(brightness: Brightness.dark, primaryColor: Colors.black)),
-      title: "WarThunderbgAssistant",
+      // ignore: prefer_single_quotes
+      title: 'WarThunderbgAssistant',
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
