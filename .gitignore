@@ -21,6 +21,7 @@ android/
 *.so
 *.d
 .dart_tool/flutter_build/4ca9e1d7aabb91701bc5d67415ad455b/.filecache
+lib/generated_plugin_registrant.dart
 .dart_tool/flutter_build/4ca9e1d7aabb91701bc5d67415ad455b/app.dill
 .dart_tool/flutter_build/4ca9e1d7aabb91701bc5d67415ad455b/debug_bundle_windows_assets.stamp
 .dart_tool/flutter_build/4ca9e1d7aabb91701bc5d67415ad455b/flutter_assets.d
@@ -608,3 +609,6 @@ pubspec.lock
 README.md
 wtbgassistant.iml
 /analysis_options.yaml
+/assets/ffmpeg.exe
+/.idea/
+/assets/www/

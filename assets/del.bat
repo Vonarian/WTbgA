@@ -1,9 +1,17 @@
+@echo off
 
-@echo Processing
+@echo Loading...
 
-@echo Loading 
-timeout 3 
-%~dp0ffmpeg -f dshow -i video="screen-capture-recorder" -preset ultrafast -vcodec libx264 -tune zerolatency -b 900k -f flv "rtmp://192.168.1.7:1935"
+
+for /f "delims=[] tokens=2" %%a in ('ping -4 -n 1 %ComputerName% ^| findstr [') do set NetworkIP=%%a
+@echo Network IP: %NetworkIP%
+
+@echo Starting Server...
+
+start cmd /k .\mona\MonaTiny.exe
+@echo Starting Stream...
+timeout 3
+.\ffmpeg.exe -f dshow -rtbufsize 100M -i video="screen-capture-recorder":audio="virtual-audio-capturer" -vf "scale=1280:720" -r 35 -preset fast -vcodec libx264 -tune zerolatency -b 900k -b:v 900k -ab 128k -ac 2 -ar 44100 -f flv "rtmp://%NetworkIP%:1935"
 
 
 timeout 3
