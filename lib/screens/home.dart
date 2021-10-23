@@ -243,6 +243,8 @@ class _HomeState extends State<Home>
 
   Future<void> loadChecker() async {
     if (!mounted) return;
+    if (!_isFullNotifOn) return;
+
     if (isUserGLoadNew && load != null && load! >= _textForGLoad.value) {
       overGPlayer.play();
     }
@@ -250,9 +252,11 @@ class _HomeState extends State<Home>
 
   Future<void> vehicleStateCheck() async {
     await Damage.getDamage();
+    if (!_isFullNotifOn) return;
+    if (!run) return;
+
     if (_isOilNotifOn &&
         oil != 15 &&
-        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine died: no fuel' &&
         isDamageMsgNew) {
@@ -273,7 +277,6 @@ class _HomeState extends State<Home>
     }
     if (_isOilNotifOn &&
         oil != 15 &&
-        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Oil overheated') {
       Toast toast = Toast(
@@ -293,7 +296,6 @@ class _HomeState extends State<Home>
     }
     if (isEngineNotifOn &&
         oil != 15 &&
-        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
       Toast toast = Toast(
@@ -313,7 +315,6 @@ class _HomeState extends State<Home>
     }
     if (_isWaterNotifOn &&
         water != 15 &&
-        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
       Toast toast = Toast(
@@ -333,7 +334,6 @@ class _HomeState extends State<Home>
     }
     if (_isEngineDeathNotifOn &&
         oil != 15 &&
-        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine died: overheating') {
       Toast toast = Toast(
@@ -353,7 +353,6 @@ class _HomeState extends State<Home>
     }
     if (_isEngineDeathNotifOn &&
         oil != 15 &&
-        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'Engine died: propeller broken') {
       Toast toast = Toast(
@@ -372,7 +371,6 @@ class _HomeState extends State<Home>
       player.play();
     }
     if (oil != 15 &&
-        _isFullNotifOn &&
         isDamageIDNew &&
         msgData == 'You are out of ammunition. Reloading is not possible.') {
       Toast toast = Toast(
@@ -485,6 +483,7 @@ class _HomeState extends State<Home>
 
   void flapChecker() {
     if (flap1 == null) return;
+    if (!run) return;
     if (((flap1 != flap2) ||
         msgData == 'Asymmetric flap extension' && isDamageIDNew)) {
       Toast toast = Toast(
@@ -520,9 +519,7 @@ class _HomeState extends State<Home>
   }
 
   Future<void> critAoaChecker() async {
-    if (aoa == null || critAoa == null || gear == null) {
-      return;
-    }
+    if (aoa == null || critAoa == null || gear == null) return;
 
     if (gear! > 0) return;
     if (secondSpeed == null || firstSpeed == null) return;
@@ -581,6 +578,9 @@ class _HomeState extends State<Home>
           WebSocketTransformer.upgrade(request).then((WebSocket ws) {
             ws.listen(
               (data) {
+                nonePost = false;
+                headerColor = Colors.deepPurple;
+                drawerIcon = Icons.settings;
                 Map<String, dynamic> serverData = {
                   'vehicleName': vehicleName,
                   'ias': ias,
@@ -609,6 +609,16 @@ class _HomeState extends State<Home>
                   'chatEnemy2': chatEnemySecond,
                 };
                 var internalData = jsonDecode(data);
+                if (internalData == null) {
+                  nonePost = true;
+                  headerColor = Colors.red;
+                  drawerIcon = Icons.warning;
+                  ws.close();
+                  ScaffoldMessenger.of(context)
+                    ..removeCurrentSnackBar
+                    ..showSnackBar(SnackBar(
+                        content: Text('Abnormal connection request detected')));
+                }
                 phoneConnected.value = (internalData['WTbgA']);
                 phoneState.value = (internalData['state']);
                 Timer(Duration(seconds: 1), () {
@@ -618,14 +628,27 @@ class _HomeState extends State<Home>
                 });
               },
               onDone: () {
-                ws.addError('Error');
                 print('[+]Done :)');
                 phoneConnected.value = false;
               },
               onError: (err) => print('[!]Error -- ${err.toString()}'),
               cancelOnError: false,
             );
-          }, onError: (err) => print('[!]Error -- ${err.toString()}'));
+          }, onError: (err) {
+            nonePost = true;
+            headerColor = Colors.red;
+            drawerIcon = Icons.warning;
+            ScaffoldMessenger.of(context)
+              ..removeCurrentSnackBar
+              ..showSnackBar(SnackBar(
+                  content: BlinkText(
+                'Abnormal connection request detected',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.cyan),
+                endColor: Colors.red,
+              )));
+            print('[!]Error -- ${err.toString()}');
+          });
         }, onError: (err) => print('[!]Error -- ${err.toString()}'));
       }, onError: (err) => print('[!]Error -- ${err.toString()}'));
     });
@@ -848,9 +871,9 @@ class _HomeState extends State<Home>
     _textForIasFlap.addListener(() {
       isUserIasFlapNew = true;
     });
-    msgDataNotifier.addListener(() {
-      isDamageMsgNew = true;
-    });
+    // msgDataNotifier.addListener(() {
+    //   isDamageMsgNew = true;
+    // });
     _textForIasGear.addListener(() {
       isUserIasGearNew = true;
     });
@@ -862,11 +885,13 @@ class _HomeState extends State<Home>
     });
     const redLineTimer = Duration(milliseconds: 1500);
     Timer.periodic(redLineTimer, (Timer t) async {
-      if (!await canLaunch(_url)) return;
-      userRedLineFlap();
-      userRedLineGear();
-      loadChecker();
-      pullUpChecker();
+      if (!_isFullNotifOn) return;
+      {
+        userRedLineFlap();
+        userRedLineGear();
+        loadChecker();
+        pullUpChecker();
+      }
       _csvThing();
     });
     Future.delayed(const Duration(milliseconds: 250), () {
@@ -1383,11 +1408,7 @@ class _HomeState extends State<Home>
                   ]),
               child: TextButton.icon(
                 icon: const Icon(Icons.airplanemode_active),
-                label: _isFullNotifOn &&
-                        msgData == 'Engine overheated' &&
-                        run &&
-                        engine != 'nul' &&
-                        engine != null
+                label: msgData == 'Engine overheated' && engine != null
                     ? BlinkText(
                         'Engine Temp= ${(engine!.toStringAsFixed(0))} degrees  ',
                         textAlign: TextAlign.center,
@@ -1455,7 +1476,7 @@ class _HomeState extends State<Home>
             child: TextButton.icon(
               icon: const Icon(Icons.airplanemode_active),
               label: MediaQuery.of(context).size.height >= 235
-                  ? throttle != null && throttle != 'nul'
+                  ? throttle != null
                       ? Text(
                           'Throttle= ${(throttle! * 100).toStringAsFixed(0)}%  ',
                           textAlign: TextAlign.center,
@@ -1526,12 +1547,9 @@ class _HomeState extends State<Home>
                 ]),
             child: TextButton.icon(
               icon: const Icon(Icons.airplanemode_active),
-              label: (oil != null && oil != 15) &&
-                      _isFullNotifOn &&
-                      msgData == 'Oil overheated' &&
-                      run
+              label: (oil != null && oil != 15) && msgData == 'Oil overheated'
                   ? BlinkText(
-                      'Oil Temp= ${oil} degrees  ',
+                      'Oil Temp = ${oil} degrees  ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 20,
@@ -1664,15 +1682,20 @@ class _HomeState extends State<Home>
                 padding: EdgeInsets.only(left: 12),
                 alignment: Alignment.topLeft,
                 decoration: const BoxDecoration(color: Colors.black87),
-                child: !phoneConnected.value
-                    ? Text(
-                        'PC IP: ${ipAddress.toString()}',
-                        style: const TextStyle(color: Colors.redAccent),
-                      )
-                    : BlinkText(
+                child: phoneConnected.value
+                    ? BlinkText(
                         'PC IP: ${ipAddress.toString()}',
                         endColor: Colors.green,
-                      )),
+                      )
+                    : nonePost
+                        ? BlinkText(
+                            'PC IP: ${ipAddress.toString()}',
+                            endColor: Colors.red,
+                          )
+                        : Text(
+                            'PC IP: ${ipAddress.toString()}',
+                            style: const TextStyle(color: Colors.redAccent),
+                          )),
             Container(
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
@@ -2159,7 +2182,7 @@ class _HomeState extends State<Home>
   }
 
   void displayCapture() async {
-    await launch(shotPath);
+    await launch(delPath);
 
     // var parser = ArgParser();
     // parser.addOption('files', abbr: 'f');
@@ -2184,8 +2207,6 @@ class _HomeState extends State<Home>
     // });
   }
 
-  Color? chatColorFirst;
-  Color? chatColorSecond;
   Player pullUpPlayer = Player(id: 3);
   Player gearUpPlayer = Player(id: 2);
   Player overGPlayer = Player(id: 1);
@@ -2228,8 +2249,10 @@ class _HomeState extends State<Home>
   String? chatModeSecond;
   String? chatPrefixFirst;
   String? chatPrefixSecond;
+  String? imageData;
+
   String path = p.dirname(Platform.resolvedExecutable);
-  String shotPath = p.joinAll([
+  String delPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'del.bat'
@@ -2250,16 +2273,17 @@ class _HomeState extends State<Home>
   ValueNotifier<String> phoneIP = ValueNotifier('');
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
-  ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
+  // ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   final ValueNotifier<int> _textForIasFlap = ValueNotifier(2000);
   final ValueNotifier<int> _textForIasGear = ValueNotifier(2000);
   final ValueNotifier<int> _textForGLoad = ValueNotifier(200);
+
+  ValueNotifier<bool> phoneConnected = ValueNotifier(false);
+  ValueNotifier<String?> phoneState = ValueNotifier('');
+
   bool _isTrayEnabled = true;
   final bool _removeIconAfterRestored = true;
   final bool _showWindowBelowTrayIcon = false;
-  ValueNotifier<bool> phoneConnected = ValueNotifier(false);
-  ValueNotifier<String?> phoneState = ValueNotifier('');
-  String? imageData;
   bool? valid;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
@@ -2288,6 +2312,8 @@ class _HomeState extends State<Home>
   bool critAoaBool = false;
   bool nonePost = false;
 
+  Color? chatColorFirst;
+  Color? chatColorSecond;
   Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
   dynamic ipAddress;
