@@ -1,7 +1,13 @@
 # This is a generated file; do not edit or check into version control.
+dart_discord_rpc=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\dart_discord_rpc-0.0.2\\
 desktoasts=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\desktoasts-0.0.2\\
 flutter_acrylic=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\flutter_acrylic-0.0.3\\
 hotkey_manager=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\hotkey_manager-0.1.1\\
+network_info_plus=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\network_info_plus-2.0.2\\
+network_info_plus_linux=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\network_info_plus_linux-1.1.0\\
+network_info_plus_macos=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\network_info_plus_macos-1.2.0\\
+network_info_plus_web=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\network_info_plus_web-1.0.1\\
+network_info_plus_windows=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\network_info_plus_windows-1.0.2\\
 path_provider_linux=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\path_provider_linux-2.0.2\\
 path_provider_windows=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\path_provider_windows-2.0.3\\
 shared_preferences=C:\\src\\flutter\\.pub-cache\\hosted\\pub.dartlang.org\\shared_preferences-2.0.7\\

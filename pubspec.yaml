@@ -41,7 +41,10 @@ dependencies:
   hotkey_manager: ^0.1.1
   web_socket_channel: ^2.1.0
   flutter_acrylic:
-#  flutter_riverpod: 1.0.0-dev.10
+  network_info_plus: ^2.0.2
+  dart_discord_rpc: ^0.0.2
+
+  #  flutter_riverpod: 1.0.0-dev.10
   libwinmedia:
     git:
       url: https://github.com/libwinmedia/libwinmedia.dart.git
@@ -92,6 +95,7 @@ flutter:
     - assets/fm_data_db.csv
     - assets/ffmpeg.exe
     - assets/del.bat
+    - assets/libwinmedia.dll
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

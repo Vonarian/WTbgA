@@ -2,6 +2,7 @@ import 'dart:ffi';
 import 'dart:io' show Platform;
 
 // import 'package:dart_vlc/dart_vlc.dart' show DartVLC;
+import 'package:dart_discord_rpc/dart_discord_rpc.dart';
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
@@ -26,8 +27,13 @@ ToastService? service;
 // final HelloWorld hello = dylib
 //     .lookup<ffi.NativeFunction<hello_world_func>>('hello_world')
 //     .asFunction();
+DiscordRPC rpc = DiscordRPC(
+  applicationId: '901456389786968125',
+);
 void main() async {
-  // hello;
+  DiscordRPC.initialize();
+  rpc.start(autoRegister: true);
+
   WidgetsFlutterBinding.ensureInitialized();
   // DartVLC.initialize();
 
@@ -56,7 +62,11 @@ void main() async {
     'PullUp.mp3'
   ]);
 
-  var path = 'C:/src/libwinmedia.dll';
+  var path = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'libwinmedia.dll'
+  ]);
   LWM.initialize(DynamicLibrary.open(path));
   var player = Player(id: 0);
   var overGPlayer = Player(id: 1);
@@ -78,8 +88,7 @@ void main() async {
     MaterialApp(
       darkTheme: ThemeData(brightness: Brightness.dark),
       theme:
-          (ThemeData(brightness: Brightness.dark, primaryColor: Colors.black)),
-      // ignore: prefer_single_quotes
+          (ThemeData(brightness: Brightness.light, primaryColor: Colors.black)),
       title: 'WarThunderbgAssistant',
       debugShowCheckedModeBanner: false,
       initialRoute: '/',

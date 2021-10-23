@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:blinking_text/blinking_text.dart';
-// import 'package:dart_vlc/dart_vlc.dart' as v;
+import 'package:dart_discord_rpc/dart_discord_rpc.dart';
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -540,6 +541,7 @@ class _HomeState extends State<Home>
   @override
   void dispose() {
     super.dispose();
+    rpc.clearPresence();
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
@@ -571,7 +573,7 @@ class _HomeState extends State<Home>
   //   }
   // }
 
-  void startServer() {
+  Future<void> startServer() async {
     Future.delayed(Duration(milliseconds: 800), () {
       HttpServer.bind(InternetAddress.anyIPv4, 55200).then((HttpServer server) {
         print('[+]WebSocket listening at -- ws://$ipAddress:55200');
@@ -716,15 +718,27 @@ class _HomeState extends State<Home>
   }
 
   Future<void> giveIps() async {
-    for (var interface in await NetworkInterface.list()) {
-      for (var addr in interface.addresses) {
-        ipAddress = addr.address;
-      }
-    }
+    final info = NetworkInfo();
+
+    var wifiIP = await info.getWifiIP();
+    ipAddress = wifiIP;
   }
 
   @override
   void initState() {
+    var dateTimeNow = DateTime.now().millisecondsSinceEpoch;
+    rpc.updatePresence(
+      DiscordPresence(
+        state: 'War Thunder Background Assistance',
+        details: 'Enjoying WTbgA',
+        startTimeStamp: dateTimeNow,
+        largeImageKey: 'largelogo',
+        largeImageText: 'War Thunder Background Assistance',
+        // smallImageKey: 'small_image',
+        // smallImageText: 'This text describes the small image.',
+      ),
+    );
+
     giveIps();
     startServer();
     final _url = 'http://localhost:8111';
@@ -744,6 +758,19 @@ class _HomeState extends State<Home>
     // });
     Timer.periodic(twoSec, (Timer t) async {
       if (!await canLaunch(_url)) return;
+      rpc.updatePresence(
+        DiscordPresence(
+          state: phoneConnected.value ? 'Using WTbgA - Mobile!' : 'Using WTbgA',
+          details: phoneConnected.value
+              ? 'Enjoying both desktop and mobile WTbgA!'
+              : 'Enjoying WTbgA!',
+          startTimeStamp: dateTimeNow,
+          largeImageKey: 'largelogo',
+          largeImageText: 'War Thunder Background Assistance',
+          // smallImageKey: 'small_image',
+          // smallImageText: 'This text describes the small image.',
+        ),
+      );
       giveIps();
       updateMsgId();
       flapChecker();
