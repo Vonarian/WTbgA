@@ -536,8 +536,9 @@ class _HomeState extends State<Home>
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     super.dispose();
+    await hotKey.unregisterAll();
     rpc.clearPresence();
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
@@ -621,6 +622,7 @@ class _HomeState extends State<Home>
                 }
                 phoneConnected.value = (internalData['WTbgA']);
                 phoneState.value = (internalData['state']);
+                streamState.value = internalData['startStream'];
                 Timer(Duration(seconds: 1), () {
                   if (ws.readyState == WebSocket.open)
                     // checking connection state helps to avoid unprecedented errors
@@ -832,10 +834,10 @@ class _HomeState extends State<Home>
                 endColor: Colors.red,
               )));
         Toast toast = Toast(
-            type: ToastType.imageAndText02,
-            title: '⚠Connection detected!',
-            subtitle: 'WTbgA Mobile connection detected',
-            image: File(warningLogo));
+          type: ToastType.text02,
+          title: '✅Connection detected!',
+          subtitle: 'WTbgA Mobile connection detected',
+        );
         service!.show(toast);
         toast.dispose();
       } else {
@@ -849,10 +851,10 @@ class _HomeState extends State<Home>
                 endColor: Colors.red,
               )));
         Toast toast = Toast(
-            type: ToastType.imageAndText02,
-            title: '⚠Connection ended!',
-            subtitle: 'WTbgA Mobile connection ended',
-            image: File(warningLogo));
+          type: ToastType.text02,
+          title: '✅Connection ended!',
+          subtitle: 'WTbgA Mobile connection ended',
+        );
         service!.show(toast);
         toast.dispose();
       }
@@ -867,6 +869,10 @@ class _HomeState extends State<Home>
       prefs.setInt('lastId', lastId!);
       vehicleStateCheck();
       run = false;
+    });
+    streamState.addListener(() async {
+      if (streamState.value == true) displayCapture();
+      if (streamState.value == false) await launch(terminatePath);
     });
     _textForIasFlap.addListener(() {
       isUserIasFlapNew = true;
@@ -932,8 +938,9 @@ class _HomeState extends State<Home>
     await TrayManager.instance.destroy();
   }
 
+  var hotKey = HotKeyManager.instance;
   Future<void> keyRegister() async {
-    HotKeyManager.instance.register(
+    await hotKey.register(
       HotKey(
         KeyCode.digit5,
         modifiers: [KeyModifier.alt],
@@ -947,7 +954,7 @@ class _HomeState extends State<Home>
         }
       },
     );
-    HotKeyManager.instance.register(
+    await hotKey.register(
         HotKey(
           KeyCode.delete,
           modifiers: [KeyModifier.alt],
@@ -955,7 +962,7 @@ class _HomeState extends State<Home>
       windowManager.terminate();
     });
 
-    HotKeyManager.instance
+    await hotKey
         .register(HotKey(KeyCode.backspace, modifiers: [KeyModifier.alt]),
             keyDownHandler: (_) {
       showIas = true;
@@ -2066,73 +2073,36 @@ class _HomeState extends State<Home>
 
   Widget homeWidgetNoData() {
     return Center(
-      child: Container(
-          height: MediaQuery.of(context).size.height,
-          decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                  Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: const BorderRadius.all(
-                Radius.circular(20.0),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.pink.withOpacity(boxShadowOpacity),
-                  spreadRadius: 4,
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                )
-              ]),
-          child: TextButton.icon(
-            icon:
-                const Icon(Icons.signal_wifi_statusbar_connected_no_internet_4),
-            onPressed: () {},
-            label: const Text(
-              'No Data.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 50,
-                  letterSpacing: 2,
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold),
+      child: Stack(children: [
+        Center(
+          child: BlinkText(
+            'No data from server',
+            style: TextStyle(color: Colors.red),
+            endColor: Colors.purple,
+          ),
+        ),
+        Center(
+          child: Container(
+            height: 200,
+            width: 200,
+            child: CircularProgressIndicator(
+              backgroundColor: Colors.red,
             ),
-          )),
+          ),
+        ),
+      ]),
     );
   }
 
   PreferredSizeWidget? homeAppBar(BuildContext context) {
     return AppBar(
         actions: [
-          // IconButton(
-          //     onPressed: () {
-          //       channel.sink.add('Hello!');
-          //     },
-          //     icon: Icon(Icons.add)),
           phoneConnected.value
               ? RotationTransition(
                   turns: _controller,
                   child: IconButton(
                     onPressed: () async {
                       displayCapture();
-
-                      // if (phoneState.value == 'image') {
-                      //   print(phoneState.value);
-                      //   sendScreen = !sendScreen;
-                      // } else {
-                      //   ScaffoldMessenger.of(context)
-                      //     ..removeCurrentSnackBar()
-                      //     ..showSnackBar(SnackBar(
-                      //         content: BlinkText(
-                      //       'Phone is not in image mode',
-                      //       endColor: Colors.red,
-                      //       style: TextStyle(color: Colors.cyan),
-                      //     )));
-                      // }
                     },
                     icon: Icon(
                       Icons.wifi_rounded,
@@ -2144,14 +2114,6 @@ class _HomeState extends State<Home>
               : IconButton(
                   onPressed: () {
                     displayCapture();
-                    // ScaffoldMessenger.of(context)
-                    //   ..removeCurrentSnackBar()
-                    //   ..showSnackBar(SnackBar(
-                    //       content: BlinkText(
-                    //     'Phone is not in image mode',
-                    //     endColor: Colors.red,
-                    //     style: TextStyle(color: Colors.cyan),
-                    //   )));
                   },
                   icon: Icon(
                     Icons.wifi_rounded,
@@ -2183,28 +2145,6 @@ class _HomeState extends State<Home>
 
   void displayCapture() async {
     await launch(delPath);
-
-    // var parser = ArgParser();
-    // parser.addOption('files', abbr: 'f');
-    // parser.addCommand('dshow');
-    // parser.addOption('input', abbr: 'i');
-    // parser.addCommand('video');
-    // parser.addCommand('output.mkv');
-    // var results = parser.parse([
-    //   '-f',
-    //   'dshow',
-    //   '-i',
-    //   'video=screen-capture-recorder',
-    //   '$path/output.mkv'
-    // ]);
-    // print(results.arguments);
-    // var test = await Process.run(shotPath, results.arguments);
-    // print(test.stderr);
-    // await Process.run(shotPath, []).catchError((error, stackTrace) async {
-    //   print(error);
-    //   var a = await (Process.run(shotPath, []));
-    //   return a;
-    // });
   }
 
   Player pullUpPlayer = Player(id: 3);
@@ -2257,6 +2197,11 @@ class _HomeState extends State<Home>
     'data/flutter_assets/assets',
     'del.bat'
   ]);
+  String terminatePath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'terminate.bat'
+  ]);
   String somePath = p.joinAll(
       [p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets']);
   String warningLogo = p.joinAll([
@@ -2277,6 +2222,7 @@ class _HomeState extends State<Home>
   final ValueNotifier<int> _textForIasFlap = ValueNotifier(2000);
   final ValueNotifier<int> _textForIasGear = ValueNotifier(2000);
   final ValueNotifier<int> _textForGLoad = ValueNotifier(200);
+  final ValueNotifier<bool> streamState = ValueNotifier(false);
 
   ValueNotifier<bool> phoneConnected = ValueNotifier(false);
   ValueNotifier<String?> phoneState = ValueNotifier('');
