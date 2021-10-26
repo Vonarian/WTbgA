@@ -12,7 +12,7 @@
 @timeout 1 /nobreak >NUL
 @echo Starting Stream...
 @timeout 3 /nobreak >NUL
-.\data\flutter_assets\assets\ffmpeg.exe -f dshow -rtbufsize 150M -filter:v fps=fps=50 -i video="screen-capture-recorder":audio="virtual-audio-capturer" -vf "scale=1280:720" -r 50 -preset ultrafast -vcodec libx264 -tune zerolatency -b 5M -b:v 5M -ab 128k -ac 2 -ar 44100 -f flv "rtmp://%NetworkIP%:1935"
+.\data\flutter_assets\assets\ffmpeg.exe -f dshow -rtbufsize 150M -filter:v fps=fps=30 -i video="screen-capture-recorder":audio="virtual-audio-capturer" -vf "scale=1600:900" -r 30 -preset ultrafast -vcodec libx264 -tune zerolatency -b 2M -b:v 2M -ab 128k -ac 2 -ar 44100 -async 44100 -f flv "rtmp://%NetworkIP%:1935"
 
 
 @timeout 3 /nobreak >NUL

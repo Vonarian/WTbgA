@@ -835,7 +835,7 @@ class _HomeState extends State<Home>
     });
     streamState.addListener(() async {
       if (streamState.value == true) displayCapture();
-      if (streamState.value == false) await launch(terminatePath);
+      if (streamState.value == false) await Process.run(terminatePath, []);
     });
     _textForIasFlap.addListener(() {
       isUserIasFlapNew = true;
