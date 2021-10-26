@@ -12,7 +12,6 @@ import 'package:path/path.dart' as p;
 import 'package:wtbgassistant/screens/loading.dart';
 
 import 'screens/home.dart';
-import 'screens/info.dart';
 
 ToastService? service;
 
@@ -35,7 +34,6 @@ void main() async {
   rpc.start(autoRegister: true);
 
   WidgetsFlutterBinding.ensureInitialized();
-  // DartVLC.initialize();
 
   Acrylic.initialize();
   await windowManager.ensureInitialized();
@@ -95,14 +93,9 @@ void main() async {
       routes: {
         '/': (context) => const Loading(),
         '/home': (context) => const Home(),
-        '/info': (context) => const InfoPage(),
+        // '/info': (context) => const InfoPage(),
         // '/transparent': (context) => TransparentPage()
       },
     ),
   );
-  // doWhenWindowReady(() {
-  //   final win = appWindow;
-  //   win.title = "WTbgA";
-  //   win.show();
-  // });
 }

@@ -229,7 +229,7 @@ class _HomeState extends State<Home>
   }
 
   Future<void> pullUpChecker() async {
-    if (!mounted) return;
+    if (!mounted || !isPullUpEnabled) return;
     if (vertical != null &&
         (ias! > 400 &&
             climb != null &&
@@ -549,7 +549,7 @@ class _HomeState extends State<Home>
     chatIdFirst.removeListener(() {});
     chatIdSecond.removeListener(() {});
     phoneConnected.removeListener(() {});
-    phoneIP.removeListener(() {});
+    // phoneIP.removeListener(() {});
   }
 
   Future<void> _handleClickRestore() async {
@@ -623,7 +623,7 @@ class _HomeState extends State<Home>
                 phoneConnected.value = (internalData['WTbgA']);
                 phoneState.value = (internalData['state']);
                 streamState.value = internalData['startStream'];
-                Timer(Duration(seconds: 1), () {
+                Timer(Duration(milliseconds: 300), () {
                   if (ws.readyState == WebSocket.open)
                     // checking connection state helps to avoid unprecedented errors
                     ws.add(json.encode(serverData));
@@ -654,55 +654,17 @@ class _HomeState extends State<Home>
         }, onError: (err) => print('[!]Error -- ${err.toString()}'));
       }, onError: (err) => print('[!]Error -- ${err.toString()}'));
     });
-    // Future.delayed(Duration(milliseconds: 800), () {
-    //   HttpServer.bind(InternetAddress.anyIPv4, 30000).then((server) {
-    //     server.listen((HttpRequest request) async {
-    //       imageData = await getFileAsBase64String('$path/output.mkv');
-    //       Map<String, dynamic> serverData = {
-    //         'image': imageData,
-    //       };
-    //       request.response.write(jsonEncode(serverData));
-    //       request.response.close();
-    //     });
-    //   });
-    // });
-    //
-
-    // WebSocket.connect('ws://192.168.43.8:55200').then((WebSocket ws) {
-    //   // our websocket server runs on ws://localhost:8000
-    //   if (ws.readyState == WebSocket.open) {
-    //     // as soon as websocket is connected and ready for use, we can start talking to other end
-    //     ws.add(
-    //         "Received Data"); // this is the JSON data format to be transmitted
-    //     ws.listen(
-    //       // gives a StreamSubscription
-    //       (data) {
-    //         data = Map<String, dynamic>.from(json.decode(data));
-    //         print(
-    //             '\t\t -- ${data}'); // listen for incoming data and show when it arrives
-    //         Timer(Duration(seconds: 1), () {
-    //           if (ws.readyState ==
-    //               WebSocket
-    //                   .open) // checking whether connection is open or not, is required before writing anything on socket
-    //             ws.add("Received data");
-    //         });
-    //       },
-    //       onDone: () => print('[+]Done :)'),
-    //       onError: (err) => print('[!]Error -- ${err.toString()}'),
-    //       cancelOnError: false,
-    //     );
-    //   } else
-    //     print('[!]Connection Denied');
-    //   // in case, if serer is not running now
-    // }, onError: (err) => print('[!]Error -- ${err.toString()}'));
   }
 
   void receiveDiskValues() {
-    _prefs.then((SharedPreferences prefs) {
-      phoneIP.value = (prefs.getString('phoneIP') ?? '');
-    });
+    // _prefs.then((SharedPreferences prefs) {
+    //   phoneIP.value = (prefs.getString('phoneIP') ?? '');
+    // });
     _prefs.then((SharedPreferences prefs) {
       lastId = (prefs.getInt('lastId') ?? 0);
+    });
+    _prefs.then((SharedPreferences prefs) {
+      isPullUpEnabled = (prefs.getBool('isPullUpEnabled') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
       _isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
@@ -751,6 +713,7 @@ class _HomeState extends State<Home>
 
   @override
   void initState() {
+    super.initState();
     var dateTimeNow = DateTime.now().millisecondsSinceEpoch;
     rpc.updatePresence(
       DiscordPresence(
@@ -766,7 +729,6 @@ class _HomeState extends State<Home>
 
     giveIps();
     startServer();
-    final _url = 'http://localhost:8111';
     updateStateIndicator();
     receiveDiskValues();
     // updatePhone();
@@ -776,24 +738,25 @@ class _HomeState extends State<Home>
     updateMsgId();
     updateChat();
     chatSettingsManager();
-    super.initState();
     const twoSec = Duration(milliseconds: 2000);
     // Timer.periodic(Duration(milliseconds: 4000), (timer) async {
     //   await updatePhone();
     // });
     Timer.periodic(twoSec, (Timer t) async {
-      if (!await canLaunch(_url)) return;
+      if (!mounted) return;
       rpc.updatePresence(
         DiscordPresence(
           state: phoneConnected.value ? 'Using WTbgA - Mobile!' : 'Using WTbgA',
           details: phoneConnected.value
               ? 'Enjoying both desktop and mobile WTbgA!'
-              : 'Enjoying WTbgA!',
+              : phoneConnected.value && phoneState.value == 'image'
+                  ? 'Streaming using WTbgA'
+                  : 'Enjoying WTbgA!',
           startTimeStamp: dateTimeNow,
           largeImageKey: 'largelogo',
           largeImageText: 'War Thunder Background Assistance',
-          // smallImageKey: 'small_image',
-          // smallImageText: 'This text describes the small image.',
+          // smallImageKey: 'small',
+          // smallImageText: 'WTbgA',
         ),
       );
       giveIps();
@@ -811,7 +774,7 @@ class _HomeState extends State<Home>
     });
     const averageTimer = Duration(milliseconds: 2000);
     Timer.periodic(averageTimer, (Timer t) async {
-      if (!await canLaunch(_url)) return;
+      if (!mounted) return;
       averageIasForStall();
       // hostChecker();
     });
@@ -835,8 +798,8 @@ class _HomeState extends State<Home>
               )));
         Toast toast = Toast(
           type: ToastType.text02,
-          title: '✅Connection detected!',
-          subtitle: 'WTbgA Mobile connection detected',
+          title: '✅Connection Detected!',
+          subtitle: 'WTbgA Mobile connected',
         );
         service!.show(toast);
         toast.dispose();
@@ -853,7 +816,7 @@ class _HomeState extends State<Home>
         Toast toast = Toast(
           type: ToastType.text02,
           title: '✅Connection ended!',
-          subtitle: 'WTbgA Mobile connection ended',
+          subtitle: 'WTbgA Mobile disconnected',
         );
         service!.show(toast);
         toast.dispose();
@@ -1761,6 +1724,31 @@ class _HomeState extends State<Home>
               child: TextButton.icon(
                   onPressed: () async {
                     final SharedPreferences prefs = await _prefs;
+                    bool _isPullUpEnabled =
+                        (prefs.getBool('isPullUpEnabled') ?? true);
+                    _isPullUpEnabled = !_isPullUpEnabled;
+                    setState(() {
+                      isPullUpEnabled = _isPullUpEnabled;
+                    });
+                    prefs.setBool('isPullUpEnabled', _isPullUpEnabled);
+                  },
+                  label: isPullUpEnabled
+                      ? const Text(
+                          'Play dive warning sound: On',
+                          style: TextStyle(color: Colors.green),
+                        )
+                      : const Text(
+                          'Play dive warning sound: Off',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                  icon: const Icon(FontAwesome.plane)),
+            ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: const BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  onPressed: () async {
+                    final SharedPreferences prefs = await _prefs;
                     bool isEngineDeathNotifOn =
                         (prefs.getBool('isEngineDeathNotifOn') ?? true);
                     isEngineDeathNotifOn = !isEngineDeathNotifOn;
@@ -1860,20 +1848,21 @@ class _HomeState extends State<Home>
                         ),
                   icon: const Icon(MaterialCommunityIcons.tray)),
             ),
-            // Container(
-            //   alignment: Alignment.topLeft,
-            //   decoration: const BoxDecoration(color: Colors.black87),
-            //   child: TextButton.icon(
-            //     label: const Text('Go to transparent page'),
-            //     icon: const Icon(
-            //       Icons.info,
-            //       color: Colors.cyanAccent,
-            //     ),
-            //     onPressed: () {
-            //       Navigator.pushReplacementNamed(context, '/transparent');
-            //     },
-            //   ),
-            // ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: const BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                label: const Text('More Info'),
+                icon: const Icon(
+                  Icons.info,
+                  color: Colors.cyanAccent,
+                ),
+                onPressed: () async {
+                  await launch(
+                      'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga/');
+                },
+              ),
+            ),
             Container(
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
@@ -2083,8 +2072,8 @@ class _HomeState extends State<Home>
         ),
         Center(
           child: Container(
-            height: 200,
-            width: 200,
+            height: 400,
+            width: 400,
             child: CircularProgressIndicator(
               backgroundColor: Colors.red,
             ),
@@ -2167,18 +2156,20 @@ class _HomeState extends State<Home>
   double normalFont = 20;
   double smallFont = 17;
   double? compass;
+  double? flap1, flap2, vertical;
+  double? load, throttle;
+  double? mach;
+
   int counter = 0;
   int? lastId;
   int? firstSpeed;
   int? secondSpeed;
   int? ias;
   int? flap;
-  double? flap1, flap2, vertical;
   int? altitude;
-  double? load, throttle;
   int? oil;
   int? water;
-  double? mach;
+
   String? vehicleName;
   String? msgData;
   String? chatMsgFirst;
@@ -2214,8 +2205,10 @@ class _HomeState extends State<Home>
     'data/flutter_assets/assets',
     'fm_data_db.csv'
   ]);
+
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  ValueNotifier<String> phoneIP = ValueNotifier('');
+
+  // ValueNotifier<String> phoneIP = ValueNotifier('');
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
   // ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
@@ -2257,7 +2250,7 @@ class _HomeState extends State<Home>
   bool? chatEnemyFirst;
   bool critAoaBool = false;
   bool nonePost = false;
-
+  bool isPullUpEnabled = true;
   Color? chatColorFirst;
   Color? chatColorSecond;
   Color borderColor = const Color(0xFF805306);
@@ -2338,13 +2331,15 @@ class _HomeState extends State<Home>
   }
 
   @override
-  void onWindowMinimize() async {
-    windowManager.hide();
-    _trayInit();
+  void onWindowMinimize() {
+    if (_isTrayEnabled) {
+      windowManager.hide();
+      _trayInit();
+    }
   }
 
   @override
-  void onWindowRestore() async {
+  void onWindowRestore() {
     if (_removeIconAfterRestored) {
       windowManager.show();
       _trayUnInit();
