@@ -535,23 +535,6 @@ class _HomeState extends State<Home>
     }
   }
 
-  @override
-  Future<void> dispose() async {
-    super.dispose();
-    await hotKey.unregisterAll();
-    rpc.clearPresence();
-    TrayManager.instance.removeListener(this);
-    windowManager.removeListener(this);
-    idData.removeListener((vehicleStateCheck));
-    _textForIasFlap.removeListener((userRedLineFlap));
-    _textForIasGear.removeListener((userRedLineGear));
-    _textForGLoad.removeListener((loadChecker));
-    chatIdFirst.removeListener(() {});
-    chatIdSecond.removeListener(() {});
-    phoneConnected.removeListener(() {});
-    // phoneIP.removeListener(() {});
-  }
-
   Future<void> _handleClickRestore() async {
     windowManager.restore();
     windowManager.show();
@@ -572,6 +555,7 @@ class _HomeState extends State<Home>
   // }
 
   Future<void> startServer() async {
+    int check = 0;
     Future.delayed(Duration(milliseconds: 800), () {
       HttpServer.bind(InternetAddress.anyIPv4, 55200).then((HttpServer server) {
         print('[+]WebSocket listening at -- ws://$ipAddress:55200');
@@ -608,6 +592,7 @@ class _HomeState extends State<Home>
                   'chatSender2': chatSenderSecond,
                   'chatEnemy1': chatEnemyFirst,
                   'chatEnemy2': chatEnemySecond,
+                  'check': check++
                 };
                 var internalData = jsonDecode(data);
                 if (internalData == null) {
@@ -625,7 +610,6 @@ class _HomeState extends State<Home>
                 streamState.value = internalData['startStream'];
                 Timer(Duration(milliseconds: 300), () {
                   if (ws.readyState == WebSocket.open)
-                    // checking connection state helps to avoid unprecedented errors
                     ws.add(json.encode(serverData));
                 });
               },
@@ -739,11 +723,8 @@ class _HomeState extends State<Home>
     updateChat();
     chatSettingsManager();
     const twoSec = Duration(milliseconds: 2000);
-    // Timer.periodic(Duration(milliseconds: 4000), (timer) async {
-    //   await updatePhone();
-    // });
     Timer.periodic(twoSec, (Timer t) async {
-      if (!mounted) return;
+      if (!mounted || isStopped) t.cancel();
       rpc.updatePresence(
         DiscordPresence(
           state: phoneConnected.value ? 'Using WTbgA - Mobile!' : 'Using WTbgA',
@@ -766,15 +747,16 @@ class _HomeState extends State<Home>
       chatSettingsManager();
       critAoaChecker();
     });
-    const oneSec = Duration(milliseconds: 200);
+    const Duration oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) async {
+      if (!mounted || isStopped) t.cancel();
       updateStateIndicator();
-      if (!mounted) return;
+
       setState(() {});
     });
-    const averageTimer = Duration(milliseconds: 2000);
+    const Duration averageTimer = Duration(milliseconds: 2000);
     Timer.periodic(averageTimer, (Timer t) async {
-      if (!mounted) return;
+      if (!mounted || isStopped) t.cancel();
       averageIasForStall();
       // hostChecker();
     });
@@ -854,6 +836,7 @@ class _HomeState extends State<Home>
     });
     const redLineTimer = Duration(milliseconds: 1500);
     Timer.periodic(redLineTimer, (Timer t) async {
+      if (!mounted || isStopped) t.cancel();
       if (!_isFullNotifOn) return;
       {
         userRedLineFlap();
@@ -866,6 +849,23 @@ class _HomeState extends State<Home>
     Future.delayed(const Duration(milliseconds: 250), () {
       widget1Opacity = 1;
     });
+  }
+
+  @override
+  Future<void> dispose() async {
+    super.dispose();
+    await hotKey.unregisterAll();
+    rpc.clearPresence();
+    TrayManager.instance.removeListener(this);
+    windowManager.removeListener(this);
+    idData.removeListener((vehicleStateCheck));
+    _textForIasFlap.removeListener((userRedLineFlap));
+    _textForIasGear.removeListener((userRedLineGear));
+    _textForGLoad.removeListener((loadChecker));
+    chatIdFirst.removeListener(() {});
+    chatIdSecond.removeListener(() {});
+    phoneConnected.removeListener(() {});
+    isStopped = true;
   }
 
   Future<void> _csvThing() async {
@@ -1628,7 +1628,7 @@ class _HomeState extends State<Home>
     }
   }
 
-  Color headerColor = Colors.deepPurple;
+  Color headerColor = Colors.teal;
   IconData drawerIcon = Icons.settings;
   Widget drawerBuilder() {
     return Drawer(
@@ -2065,8 +2065,9 @@ class _HomeState extends State<Home>
       child: Stack(children: [
         Center(
           child: BlinkText(
-            'No data from server',
-            style: TextStyle(color: Colors.red),
+            'In hangar / Could not connect',
+            style: TextStyle(
+                color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
             endColor: Colors.purple,
           ),
         ),
@@ -2181,6 +2182,7 @@ class _HomeState extends State<Home>
   String? chatPrefixFirst;
   String? chatPrefixSecond;
   String? imageData;
+  String? ipAddress;
 
   String path = p.dirname(Platform.resolvedExecutable);
   String delPath = p.joinAll([
@@ -2219,7 +2221,7 @@ class _HomeState extends State<Home>
 
   ValueNotifier<bool> phoneConnected = ValueNotifier(false);
   ValueNotifier<String?> phoneState = ValueNotifier('');
-
+  bool isStopped = false;
   bool _isTrayEnabled = true;
   final bool _removeIconAfterRestored = true;
   final bool _showWindowBelowTrayIcon = false;
@@ -2251,17 +2253,18 @@ class _HomeState extends State<Home>
   bool critAoaBool = false;
   bool nonePost = false;
   bool isPullUpEnabled = true;
+
   Color? chatColorFirst;
   Color? chatColorSecond;
   Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
-  dynamic ipAddress;
   final windowManager = WindowManager.instance;
+
   late final AnimationController _controller = AnimationController(
     duration: const Duration(seconds: 2),
     vsync: this,
-  )..repeat(reverse: false);
-  int i = 0;
+  )..repeat(reverse: false, period: Duration(seconds: 1));
+
   @override
   Widget build(BuildContext context) {
     return Stack(children: [

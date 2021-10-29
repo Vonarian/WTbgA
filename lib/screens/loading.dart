@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:blinking_text/blinking_text.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -72,25 +73,41 @@ class _LoadingState extends State<Loading> {
           ),
           imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0)),
       Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          centerTitle: true,
           backgroundColor: Colors.transparent,
-          title: const Text(
-            'Loading WTbgI',
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Colors.cyanAccent),
+          appBar: AppBar(
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            title: const Text(
+              'Loading WTbgI',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.cyanAccent),
+            ),
           ),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(
-            backgroundColor: Colors.orange,
-            color: Colors.redAccent,
-          ),
-        ),
-      ),
+          body: Center(
+            child: Stack(children: [
+              Center(
+                child: BlinkText(
+                  '..: Loading :..',
+                  style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                  endColor: Colors.purple,
+                ),
+              ),
+              Center(
+                child: Container(
+                  height: 400,
+                  width: 400,
+                  child: CircularProgressIndicator(
+                    backgroundColor: Colors.red,
+                  ),
+                ),
+              ),
+            ]),
+          )),
     ]);
   }
 }

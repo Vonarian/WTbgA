@@ -31,7 +31,6 @@ dependencies:
   url_launcher: ^6.0.9
   path: ^1.8.0
   window_manager: ^0.0.5
-  args: ^2.3.0
 
   #  screen_recorder:
 #  dart_vlc:
@@ -93,7 +92,7 @@ flutter:
     - assets/PullUp.mp3
     - assets/app_icon.ico
     - assets/fm_data_db.csv
-    - assets/ffmpeg.exe
+#    - assets/ffmpeg.exe
     - assets/del.bat
     - assets/libwinmedia.dll
     - assets/mona/
