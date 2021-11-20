@@ -22,6 +22,7 @@ IF EXIST ".\data\flutter_assets\assets\ffmpeg.exe" (
 exit /f
 ) ELSE (
 @echo FFMPEG.EXE NOT FOUND, COPYING
-    xcopy /s /y "C:\Program Files (x86)\Screen Capturer Recorder\configuration_setup_utility\vendor\ffmpeg\bin\ffmpeg.exe" .\data\flutter_assets\assets\
+    xcopy /s /y "%SystemDrive%\Program Files (x86)\Screen Capturer Recorder\configuration_setup_utility\vendor\ffmpeg\bin\ffmpeg.exe" .\data\flutter_assets\assets\
+@timeout 2 /nobreak >NUL
 goto main
 )

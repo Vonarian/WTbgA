@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io' show Platform;
 
 // import 'package:dart_vlc/dart_vlc.dart' show DartVLC;
@@ -34,8 +33,8 @@ void main() async {
   rpc.start(autoRegister: true);
 
   WidgetsFlutterBinding.ensureInitialized();
+  await Window.initialize();
 
-  Acrylic.initialize();
   await windowManager.ensureInitialized();
 
   HotKeyManager.instance.unregisterAll();
@@ -60,12 +59,7 @@ void main() async {
     'PullUp.mp3'
   ]);
 
-  var path = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/assets',
-    'libwinmedia.dll'
-  ]);
-  LWM.initialize(DynamicLibrary.open(path));
+  LWM.initialize();
   var player = Player(id: 0);
   var overGPlayer = Player(id: 1);
   var gearUpPlayer = Player(id: 2);

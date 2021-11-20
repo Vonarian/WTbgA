@@ -52,7 +52,7 @@ class _LoadingState extends State<Loading> {
   void initState() {
     setupToolData();
     super.initState();
-    Timer.periodic(Duration(seconds: 2), (timer) {
+    Timer.periodic(Duration(milliseconds: 1300), (timer) {
       if (mounted) setupToolData();
     });
   }

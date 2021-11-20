@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.13.0 <3.0.0"
+  sdk: ">=2.14.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -31,7 +31,7 @@ dependencies:
   url_launcher: ^6.0.9
   path: ^1.8.0
   window_manager: ^0.0.5
-
+  flutter_vector_icons: ^1.0.0
   #  screen_recorder:
 #  dart_vlc:
 #  obs_websocket: ^2.2.7
@@ -43,11 +43,8 @@ dependencies:
   network_info_plus: ^2.0.2
   dart_discord_rpc: ^0.0.2
 
-  #  flutter_riverpod: 1.0.0-dev.10
-  libwinmedia:
-    git:
-      url: https://github.com/libwinmedia/libwinmedia.dart.git
-  flutter_vector_icons: ^1.0.0
+#    flutter_riverpod: 1.0.0-dev.10
+  libwinmedia: ^0.0.7
     #  response: ^1.0.0
 
     #  adaptive_theme:
@@ -94,7 +91,6 @@ flutter:
     - assets/fm_data_db.csv
 #    - assets/ffmpeg.exe
     - assets/del.bat
-    - assets/libwinmedia.dll
     - assets/mona/
     - assets/terminate.bat
   # An image asset can refer to one or more resolution-specific "variants", see
