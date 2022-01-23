@@ -138,18 +138,24 @@ class _HomeState extends State<Home>
             ));
   }
 
-  // static Route<String> dialogBuilderIP(BuildContext context) {
-  //   TextEditingController userInputIP = TextEditingController();
+  // Route<double> sliderFontSize(BuildContext context, double initialValue) {
+  //   TextEditingController userInputIP =
+  //       TextEditingController(text: initialValue.toString());
   //   return DialogRoute(
   //       context: context,
   //       builder: (BuildContext context) => AlertDialog(
-  //             content: TextField(
-  //               onChanged: (value) {},
-  //               controller: userInputIP,
-  //               decoration: const InputDecoration(hintText: '192.168.X.Y'),
+  //             content: Slider(
+  //               min: 20,
+  //               max: 100,
+  //               divisions: 8,
+  //               label: userInputIP.text,
+  //               value: initialValue,
+  //               onChanged: (double value) {
+  //                 userInputIP.text = value.toString();
+  //                 setState(() {});
+  //               },
   //             ),
-  //             title:
-  //                 const Text('Red line notifier (Enter red line gear speed). '),
+  //             title: const Text('Change font size of transparent page:'),
   //             actions: [
   //               ElevatedButton(
   //                   onPressed: () {
@@ -158,11 +164,10 @@ class _HomeState extends State<Home>
   //                   child: const Text('Cancel')),
   //               ElevatedButton(
   //                   onPressed: () {
-  //                     ScaffoldMessenger.of(context)
-  //                       ..removeCurrentSnackBar()
-  //                       ..showSnackBar(SnackBar(
-  //                           content: Text('Phone IP address has been update')));
-  //                     Navigator.of(context).pop(userInputIP.text);
+  //                     WidgetsBinding.instance!.addPostFrameCallback((_) {
+  //                       Navigator.of(context)
+  //                           .pop(double.parse(userInputIP.text));
+  //                     });
   //                   },
   //                   child: const Text('Update'))
   //             ],
@@ -380,7 +385,7 @@ class _HomeState extends State<Home>
     try {
       ToolDataState state = await ToolDataState.getState();
       return state;
-    } catch (e, st) {
+    } catch (e) {
       // log(e.toString(), stackTrace: st);
       rethrow;
     }
@@ -610,6 +615,9 @@ class _HomeState extends State<Home>
     // });
     _prefs.then((SharedPreferences prefs) {
       lastId = (prefs.getInt('lastId') ?? 0);
+    });
+    _prefs.then((SharedPreferences prefs) {
+      transparentFont = (prefs.getDouble('fontSize') ?? 40);
     });
     _prefs.then((SharedPreferences prefs) {
       isPullUpEnabled = (prefs.getBool('isPullUpEnabled') ?? true);
@@ -1248,7 +1256,22 @@ class _HomeState extends State<Home>
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
-                  label: Text('Transparent screen'),
+                  label: Text(
+                    'In-game Overlay (Hold for font size)',
+                  ),
+                  onLongPress: () async {
+                    showGeneralDialog(
+                        context: context,
+                        pageBuilder: (context, an, an2) {
+                          return SliderClass(
+                              defaultText: transparentFont,
+                              callback: (double value) {
+                                setState(() {
+                                  transparentFont = value;
+                                });
+                              });
+                        });
+                  },
                   onPressed: () async {
                     await Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
@@ -1256,12 +1279,13 @@ class _HomeState extends State<Home>
                           flapLimit: _textForIasFlap.value,
                           gearLimit: _textForIasGear.value,
                           gLoad: _textForGLoad.value,
+                          fontSize: transparentFont,
                         ),
                       ),
                     );
                   },
                   icon: const Icon(
-                    MaterialCommunityIcons.close_box,
+                    MaterialCommunityIcons.window_open,
                     color: Colors.amber,
                   )),
             ),
@@ -1455,7 +1479,7 @@ class _HomeState extends State<Home>
   bool critAoaBool = false;
   bool nonePost = false;
   bool isPullUpEnabled = true;
-
+  double transparentFont = 30.0;
   Color? chatColorFirst;
   Color? chatColorSecond;
   Color borderColor = const Color(0xFF805306);
@@ -1486,316 +1510,442 @@ class _HomeState extends State<Home>
           appBar: MediaQuery.of(context).size.height >= 300
               ? homeAppBar(context)
               : null,
-          body: FutureBuilder<ToolDataState>(
-              future: updateState(),
-              builder: (context, AsyncSnapshot<ToolDataState> shot) {
-                if (shot.hasData) {
-                  ias = shot.data!.ias;
-                  gear = shot.data!.gear;
-                  flap = shot.data!.flaps;
-                  altitude = shot.data!.altitude;
-                  oil = shot.data!.oilTemp1C;
-                  water = shot.data!.waterTemp1C;
-                  double fuel = shot.data!.fuel / shot.data!.maxFuel * 100;
-                  return Flex(
-                    direction: Axis.vertical,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
+          body: Flex(
+            direction: Axis.horizontal,
+            children: [
+              Expanded(
+                child: FutureBuilder<ToolDataState>(
+                    future: updateState(),
+                    builder: (context, AsyncSnapshot<ToolDataState> shot) {
+                      if (shot.hasData) {
+                        ias = shot.data!.ias;
+                        gear = shot.data!.gear;
+                        flap = shot.data!.flaps;
+                        altitude = shot.data!.altitude;
+                        oil = shot.data!.oilTemp1C;
+                        water = shot.data!.waterTemp1C;
+                        double fuel =
+                            shot.data!.fuel / shot.data!.maxFuel * 100;
+                        return Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(
+                                            10, 123, 10, 0.403921568627451),
+                                        Color.fromRGBO(
+                                            0, 50, 158, 0.4196078431372549),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(20.0),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red
+                                            .withOpacity(boxShadowOpacity),
+                                        spreadRadius: 4,
+                                        blurRadius: 7,
+                                        offset: const Offset(0, 3),
+                                      )
+                                    ]),
+                                alignment: Alignment.center,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    WidgetSpan(child: Icon(Icons.airplay)),
+                                    TextSpan(
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            '  Throttle= ${shot.data!.throttle1} %')
+                                  ]),
+                                ),
                               ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(
+                                            10, 123, 10, 0.403921568627451),
+                                        Color.fromRGBO(
+                                            0, 50, 158, 0.4196078431372549),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(20.0),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red
+                                            .withOpacity(boxShadowOpacity),
+                                        spreadRadius: 4,
+                                        blurRadius: 7,
+                                        offset: const Offset(0, 3),
+                                      )
+                                    ]),
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    WidgetSpan(child: Icon(Icons.airplay)),
+                                    TextSpan(
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text: '  IAS= ${shot.data!.ias} km/h')
+                                  ]),
+                                ),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.red.withOpacity(boxShadowOpacity),
-                                  spreadRadius: 4,
-                                  blurRadius: 7,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]),
-                          alignment: Alignment.center,
-                          child: RichText(
-                            text: TextSpan(children: [
-                              WidgetSpan(child: Icon(Icons.airplay)),
-                              TextSpan(
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                  text: '  Throttle= ${shot.data!.throttle1} %')
-                            ]),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(
+                                            10, 123, 10, 0.403921568627451),
+                                        Color.fromRGBO(
+                                            0, 50, 158, 0.4196078431372549),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(20.0),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red
+                                            .withOpacity(boxShadowOpacity),
+                                        spreadRadius: 4,
+                                        blurRadius: 7,
+                                        offset: const Offset(0, 3),
+                                      )
+                                    ]),
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    WidgetSpan(child: Icon(Icons.airplay)),
+                                    TextSpan(
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            '  Altitude= ${shot.data!.altitude} m')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(
+                                            10, 123, 10, 0.403921568627451),
+                                        Color.fromRGBO(
+                                            0, 50, 158, 0.4196078431372549),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(20.0),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red
+                                            .withOpacity(boxShadowOpacity),
+                                        spreadRadius: 4,
+                                        blurRadius: 7,
+                                        offset: const Offset(0, 3),
+                                      )
+                                    ]),
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    WidgetSpan(child: Icon(Icons.airplay)),
+                                    TextSpan(
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            '  Climb= ${shot.data!.climb} m/s')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(
+                                            10, 123, 10, 0.403921568627451),
+                                        Color.fromRGBO(
+                                            0, 50, 158, 0.4196078431372549),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(20.0),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red
+                                            .withOpacity(boxShadowOpacity),
+                                        spreadRadius: 4,
+                                        blurRadius: 7,
+                                        offset: const Offset(0, 3),
+                                      )
+                                    ]),
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    WidgetSpan(child: Icon(Icons.airplay)),
+                                    TextSpan(
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            '  Fuel= ${fuel.toStringAsFixed(1)} %')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(
+                                            10, 123, 10, 0.403921568627451),
+                                        Color.fromRGBO(
+                                            0, 50, 158, 0.4196078431372549),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(20.0),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red
+                                            .withOpacity(boxShadowOpacity),
+                                        spreadRadius: 4,
+                                        blurRadius: 7,
+                                        offset: const Offset(0, 3),
+                                      )
+                                    ]),
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    WidgetSpan(child: Icon(Icons.airplay)),
+                                    TextSpan(
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            '  Oil Temp= ${shot.data!.oilTemp1C}°c')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(
+                                            10, 123, 10, 0.403921568627451),
+                                        Color.fromRGBO(
+                                            0, 50, 158, 0.4196078431372549),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(20.0),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red
+                                            .withOpacity(boxShadowOpacity),
+                                        spreadRadius: 4,
+                                        blurRadius: 7,
+                                        offset: const Offset(0, 3),
+                                      )
+                                    ]),
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    WidgetSpan(
+                                      child: Icon(Icons.airplay),
+                                    ),
+                                    TextSpan(
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            '  Water Temp= ${shot.data!.waterTemp1C}°c')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      } else if (shot.hasError) {
+                        // print(shot.error);
+                        return Center(
+                            child: BlinkText(
+                          'ERROR: NO DATA',
+                          endColor: Colors.red,
+                        ));
+                      } else {
+                        return Center(
+                            child: SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: CircularProgressIndicator(
+                            color: Colors.red,
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
+                        ));
+                      }
+                    }),
+              ),
+              FutureBuilder<ToolDataIndicator>(
+                  future: ToolDataIndicator.getIndicator(),
+                  builder: (context, AsyncSnapshot<ToolDataIndicator> shot) {
+                    if (shot.hasData) {
+                      vehicleName = shot.data!.type;
+                      if (shot.data!.mach == null) shot.data!.mach = -0;
+                      return Flex(
+                        direction: Axis.vertical,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color.fromRGBO(
+                                          10, 123, 10, 0.403921568627451),
+                                      Color.fromRGBO(
+                                          0, 50, 158, 0.4196078431372549),
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(20.0),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.red
+                                          .withOpacity(boxShadowOpacity),
+                                      spreadRadius: 4,
+                                      blurRadius: 7,
+                                      offset: const Offset(0, 3),
+                                    )
+                                  ]),
+                              child: RichText(
+                                text: TextSpan(children: [
+                                  WidgetSpan(
+                                    child: Icon(Icons.airplay),
+                                  ),
+                                  TextSpan(
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 40),
+                                      text:
+                                          '  Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
+                                ]),
                               ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.red.withOpacity(boxShadowOpacity),
-                                  spreadRadius: 4,
-                                  blurRadius: 7,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]),
-                          child: RichText(
-                            text: TextSpan(children: [
-                              WidgetSpan(child: Icon(Icons.airplay)),
-                              TextSpan(
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                  text: '  IAS= ${shot.data!.ias} km/h')
-                            ]),
+                            ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
+                          Expanded(
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color.fromRGBO(
+                                          10, 123, 10, 0.403921568627451),
+                                      Color.fromRGBO(
+                                          0, 50, 158, 0.4196078431372549),
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(20.0),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.red
+                                          .withOpacity(boxShadowOpacity),
+                                      spreadRadius: 4,
+                                      blurRadius: 7,
+                                      offset: const Offset(0, 3),
+                                    )
+                                  ]),
+                              child: RichText(
+                                text: TextSpan(children: [
+                                  WidgetSpan(
+                                    child: Icon(Icons.airplay),
+                                  ),
+                                  TextSpan(
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 40),
+                                      text: '  Mach= ${shot.data!.mach} M')
+                                ]),
                               ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.red.withOpacity(boxShadowOpacity),
-                                  spreadRadius: 4,
-                                  blurRadius: 7,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]),
-                          child: RichText(
-                            text: TextSpan(children: [
-                              WidgetSpan(child: Icon(Icons.airplay)),
-                              TextSpan(
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                  text: '  Altitude= ${shot.data!.altitude} m')
-                            ]),
+                            ),
                           ),
+                        ],
+                      );
+                    }
+                    if (shot.hasError) {
+                      // print(shot.error);
+                      return Center(
+                          child: BlinkText(
+                        'ERROR: NO DATA',
+                        endColor: Colors.red,
+                      ));
+                    } else {
+                      return Center(
+                          child: SizedBox(
+                        height: 100,
+                        width: 100,
+                        child: CircularProgressIndicator(
+                          color: Colors.red,
                         ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.red.withOpacity(boxShadowOpacity),
-                                  spreadRadius: 4,
-                                  blurRadius: 7,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]),
-                          child: RichText(
-                            text: TextSpan(children: [
-                              WidgetSpan(child: Icon(Icons.airplay)),
-                              TextSpan(
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                  text: '  Climb= ${shot.data!.climb} m/s')
-                            ]),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.red.withOpacity(boxShadowOpacity),
-                                  spreadRadius: 4,
-                                  blurRadius: 7,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]),
-                          child: RichText(
-                            text: TextSpan(children: [
-                              WidgetSpan(child: Icon(Icons.airplay)),
-                              TextSpan(
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                  text: '  Fuel= ${fuel.toStringAsFixed(1)} %')
-                            ]),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.red.withOpacity(boxShadowOpacity),
-                                  spreadRadius: 4,
-                                  blurRadius: 7,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]),
-                          child: RichText(
-                            text: TextSpan(children: [
-                              WidgetSpan(child: Icon(Icons.airplay)),
-                              TextSpan(
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                  text: '  Oil Temp= ${shot.data!.oilTemp1C}°c')
-                            ]),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color.fromRGBO(
-                                      10, 123, 10, 0.403921568627451),
-                                  Color.fromRGBO(
-                                      0, 50, 158, 0.4196078431372549),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(20.0),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.red.withOpacity(boxShadowOpacity),
-                                  spreadRadius: 4,
-                                  blurRadius: 7,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]),
-                          child: RichText(
-                            text: TextSpan(children: [
-                              WidgetSpan(
-                                child: Icon(Icons.airplay),
-                              ),
-                              TextSpan(
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                  text:
-                                      '  Water Temp= ${shot.data!.waterTemp1C}°c')
-                            ]),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                } else if (shot.hasError) {
-                  // print(shot.error);
-                  return Center(
-                      child: BlinkText(
-                    'ERROR: NO DATA',
-                    endColor: Colors.red,
-                  ));
-                } else {
-                  return Center(
-                      child: SizedBox(
-                    height: 100,
-                    width: 100,
-                    child: CircularProgressIndicator(
-                      color: Colors.red,
-                    ),
-                  ));
-                }
-              }))
+                      ));
+                    }
+                  })
+            ],
+          ))
     ]);
   }
 
@@ -1846,5 +1996,74 @@ class _HomeState extends State<Home>
       windowManager.show();
       _trayUnInit();
     }
+  }
+}
+
+class SliderClass extends StatefulWidget {
+  double defaultText;
+  final DoubleCallBack callback;
+
+  SliderClass({Key? key, required this.defaultText, required this.callback})
+      : super(key: key);
+
+  @override
+  _SliderClassState createState() => _SliderClassState();
+}
+
+typedef DoubleCallBack(double value);
+
+class _SliderClassState extends State<SliderClass> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<void> loadPrefs() async {
+    prefs.then((SharedPreferences prefs) {
+      widget.defaultText = (prefs.getDouble('fontSize') ?? 40);
+    });
+  }
+
+  Future<SharedPreferences> prefs = SharedPreferences.getInstance();
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.blueGrey,
+      appBar: AppBar(
+        title: Text('Set font size'),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          Padding(padding: EdgeInsets.only(top: 100)),
+          Center(
+            child: Slider(
+              min: 20,
+              max: 80,
+              divisions: 60,
+              label: widget.defaultText.round().toString(),
+              value: widget.defaultText,
+              onChanged: (double value) async {
+                widget.callback(value);
+                widget.defaultText = value;
+                setState(() {});
+                final SharedPreferences _prefs = await prefs;
+
+                double _defaultText = (_prefs.getDouble('fontSize') ?? 40);
+                setState(() {
+                  _defaultText = widget.defaultText;
+                });
+                _prefs.setDouble('fontSize', _defaultText);
+              },
+            ),
+          ),
+          Center(
+              child: Text(
+            'Example:',
+            style: TextStyle(fontSize: widget.defaultText),
+          ))
+        ],
+      ),
+    );
   }
 }

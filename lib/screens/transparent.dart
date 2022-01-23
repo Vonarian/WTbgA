@@ -15,12 +15,13 @@ class TransparentPage extends StatefulWidget {
   final int gLoad;
   final int gearLimit;
   final int flapLimit;
-
+  final double fontSize;
   const TransparentPage(
       {Key? key,
       required this.gLoad,
       required this.gearLimit,
-      required this.flapLimit})
+      required this.flapLimit,
+      required this.fontSize})
       : super(key: key);
   @override
   _TransparentPageState createState() => _TransparentPageState();
@@ -89,8 +90,7 @@ class _TransparentPageState extends State<TransparentPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Center(
-          child: FutureBuilder<ToolDataState>(
+      body: FutureBuilder<ToolDataState>(
         future: ToolDataState.getState(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
@@ -123,103 +123,163 @@ class _TransparentPageState extends State<TransparentPage> {
             }
             if (inHangar) show = false;
             return show
-                ? Column(
-                    children: [
-                      SizedBox(
-                        height: 0150,
-                      ),
-                      Center(
-                        child: Flex(
-                          direction: Axis.horizontal,
-                          children: [
-                            Expanded(flex: 1, child: SizedBox()),
-                            Expanded(
-                                flex: 3,
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Text('IAS '),
-                                        Text('${snapshot.data!.ias} Km/h'),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Text('Altitude'),
-                                        Text(' ${snapshot.data!.altitude} m'),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Text('Flap'),
-                                        !flashFlap
-                                            ? Text('${snapshot.data!.flaps} %')
-                                            : BlinkText(
-                                                '${snapshot.data!.flaps} %',
-                                                endColor: Colors.red,
-                                              ),
-                                      ],
-                                    ),
-                                  ],
-                                )),
-                            Expanded(flex: 1, child: SizedBox()),
-                            Expanded(
-                                flex: 3,
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Text(
-                                          'Gear',
-                                        ),
-                                        !flashGear
-                                            ? Text('${snapshot.data!.gear} %')
-                                            : BlinkText(
-                                                '${snapshot.data!.gear} %',
-                                                endColor: Colors.red,
-                                              ),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Text('Climb '),
-                                        Text('${snapshot.data!.climb} m/s'),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Text('GLoad '),
-                                        !flashLoad
-                                            ? Text('${snapshot.data!.load} G')
-                                            : BlinkText(
-                                                '${snapshot.data!.load} G',
-                                                endColor: Colors.red,
-                                              ),
-                                      ],
-                                    ),
-                                  ],
-                                )),
-                            Expanded(flex: 1, child: SizedBox()),
-                          ],
+                ? Center(
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 0150,
                         ),
-                      ),
-                    ],
+                        Center(
+                          child: Flex(
+                            direction: Axis.horizontal,
+                            children: [
+                              Expanded(flex: 1, child: SizedBox()),
+                              Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Text(
+                                            'IAS ',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                          Text(
+                                            '${snapshot.data!.ias} Km/h',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Text(
+                                            'Altitude',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                          Text(
+                                            ' ${snapshot.data!.altitude} m',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Text(
+                                            'Flap',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                          !flashFlap
+                                              ? Text(
+                                                  '${snapshot.data!.flaps} %',
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                          widget.fontSize),
+                                                )
+                                              : BlinkText(
+                                                  '${snapshot.data!.flaps} %',
+                                                  endColor: Colors.red,
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                          widget.fontSize),
+                                                ),
+                                        ],
+                                      ),
+                                    ],
+                                  )),
+                              Expanded(flex: 1, child: SizedBox()),
+                              Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Text(
+                                            'Gear',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                          !flashGear
+                                              ? Text(
+                                                  '${snapshot.data!.gear} %',
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                          widget.fontSize),
+                                                )
+                                              : BlinkText(
+                                                  '${snapshot.data!.gear} %',
+                                                  endColor: Colors.red,
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                          widget.fontSize),
+                                                ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Text(
+                                            'Climb ',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                          Text(
+                                            '${snapshot.data!.climb} m/s',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Text(
+                                            'GLoad ',
+                                            style: TextStyle(
+                                                fontSize: widget.fontSize),
+                                          ),
+                                          !flashLoad
+                                              ? Text(
+                                                  '${snapshot.data!.load} G',
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                          widget.fontSize),
+                                                )
+                                              : BlinkText(
+                                                  '${snapshot.data!.load} G',
+                                                  endColor: Colors.red,
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                          widget.fontSize),
+                                                ),
+                                        ],
+                                      ),
+                                    ],
+                                  )),
+                              Expanded(flex: 1, child: SizedBox()),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   )
                 : Container();
           }
@@ -229,7 +289,7 @@ class _TransparentPageState extends State<TransparentPage> {
             return Container();
           }
         },
-      )),
+      ),
     );
   }
 }
