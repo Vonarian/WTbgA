@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:blinking_text/blinking_text.dart';
 import 'package:draggable_widget/draggable_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
@@ -11,6 +12,16 @@ import 'package:wtbgassistant/data_receivers/state_receiver.dart';
 import '../main.dart';
 
 class TransparentPage extends StatefulWidget {
+  final int gLoad;
+  final int gearLimit;
+  final int flapLimit;
+
+  const TransparentPage(
+      {Key? key,
+      required this.gLoad,
+      required this.gearLimit,
+      required this.flapLimit})
+      : super(key: key);
   @override
   _TransparentPageState createState() => _TransparentPageState();
 }
@@ -46,12 +57,13 @@ class _TransparentPageState extends State<TransparentPage> {
 
   Future<void> keyRegister() async {
     await hotKey.register(HotKey(KeyCode.digit1, modifiers: [KeyModifier.alt]),
-        keyDownHandler: (_) async {
-      try {
-        await Navigator.pushReplacementNamed(context, '/home');
-      } catch (e) {
-        print(e);
-      }
+        keyDownHandler: (_) {
+      Navigator.pushReplacementNamed(context, '/home');
+    });
+    await hotKey
+        .register(HotKey(KeyCode.backspace, modifiers: [KeyModifier.alt]),
+            keyDownHandler: (_) {
+      show = !show;
     });
   }
 
@@ -68,7 +80,11 @@ class _TransparentPageState extends State<TransparentPage> {
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets/AutoHotkeyU64.exe'
   ]);
-
+  bool flashGear = false;
+  bool flashFlap = false;
+  bool flashLoad = false;
+  bool inHangar = true;
+  bool show = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,94 +94,139 @@ class _TransparentPageState extends State<TransparentPage> {
         future: ToolDataState.getState(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return Column(
-              children: [
-                SizedBox(
-                  height: 0150,
-                ),
-                Center(
-                  child: Flex(
-                    direction: Axis.horizontal,
+            if (snapshot.data!.altitude == 32 &&
+                snapshot.data!.gear == 100 &&
+                snapshot.data!.ias == 0) {
+              inHangar = true;
+            } else {
+              inHangar = false;
+            }
+            if (snapshot.data!.ias >= widget.gearLimit &&
+                snapshot.data!.gear > 0) {
+              flashGear = true;
+            } else {
+              flashGear = false;
+            }
+            if (snapshot.data!.ias >= widget.flapLimit &&
+                snapshot.data!.flaps! > 0) {
+              print(widget.flapLimit);
+              flashFlap = true;
+            } else {
+              flashFlap = false;
+            }
+            if (snapshot.data!.load >= widget.gLoad) {
+              // print(snapshot.data!.load);
+
+              flashLoad = true;
+            } else {
+              flashLoad = false;
+            }
+            if (inHangar) show = false;
+            return show
+                ? Column(
                     children: [
-                      Expanded(flex: 1, child: SizedBox()),
-                      Expanded(
-                          flex: 3,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text('IAS '),
-                                  Text('${snapshot.data!.ias} Km/h'),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text('Altitude'),
-                                  Text(' ${snapshot.data!.height} m'),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text('Flap'),
-                                  Text('${snapshot.data!.flap} %'),
-                                ],
-                              ),
-                            ],
-                          )),
-                      Expanded(flex: 1, child: SizedBox()),
-                      Expanded(
-                          flex: 3,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text(
-                                    'Gear',
-                                  ),
-                                  Text('${snapshot.data!.gear} %'),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text('Climb '),
-                                  Text('${snapshot.data!.climb} m/s'),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text('GLoad '),
-                                  Text('${snapshot.data!.load} G'),
-                                ],
-                              ),
-                            ],
-                          )),
-                      Expanded(flex: 1, child: SizedBox()),
+                      SizedBox(
+                        height: 0150,
+                      ),
+                      Center(
+                        child: Flex(
+                          direction: Axis.horizontal,
+                          children: [
+                            Expanded(flex: 1, child: SizedBox()),
+                            Expanded(
+                                flex: 3,
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Text('IAS '),
+                                        Text('${snapshot.data!.ias} Km/h'),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Text('Altitude'),
+                                        Text(' ${snapshot.data!.altitude} m'),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Text('Flap'),
+                                        !flashFlap
+                                            ? Text('${snapshot.data!.flaps} %')
+                                            : BlinkText(
+                                                '${snapshot.data!.flaps} %',
+                                                endColor: Colors.red,
+                                              ),
+                                      ],
+                                    ),
+                                  ],
+                                )),
+                            Expanded(flex: 1, child: SizedBox()),
+                            Expanded(
+                                flex: 3,
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Text(
+                                          'Gear',
+                                        ),
+                                        !flashGear
+                                            ? Text('${snapshot.data!.gear} %')
+                                            : BlinkText(
+                                                '${snapshot.data!.gear} %',
+                                                endColor: Colors.red,
+                                              ),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Text('Climb '),
+                                        Text('${snapshot.data!.climb} m/s'),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Text('GLoad '),
+                                        !flashLoad
+                                            ? Text('${snapshot.data!.load} G')
+                                            : BlinkText(
+                                                '${snapshot.data!.load} G',
+                                                endColor: Colors.red,
+                                              ),
+                                      ],
+                                    ),
+                                  ],
+                                )),
+                            Expanded(flex: 1, child: SizedBox()),
+                          ],
+                        ),
+                      ),
                     ],
-                  ),
-                ),
-              ],
-            );
+                  )
+                : Container();
           }
-          if (snapshot.hasError) {
-            return Text(snapshot.error.toString());
+          if (snapshot.hasError && show) {
+            return Text('ERROR: INVALID DATA');
           } else {
-            return CircularProgressIndicator(
-              color: Colors.purple,
-            );
+            return Container();
           }
         },
       )),

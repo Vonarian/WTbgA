@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:json_annotation/json_annotation.dart';
@@ -71,7 +70,7 @@ class Damage {
           .toList();
       return damageEvents;
     } catch (e, stackTrace) {
-      log('Encountered error: $e', stackTrace: stackTrace);
+      // log('Encountered error: $e', stackTrace: stackTrace);
       rethrow;
     }
   }

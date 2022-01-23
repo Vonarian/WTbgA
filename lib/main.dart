@@ -8,7 +8,6 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 import 'package:wtbgassistant/screens/loading.dart';
-import 'package:wtbgassistant/screens/transparent.dart';
 
 import 'screens/home.dart';
 
@@ -81,7 +80,9 @@ void main() async {
     MaterialApp(
       darkTheme: ThemeData(brightness: Brightness.dark),
       theme: (ThemeData(
-          textTheme: TextTheme(bodyText2: TextStyle(fontSize: 45)),
+          textTheme: TextTheme(
+              bodyText1: TextStyle(fontSize: 45),
+              bodyText2: TextStyle(fontSize: 45)),
           brightness: Brightness.light,
           primaryColor: Colors.black)),
       title: 'WarThunderbgAssistant',
@@ -91,7 +92,6 @@ void main() async {
         '/': (context) => const Loading(),
         '/home': (context) => const Home(),
         // '/info': (context) => const InfoPage(),
-        '/transparent': (context) => TransparentPage()
       },
     ),
   );

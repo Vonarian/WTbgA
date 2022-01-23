@@ -18,7 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/indicators/indicator.dart';
+import 'package:wtbgassistant/screens/transparent.dart';
 
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
@@ -252,10 +252,8 @@ class _HomeState extends State<Home>
   }
 
   Future<void> vehicleStateCheck() async {
-    await Damage.getDamage();
     if (!_isFullNotifOn) return;
     if (!run) return;
-
     if (_isOilNotifOn &&
         oil != 15 &&
         isDamageIDNew &&
@@ -268,11 +266,7 @@ class _HomeState extends State<Home>
           image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
+
       isDamageIDNew = false;
       player.play();
     }
@@ -287,11 +281,7 @@ class _HomeState extends State<Home>
           image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
+
       isDamageIDNew = false;
       player.play();
     }
@@ -306,29 +296,21 @@ class _HomeState extends State<Home>
           image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
+
       isDamageIDNew = false;
       player.play();
     }
     if (_isWaterNotifOn &&
         water != 15 &&
         isDamageIDNew &&
-        msgData == 'Engine overheated') {
+        msgData == 'Water overheated') {
       Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳ENGINE WARNING!',
           subtitle: 'Engine is overheating!',
           image: File(warningLogo));
       service!.show(toast);
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
+
       toast.dispose();
       isDamageIDNew = false;
       player.play();
@@ -344,11 +326,7 @@ class _HomeState extends State<Home>
           image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
+
       isDamageIDNew = false;
       player.play();
     }
@@ -363,11 +341,7 @@ class _HomeState extends State<Home>
           image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
+
       isDamageIDNew = false;
       player.play();
     }
@@ -381,16 +355,12 @@ class _HomeState extends State<Home>
           image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
+
       isDamageIDNew = false;
       player.play();
     }
 
-    run = true;
+    run = false;
   }
 
   int? emptyInt = 0;
@@ -406,30 +376,23 @@ class _HomeState extends State<Home>
   //   });
   // }
 
-  Future<void> updateStateIndicator() async {
-    ToolDataState state = await ToolDataState.getState();
-    ToolDataIndicator indicator = await ToolDataIndicator.getIndicator();
-    if (!mounted) return;
-    maxFuel = state.maxFuel;
-    minFuel = state.minFuel;
-    ias = state.ias;
-    oil = state.oil;
-    water = state.water;
-    altitude = state.height;
-    flap = state.flap;
-    gear = state.gear;
-    valid = state.valid;
-    load = state.load;
-    aoa = state.aoa;
-    climb = state.climb;
-    throttle = indicator.throttle;
-    mach = indicator.mach;
-    compass = indicator.compass;
-    engine = indicator.engine;
-    flap1 = indicator.flap1;
-    flap2 = indicator.flap2;
-    vertical = indicator.vertical;
-    vehicleName = indicator.name;
+  Future<ToolDataState> updateState() async {
+    try {
+      ToolDataState state = await ToolDataState.getState();
+      return state;
+    } catch (e, st) {
+      // log(e.toString(), stackTrace: st);
+      rethrow;
+    }
+  }
+
+  Future<ToolDataIndicator> updateIndicator() async {
+    try {
+      ToolDataIndicator indicator = await ToolDataIndicator.getIndicator();
+      return indicator;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> updateMsgId() async {
@@ -711,10 +674,13 @@ class _HomeState extends State<Home>
         // smallImageText: 'This text describes the small image.',
       ),
     );
-
+    service?.stream.listen((event) {
+      if (event is ToastActivated) {
+        windowManager.show();
+      }
+    });
     giveIps();
     startServer();
-    updateStateIndicator();
     receiveDiskValues();
     // updatePhone();
     exitFS();
@@ -751,7 +717,6 @@ class _HomeState extends State<Home>
     const Duration oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) async {
       if (!mounted || isStopped) return;
-      updateStateIndicator();
 
       setState(() {});
     });
@@ -814,7 +779,8 @@ class _HomeState extends State<Home>
       lastId = idData.value;
       prefs.setInt('lastId', lastId!);
       vehicleStateCheck();
-      run = false;
+
+      run = true;
     });
     streamState.addListener(() async {
       if (streamState.value == true) displayCapture();
@@ -898,493 +864,6 @@ class _HomeState extends State<Home>
   Future<void> exitFS() async {
     await Window.exitFullscreen();
     await hotKey.unregisterAll();
-  }
-
-  Widget fuelIndicator() {
-    if (minFuel != null) {
-      fuelPercent = (minFuel! / maxFuel!) * 100;
-    }
-    return AnimatedContainer(
-        duration: const Duration(seconds: 2),
-        height: MediaQuery.of(context).size.height >= 235
-            ? normalHeight
-            : smallHeight,
-        decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: const BorderRadius.all(
-              Radius.circular(20.0),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.pink.withOpacity(boxShadowOpacity),
-                spreadRadius: 4,
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              )
-            ]),
-        child: minFuel != null && fuelPercent! >= 15.00
-            ? TextButton.icon(
-                icon: const Icon(Icons.speed),
-                onPressed: () {
-                  showFuel = !showFuel;
-                },
-                label: Text(
-                  'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      letterSpacing: 2,
-                      color: textColor,
-                      fontWeight: FontWeight.bold),
-                ),
-              )
-            : minFuel != null &&
-                    fuelPercent! < 15.00 &&
-                    (altitude != 32 && minFuel != 0)
-                ? TextButton.icon(
-                    icon: const Icon(Icons.speed),
-                    onPressed: () {
-                      showFuel = !showFuel;
-                    },
-                    label: BlinkText(
-                      'Remaining Fuel = ${fuelPercent!.toStringAsFixed(0)}%',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 20,
-                          letterSpacing: 2,
-                          color: textColor,
-                          fontWeight: FontWeight.bold),
-                      endColor: Colors.red,
-                    ),
-                  )
-                : TextButton.icon(
-                    icon: const Icon(Icons.speed),
-                    onPressed: () {
-                      showFuel = !showFuel;
-                    },
-                    label: Text(
-                      'No Data.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 20,
-                          letterSpacing: 2,
-                          color: textColor,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ));
-  }
-
-  Widget altitudeText() {
-    return AnimatedContainer(
-        duration: const Duration(seconds: 2),
-        height: MediaQuery.of(context).size.height >= 235
-            ? normalHeight
-            : smallHeight,
-        decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: const BorderRadius.all(
-              Radius.circular(20.0),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.pink.withOpacity(boxShadowOpacity),
-                spreadRadius: 4,
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              )
-            ]),
-        child: TextButton.icon(
-          icon: const Icon(Icons.height),
-          onPressed: () {
-            showAlt = !showAlt;
-          },
-          label: altitude != null
-              ? Text(
-                  'Altitude: ${altitude} meters ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      letterSpacing: 2,
-                      color: textColor,
-                      fontWeight: FontWeight.bold),
-                )
-              : Text(
-                  'No data available. ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      letterSpacing: 2,
-                      color: textColor,
-                      fontWeight: FontWeight.bold),
-                ),
-        ));
-  }
-
-  Widget climbRate() {
-    ToolDataState.getState();
-    averageIasForStall();
-    return AnimatedContainer(
-      duration: const Duration(seconds: 2),
-      height: MediaQuery.of(context).size.height >= 235
-          ? normalHeight
-          : smallHeight,
-      decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color.fromRGBO(10, 123, 10, 0.403921568627451),
-              Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: const BorderRadius.all(
-            Radius.circular(20.0),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.pink.withOpacity(boxShadowOpacity),
-              spreadRadius: 4,
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            )
-          ]),
-      child: TextButton.icon(
-          icon: const Icon(Icons.arrow_upward),
-          onPressed: () {
-            showClimb = !showClimb;
-          },
-          label: critAoaBool ||
-                  (vertical != null &&
-                          ias != null &&
-                          climb != null &&
-                          (ias! < 250 &&
-                              climb != null &&
-                              climb! < 60 &&
-                              vertical! >= -135 &&
-                              vertical! <= -50) ||
-                      (ias != null &&
-                              ias! < 180 &&
-                              climb != null &&
-                              climb! < 10) &&
-                          ias != 0 &&
-                          altitude! > 250)
-              ? BlinkText(
-                  'Absolute Climb rate = ${climb} m/s (Possible stall!)',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      letterSpacing: 2,
-                      color: textColor,
-                      fontWeight: FontWeight.bold),
-                  endColor: Colors.red,
-                )
-              : climb != null && climb != 0.0
-                  ? Text(
-                      'Absolute Climb rate = ${climb} m/s',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 20,
-                          letterSpacing: 2,
-                          color: textColor,
-                          fontWeight: FontWeight.bold),
-                    )
-                  : Text(
-                      'No Data. ',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 20,
-                          letterSpacing: 2,
-                          color: textColor,
-                          fontWeight: FontWeight.bold),
-                    )),
-    );
-  }
-
-  Widget iasText() {
-    return AnimatedContainer(
-        duration: const Duration(seconds: 2),
-        height: MediaQuery.of(context).size.height >= 235
-            ? normalHeight
-            : smallHeight,
-        decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: const BorderRadius.all(
-              Radius.circular(20.0),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.pink.withOpacity(boxShadowOpacity),
-                spreadRadius: 4,
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              )
-            ]),
-        child: ias == null || ias == 0
-            ? TextButton.icon(
-                icon: const Icon(Icons.speed),
-                onPressed: () {
-                  showIas = !showIas;
-                },
-                label: Text(
-                  'Stationary / No data!  ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      letterSpacing: 2,
-                      color: textColor,
-                      fontWeight: FontWeight.bold),
-                ),
-              )
-            : mach != null && mach! >= 1 && ias != null
-                ? TextButton.icon(
-                    icon: const Icon(Icons.speed),
-                    onPressed: () {
-                      showIas = !showIas;
-                    },
-                    label: Text(
-                      'IAS = ${ias!} km/h (Above Mach) ',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 20,
-                          letterSpacing: 2,
-                          color: textColor,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  )
-                : TextButton.icon(
-                    icon: const Icon(Icons.speed),
-                    onPressed: () {
-                      showIas = !showIas;
-                    },
-                    label: Text(
-                      'IAS = ${ias!} km/h ',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 20,
-                          letterSpacing: 2,
-                          color: textColor,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ));
-  }
-
-  Widget compassText() {
-    return AnimatedContainer(
-        duration: const Duration(seconds: 2),
-        height: MediaQuery.of(context).size.height >= 235
-            ? normalHeight
-            : smallHeight,
-        decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: const BorderRadius.all(
-              Radius.circular(20.0),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.pink.withOpacity(boxShadowOpacity),
-                spreadRadius: 4,
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              )
-            ]),
-        child: compass == '0' || compass == null
-            ? TextButton.icon(
-                icon: const Icon(Icons.gps_fixed),
-                onPressed: () {
-                  showCompass = !showCompass;
-                },
-                label: Text(
-                  'No data.  ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      letterSpacing: 2,
-                      color: textColor,
-                      fontWeight: FontWeight.bold),
-                ),
-              )
-            : TextButton.icon(
-                icon: const Icon(Icons.gps_fixed),
-                onPressed: () {
-                  showCompass = !showCompass;
-                },
-                label: Text(
-                  'Compass = ${compass?.toStringAsFixed(0)} degrees ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      letterSpacing: 2,
-                      color: textColor,
-                      fontWeight: FontWeight.bold),
-                ),
-              ));
-  }
-
-  Widget engineTempText() {
-    return ValueListenableBuilder(
-        valueListenable: idData,
-        builder: (BuildContext context, value, Widget? child) {
-          return AnimatedContainer(
-              duration: const Duration(seconds: 2),
-              height: MediaQuery.of(context).size.height >= 235
-                  ? normalHeight
-                  : smallHeight,
-              decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                      Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                    ],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(20.0),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withOpacity(boxShadowOpacity),
-                      spreadRadius: 4,
-                      blurRadius: 7,
-                      offset: const Offset(0, 3),
-                    )
-                  ]),
-              child: TextButton.icon(
-                icon: const Icon(Icons.airplanemode_active),
-                label: msgData == 'Engine overheated' && engine != null
-                    ? BlinkText(
-                        'Engine Temp= ${(engine!.toStringAsFixed(0))} degrees  ',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 20,
-                            letterSpacing: 2,
-                            color: textColor,
-                            fontWeight: FontWeight.bold),
-                        endColor: Colors.red,
-                        times: 13,
-                        duration: const Duration(milliseconds: 300),
-                      )
-                    : engine != null
-                        ? Text(
-                            'Engine Temp= ${(engine!.toStringAsFixed(0))} degrees  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold))
-                        : Text('No data.  ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                letterSpacing: 2,
-                                color: textColor,
-                                fontWeight: FontWeight.bold)),
-                onPressed: () {
-                  showEngineTemp = !showEngineTemp;
-                },
-              ));
-        });
-  }
-
-  Widget engineThrottleText() {
-    return ValueListenableBuilder(
-      valueListenable: idData,
-      builder: (BuildContext context, value, Widget? child) {
-        return AnimatedContainer(
-            duration: const Duration(seconds: 2),
-            height: MediaQuery.of(context).size.height >= 235
-                ? normalHeight
-                : smallHeight,
-            decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color.fromRGBO(10, 123, 10, 0.403921568627451),
-                    Color.fromRGBO(0, 50, 158, 0.4196078431372549),
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(20.0),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.withOpacity(boxShadowOpacity),
-                    spreadRadius: 4,
-                    blurRadius: 7,
-                    offset: const Offset(0, 3),
-                  )
-                ]),
-            child: TextButton.icon(
-              icon: const Icon(Icons.airplanemode_active),
-              label: MediaQuery.of(context).size.height >= 235
-                  ? throttle != null
-                      ? Text(
-                          'Throttle= ${(throttle! * 100).toStringAsFixed(0)}%  ',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 20,
-                              letterSpacing: 2,
-                              color: textColor,
-                              fontWeight: FontWeight.bold))
-                      : Text('No data.  ',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 20,
-                              letterSpacing: 2,
-                              color: textColor,
-                              fontWeight: FontWeight.bold))
-                  : throttle != null && throttle != 'nul'
-                      ? Text(
-                          'Throttle= ${((throttle)! * 100).toStringAsFixed(0)}%  ',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 20,
-                              letterSpacing: 2,
-                              color: textColor,
-                              fontWeight: FontWeight.bold))
-                      : Text('No data.  ',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 13,
-                              letterSpacing: 2,
-                              color: textColor,
-                              fontWeight: FontWeight.bold)),
-              onPressed: () {
-                showThrottle = !showThrottle;
-              },
-            ));
-      },
-    );
   }
 
   Widget chatBuilder(String? chatSender, String? chatMsg, String? chatPrefix) {
@@ -1771,7 +1250,15 @@ class _HomeState extends State<Home>
               child: TextButton.icon(
                   label: Text('Transparent screen'),
                   onPressed: () async {
-                    Navigator.pushReplacementNamed(context, '/transparent');
+                    await Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => TransparentPage(
+                          flapLimit: _textForIasFlap.value,
+                          gearLimit: _textForIasGear.value,
+                          gLoad: _textForGLoad.value,
+                        ),
+                      ),
+                    );
                   },
                   icon: const Icon(
                     MaterialCommunityIcons.close_box,
@@ -1797,96 +1284,6 @@ class _HomeState extends State<Home>
           ],
         ),
       ),
-    );
-  }
-
-  Widget homeWidgetColumn() {
-    return Center(
-      child: Flex(
-        direction: Axis.vertical,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Expanded(child: engineThrottleText()),
-          Expanded(child: engineTempText()),
-          Expanded(child: fuelIndicator()),
-          Expanded(child: altitudeText()),
-          Expanded(child: compassText()),
-          Expanded(child: iasText()),
-          Expanded(child: climbRate()),
-          Expanded(
-            child: oilTempText(idData, normalHeight, smallHeight,
-                boxShadowOpacity, oil, msgData, textColor, showOilTemp),
-          ),
-          Expanded(
-            child: waterTempText(context, normalHeight, smallHeight,
-                boxShadowOpacity, water, showWaterTemp, textColor),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget homeWidgetRow() {
-    return ListView(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            engineTempText(),
-            Expanded(
-              child: engineThrottleText(),
-            ),
-            fuelIndicator(),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            altitudeText(),
-            compassText(),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            iasText(),
-            climbRate(),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            oilTempText(idData, normalHeight, smallHeight, boxShadowOpacity,
-                oil, msgData, textColor, showOilTemp),
-            waterTempText(context, normalHeight, smallHeight, boxShadowOpacity,
-                water, showWaterTemp, textColor)
-          ],
-        )
-      ],
-    );
-  }
-
-  Widget homeWidgetNoData() {
-    return Center(
-      child: Stack(children: [
-        Center(
-          child: BlinkText(
-            'In hangar / Could not connect',
-            style: TextStyle(
-                color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-            endColor: Colors.purple,
-          ),
-        ),
-        Center(
-          child: Container(
-            height: 400,
-            width: 400,
-            child: CircularProgressIndicator(
-              backgroundColor: Colors.red,
-            ),
-          ),
-        ),
-      ]),
     );
   }
 
@@ -2051,15 +1448,6 @@ class _HomeState extends State<Home>
   bool _isOilNotifOn = true;
   bool _isEngineDeathNotifOn = true;
   bool _isWaterNotifOn = true;
-  bool showIas = true;
-  bool showAlt = true;
-  bool showCompass = true;
-  bool showEngineTemp = true;
-  bool showOilTemp = true;
-  bool showWaterTemp = true;
-  bool showThrottle = true;
-  bool showClimb = true;
-  bool showFuel = true;
   bool sendScreen = false;
   bool playStallWarning = true;
   bool? chatEnemySecond;
@@ -2098,13 +1486,316 @@ class _HomeState extends State<Home>
           appBar: MediaQuery.of(context).size.height >= 300
               ? homeAppBar(context)
               : null,
-          body: MediaQuery.of(context).size.height >= 235 &&
-                  (valid == true && valid != null)
-              ? homeWidgetColumn()
-              : MediaQuery.of(context).size.height < 235 &&
-                      (valid == true && valid != null)
-                  ? homeWidgetRow()
-                  : homeWidgetNoData()),
+          body: FutureBuilder<ToolDataState>(
+              future: updateState(),
+              builder: (context, AsyncSnapshot<ToolDataState> shot) {
+                if (shot.hasData) {
+                  ias = shot.data!.ias;
+                  gear = shot.data!.gear;
+                  flap = shot.data!.flaps;
+                  altitude = shot.data!.altitude;
+                  oil = shot.data!.oilTemp1C;
+                  water = shot.data!.waterTemp1C;
+                  double fuel = shot.data!.fuel / shot.data!.maxFuel * 100;
+                  return Flex(
+                    direction: Axis.vertical,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color.fromRGBO(
+                                      10, 123, 10, 0.403921568627451),
+                                  Color.fromRGBO(
+                                      0, 50, 158, 0.4196078431372549),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      Colors.red.withOpacity(boxShadowOpacity),
+                                  spreadRadius: 4,
+                                  blurRadius: 7,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]),
+                          alignment: Alignment.center,
+                          child: RichText(
+                            text: TextSpan(children: [
+                              WidgetSpan(child: Icon(Icons.airplay)),
+                              TextSpan(
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                  text: '  Throttle= ${shot.data!.throttle1} %')
+                            ]),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color.fromRGBO(
+                                      10, 123, 10, 0.403921568627451),
+                                  Color.fromRGBO(
+                                      0, 50, 158, 0.4196078431372549),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      Colors.red.withOpacity(boxShadowOpacity),
+                                  spreadRadius: 4,
+                                  blurRadius: 7,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]),
+                          child: RichText(
+                            text: TextSpan(children: [
+                              WidgetSpan(child: Icon(Icons.airplay)),
+                              TextSpan(
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                  text: '  IAS= ${shot.data!.ias} km/h')
+                            ]),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color.fromRGBO(
+                                      10, 123, 10, 0.403921568627451),
+                                  Color.fromRGBO(
+                                      0, 50, 158, 0.4196078431372549),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      Colors.red.withOpacity(boxShadowOpacity),
+                                  spreadRadius: 4,
+                                  blurRadius: 7,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]),
+                          child: RichText(
+                            text: TextSpan(children: [
+                              WidgetSpan(child: Icon(Icons.airplay)),
+                              TextSpan(
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                  text: '  Altitude= ${shot.data!.altitude} m')
+                            ]),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color.fromRGBO(
+                                      10, 123, 10, 0.403921568627451),
+                                  Color.fromRGBO(
+                                      0, 50, 158, 0.4196078431372549),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      Colors.red.withOpacity(boxShadowOpacity),
+                                  spreadRadius: 4,
+                                  blurRadius: 7,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]),
+                          child: RichText(
+                            text: TextSpan(children: [
+                              WidgetSpan(child: Icon(Icons.airplay)),
+                              TextSpan(
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                  text: '  Climb= ${shot.data!.climb} m/s')
+                            ]),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color.fromRGBO(
+                                      10, 123, 10, 0.403921568627451),
+                                  Color.fromRGBO(
+                                      0, 50, 158, 0.4196078431372549),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      Colors.red.withOpacity(boxShadowOpacity),
+                                  spreadRadius: 4,
+                                  blurRadius: 7,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]),
+                          child: RichText(
+                            text: TextSpan(children: [
+                              WidgetSpan(child: Icon(Icons.airplay)),
+                              TextSpan(
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                  text: '  Fuel= ${fuel.toStringAsFixed(1)} %')
+                            ]),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color.fromRGBO(
+                                      10, 123, 10, 0.403921568627451),
+                                  Color.fromRGBO(
+                                      0, 50, 158, 0.4196078431372549),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      Colors.red.withOpacity(boxShadowOpacity),
+                                  spreadRadius: 4,
+                                  blurRadius: 7,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]),
+                          child: RichText(
+                            text: TextSpan(children: [
+                              WidgetSpan(child: Icon(Icons.airplay)),
+                              TextSpan(
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                  text: '  Oil Temp= ${shot.data!.oilTemp1C}°c')
+                            ]),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color.fromRGBO(
+                                      10, 123, 10, 0.403921568627451),
+                                  Color.fromRGBO(
+                                      0, 50, 158, 0.4196078431372549),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      Colors.red.withOpacity(boxShadowOpacity),
+                                  spreadRadius: 4,
+                                  blurRadius: 7,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]),
+                          child: RichText(
+                            text: TextSpan(children: [
+                              WidgetSpan(
+                                child: Icon(Icons.airplay),
+                              ),
+                              TextSpan(
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                  text:
+                                      '  Water Temp= ${shot.data!.waterTemp1C}°c')
+                            ]),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                } else if (shot.hasError) {
+                  // print(shot.error);
+                  return Center(
+                      child: BlinkText(
+                    'ERROR: NO DATA',
+                    endColor: Colors.red,
+                  ));
+                } else {
+                  return Center(
+                      child: SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: CircularProgressIndicator(
+                      color: Colors.red,
+                    ),
+                  ));
+                }
+              }))
     ]);
   }
 
