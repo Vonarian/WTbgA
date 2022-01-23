@@ -61,6 +61,7 @@ class DamageEvents {
 class Damage {
   int? id;
   String? msg;
+
   static Future<List<Damage>> getDamage() async {
     try {
       final response = await http

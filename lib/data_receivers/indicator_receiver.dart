@@ -13,6 +13,7 @@ class ToolDataIndicator {
   double? flap2;
   double? vertical;
   bool? valid;
+
   ToolDataIndicator(
       {this.name,
       this.throttle,

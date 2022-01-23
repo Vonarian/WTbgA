@@ -1,6 +1,5 @@
 import 'dart:io' show Platform;
 
-// import 'package:dart_vlc/dart_vlc.dart' show DartVLC;
 import 'package:dart_discord_rpc/dart_discord_rpc.dart';
 import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +8,7 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 import 'package:wtbgassistant/screens/loading.dart';
+import 'package:wtbgassistant/screens/transparent.dart';
 
 import 'screens/home.dart';
 
@@ -28,6 +28,8 @@ ToastService? service;
 DiscordRPC rpc = DiscordRPC(
   applicationId: '901456389786968125',
 );
+HotKeyManager hotKey = HotKeyManager.instance;
+
 void main() async {
   DiscordRPC.initialize();
   rpc.start(autoRegister: true);
@@ -37,7 +39,6 @@ void main() async {
 
   await windowManager.ensureInitialized();
 
-  HotKeyManager.instance.unregisterAll();
   var warningPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
@@ -79,8 +80,10 @@ void main() async {
   runApp(
     MaterialApp(
       darkTheme: ThemeData(brightness: Brightness.dark),
-      theme:
-          (ThemeData(brightness: Brightness.light, primaryColor: Colors.black)),
+      theme: (ThemeData(
+          textTheme: TextTheme(bodyText2: TextStyle(fontSize: 45)),
+          brightness: Brightness.light,
+          primaryColor: Colors.black)),
       title: 'WarThunderbgAssistant',
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
@@ -88,7 +91,7 @@ void main() async {
         '/': (context) => const Loading(),
         '/home': (context) => const Home(),
         // '/info': (context) => const InfoPage(),
-        // '/transparent': (context) => TransparentPage()
+        '/transparent': (context) => TransparentPage()
       },
     ),
   );

@@ -9,6 +9,7 @@ class ChatEvents {
   String? sender;
   bool? enemy;
   String? mode;
+
   static Future<List<ChatEvents>> getChat() async {
     try {
       final response = await http.get(
@@ -30,6 +31,7 @@ class ChatEvents {
     enemy = json['enemy'];
     mode = json['mode']?.toString();
   }
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = Map<String, dynamic>();
     data['id'] = id;

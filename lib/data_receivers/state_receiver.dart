@@ -16,6 +16,7 @@ class ToolDataState {
   bool valid;
   double? load;
   double? aoa;
+
   ToolDataState(
       {required this.ias,
       this.oil,
@@ -32,20 +33,24 @@ class ToolDataState {
 
   static Future<ToolDataState> getState() async {
     // make the request
-    Response? response = await get(Uri.parse('http://localhost:8111/state'));
-    Map<String, dynamic>? data = jsonDecode(response.body);
-    return ToolDataState(
-        ias: data!['IAS, km/h'],
-        oil: data['oil temp 1, C'],
-        water: data['water temp 1, C'],
-        height: data['H, m'],
-        flap: data['flaps, %'],
-        maxFuel: data['Mfuel0, kg'],
-        minFuel: data['Mfuel, kg'],
-        valid: data['valid'],
-        climb: data['Vy, m/s'],
-        gear: data['gear, %'],
-        load: data['Ny'],
-        aoa: data['AoA, deg']);
+    try {
+      Response? response = await get(Uri.parse('http://localhost:8111/state'));
+      Map<String, dynamic>? data = jsonDecode(response.body);
+      return ToolDataState(
+          ias: data!['IAS, km/h'],
+          oil: data['oil temp 1, C'],
+          water: data['water temp 1, C'],
+          height: data['H, m'],
+          flap: data['flaps, %'],
+          maxFuel: data['Mfuel0, kg'],
+          minFuel: data['Mfuel, kg'],
+          valid: data['valid'],
+          climb: data['Vy, m/s'],
+          gear: data['gear, %'],
+          load: data['Ny'],
+          aoa: data['AoA, deg']);
+    } catch (e) {
+      rethrow;
+    }
   }
 }

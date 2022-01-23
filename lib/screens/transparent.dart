@@ -1,126 +1,174 @@
-// import 'dart:async';
-// import 'dart:io';
-//
-// import 'package:flutter/material.dart';
-// import 'package:flutter_acrylic/flutter_acrylic.dart';
-// import 'package:hotkey_manager/hotkey_manager.dart';
-// import 'package:screen_recorder/screen_recorder.dart';
-//
-// import 'home.dart';
-//
-// class TransparentPage extends StatefulWidget {
-//   @override
-//   _TransparentPageState createState() => _TransparentPageState();
-// }
-//
-// class _TransparentPageState extends State<TransparentPage> {
-//   AcrylicEffect effect = AcrylicEffect.transparent;
-//   Color color = Platform.isWindows ? Color(0x00222222) : Colors.transparent;
-//   // keyRegister() async {
-//   //
-//   // }
-//
-//   keyRegister() async {
-//     HotKeyManager.instance.register(
-//       HotKey(
-//         KeyCode.digit5,
-//         modifiers: [KeyModifier.alt],
-//       ),
-//       keyDownHandler: (_) async {
-//         bool isVisible = await windowManager.isVisible();
-//         if (isVisible) {
-//           windowManager.hide();
-//         } else {
-//           windowManager.show();
-//         }
-//       },
-//     );
-//     HotKeyManager.instance.register(
-//         HotKey(
-//           KeyCode.delete,
-//           modifiers: [KeyModifier.alt],
-//         ), keyDownHandler: (_) {
-//       windowManager.terminate();
-//     });
-//     bool isAlwaysOnTop = await windowManager.isAlwaysOnTop();
-//
-//     HotKeyManager.instance.register(
-//       HotKey(
-//         KeyCode.keyT,
-//         modifiers: [KeyModifier.control, KeyModifier.shift],
-//       ),
-//       keyDownHandler: (_) async {
-//         windowManager.setAlwaysOnTop(!isAlwaysOnTop);
-//         Future.delayed(Duration(milliseconds: 200));
-//         isAlwaysOnTop = await windowManager.isAlwaysOnTop();
-//         await windowManager.setAsFrameless();
-//         controller.start();
-//         print(isAlwaysOnTop);
-//       },
-//     );
-//     HotKeyManager.instance.register(
-//         HotKey(
-//           KeyCode.keyB,
-//           modifiers: [KeyModifier.alt],
-//         ), keyDownHandler: (_) {
-//       if (mounted) {
-//         Navigator.pushReplacementNamed(context, '/home');
-//       }
-//     });
-//   }
-//
-//   @override
-//   void initState() {
-//     keyRegister();
-//     super.initState();
-//     this.setWindowEffect(this.effect);
-//   }
-//
-//   void setWindowEffect(AcrylicEffect? value) {
-//     Acrylic.setEffect(effect: value!, gradientColor: this.color);
-//     this.setState(() => this.effect = value);
-//   }
-//
-//   late var controller = ScreenRecorderController(
-//     pixelRatio: 0.5,
-//     skipFramesBetweenCaptures: 2,
-//   );
-//   @override
-//   Widget build(BuildContext context) {
-//     return ScreenRecorder(
-//         controller: controller,
-//         height: MediaQuery.of(context).size.height,
-//         width: MediaQuery.of(context).size.width,
-//         child: Container());
-//   }
-// }
-//Server HERE:::::::====>>>
-// String? imageData;
-// Future<void> startServer() async {
-//   HttpServer.bind(InternetAddress.anyIPv4, 80).then((server) {
-//     server.listen((HttpRequest request) async {
-//       ContentType? contentType = request.headers.contentType;
-//       if (request.method == 'POST' &&
-//           contentType!.mimeType == 'application/json') {
-//         String content = await utf8.decoder.bind(request).join();
-//         Map<String?, dynamic> data = jsonDecode(content);
-//         phoneConnected.value = data['WTbgA'];
-//         phoneState.value = data['state'];
-//         nonePost = false;
-//         headerColor = Colors.deepPurple;
-//         drawerIcon = Icons.settings;
+import 'dart:async';
+import 'dart:io';
 
-//         request.response.write(jsonEncode(serverData));
-//         request.response.close();
-//       } else {
-//         phoneConnected.value = false;
-//         String serverData = 'ACCESS DENIED';
-//         nonePost = true;
-//         headerColor = Colors.red;
-//         drawerIcon = Icons.warning;
-//         request.response.write(serverData);
-//         request.response.close();
-//       }
-//     });
-//   });
-// }
+import 'package:draggable_widget/draggable_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:path/path.dart' as p;
+import 'package:wtbgassistant/data_receivers/state_receiver.dart';
+
+import '../main.dart';
+
+class TransparentPage extends StatefulWidget {
+  @override
+  _TransparentPageState createState() => _TransparentPageState();
+}
+
+class _TransparentPageState extends State<TransparentPage> {
+  WindowEffect effect = WindowEffect.transparent;
+  Color color = Platform.isWindows ? Color(0x00222222) : Colors.transparent;
+  final dragController = DragController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    Timer.periodic(Duration(milliseconds: 500), (timer) {
+      if (!mounted) return;
+      setState(() {});
+    });
+    this.setWindowEffect(this.effect);
+    setWindow();
+  }
+
+  Future<void> setWindow() async {
+    await keyRegister();
+    await Window.enterFullscreen();
+    await Process.start(pathAHK, [path]);
+  }
+
+  @override
+  Future<void> dispose() async {
+    super.dispose();
+    await hotKeyManager.unregisterAll();
+  }
+
+  Future<void> keyRegister() async {
+    await hotKey.register(HotKey(KeyCode.digit1, modifiers: [KeyModifier.alt]),
+        keyDownHandler: (_) async {
+      try {
+        await Navigator.pushReplacementNamed(context, '/home');
+      } catch (e) {
+        print(e);
+      }
+    });
+  }
+
+  Future<void> setWindowEffect(WindowEffect? value) async {
+    Window.setEffect(effect: value!, color: this.color);
+    this.setState(() => this.effect = value);
+  }
+
+  String path = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets/AutoHotkeyU64.ahk'
+  ]);
+  String pathAHK = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets/AutoHotkeyU64.exe'
+  ]);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Center(
+          child: FutureBuilder<ToolDataState>(
+        future: ToolDataState.getState(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Column(
+              children: [
+                SizedBox(
+                  height: 0150,
+                ),
+                Center(
+                  child: Flex(
+                    direction: Axis.horizontal,
+                    children: [
+                      Expanded(flex: 1, child: SizedBox()),
+                      Expanded(
+                          flex: 3,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text('IAS '),
+                                  Text('${snapshot.data!.ias} Km/h'),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text('Altitude'),
+                                  Text(' ${snapshot.data!.height} m'),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text('Flap'),
+                                  Text('${snapshot.data!.flap} %'),
+                                ],
+                              ),
+                            ],
+                          )),
+                      Expanded(flex: 1, child: SizedBox()),
+                      Expanded(
+                          flex: 3,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text(
+                                    'Gear',
+                                  ),
+                                  Text('${snapshot.data!.gear} %'),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text('Climb '),
+                                  Text('${snapshot.data!.climb} m/s'),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text('GLoad '),
+                                  Text('${snapshot.data!.load} G'),
+                                ],
+                              ),
+                            ],
+                          )),
+                      Expanded(flex: 1, child: SizedBox()),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
+          if (snapshot.hasError) {
+            return Text(snapshot.error.toString());
+          } else {
+            return CircularProgressIndicator(
+              color: Colors.purple,
+            );
+          }
+        },
+      )),
+    );
+  }
+}

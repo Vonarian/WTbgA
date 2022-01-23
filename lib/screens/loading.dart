@@ -16,7 +16,7 @@ class _LoadingState extends State<Loading> {
   Future<void> setupToolData() async {
     bool launch = await canLaunch('http://localhost:8111');
     if (launch) {
-      Future.delayed(Duration(seconds: 1), () async {
+      Future.delayed(Duration(seconds: 1), () {
         Navigator.pushReplacementNamed(context, '/home');
       });
     } else {

@@ -9,8 +9,8 @@ import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:path/path.dart' as p;
@@ -717,7 +717,7 @@ class _HomeState extends State<Home>
     updateStateIndicator();
     receiveDiskValues();
     // updatePhone();
-    keyRegister();
+    exitFS();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
     updateMsgId();
@@ -750,7 +750,7 @@ class _HomeState extends State<Home>
     });
     const Duration oneSec = Duration(milliseconds: 200);
     Timer.periodic(oneSec, (Timer t) async {
-      if (!mounted || isStopped) t.cancel();
+      if (!mounted || isStopped) return;
       updateStateIndicator();
 
       setState(() {});
@@ -847,7 +847,7 @@ class _HomeState extends State<Home>
       }
       _csvThing();
     });
-    Future.delayed(const Duration(milliseconds: 250), () {
+    Future.delayed(const Duration(milliseconds: 250), () async {
       widget1Opacity = 1;
     });
   }
@@ -855,7 +855,6 @@ class _HomeState extends State<Home>
   @override
   Future<void> dispose() async {
     super.dispose();
-    await hotKey.unregisterAll();
     rpc.clearPresence();
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
@@ -888,13 +887,7 @@ class _HomeState extends State<Home>
     await TrayManager.instance.setIcon(
       'assets/app_icon.ico',
     );
-    List<MenuItem> menuItems = [
-      MenuItem(
-        key: 'exit-app',
-        title: 'Exit',
-      ),
-      MenuItem(key: 'show-app', title: 'Show')
-    ];
+    List<MenuItem> menuItems = [MenuItem(key: 'show-app', title: 'Show')];
     await TrayManager.instance.setContextMenu(menuItems);
   }
 
@@ -902,43 +895,9 @@ class _HomeState extends State<Home>
     await TrayManager.instance.destroy();
   }
 
-  var hotKey = HotKeyManager.instance;
-  Future<void> keyRegister() async {
-    await hotKey.register(
-      HotKey(
-        KeyCode.digit5,
-        modifiers: [KeyModifier.alt],
-      ),
-      keyDownHandler: (_) async {
-        bool isVisible = await windowManager.isVisible();
-        if (isVisible) {
-          windowManager.hide();
-        } else {
-          windowManager.show();
-        }
-      },
-    );
-    await hotKey.register(
-        HotKey(
-          KeyCode.delete,
-          modifiers: [KeyModifier.alt],
-        ), keyDownHandler: (_) {
-      windowManager.terminate();
-    });
-
-    await hotKey
-        .register(HotKey(KeyCode.backspace, modifiers: [KeyModifier.alt]),
-            keyDownHandler: (_) {
-      showIas = true;
-      showAlt = true;
-      showCompass = true;
-      showEngineTemp = true;
-      showOilTemp = true;
-      showWaterTemp = true;
-      showThrottle = true;
-      showClimb = true;
-      showFuel = true;
-    });
+  Future<void> exitFS() async {
+    await Window.exitFullscreen();
+    await hotKey.unregisterAll();
   }
 
   Widget fuelIndicator() {
@@ -1505,6 +1464,7 @@ class _HomeState extends State<Home>
 
   Color headerColor = Colors.teal;
   IconData drawerIcon = Icons.settings;
+
   Widget drawerBuilder() {
     return Drawer(
       child: Container(
@@ -1539,7 +1499,8 @@ class _HomeState extends State<Home>
                           )
                         : Text(
                             'PC IP: ${ipAddress.toString()}',
-                            style: const TextStyle(color: Colors.redAccent),
+                            style: const TextStyle(
+                                color: Colors.redAccent, fontSize: 20),
                           )),
             Container(
               alignment: Alignment.topLeft,
@@ -1804,6 +1765,19 @@ class _HomeState extends State<Home>
                     color: Colors.amber,
                   )),
             ),
+            Container(
+              alignment: Alignment.topLeft,
+              decoration: const BoxDecoration(color: Colors.black87),
+              child: TextButton.icon(
+                  label: Text('Transparent screen'),
+                  onPressed: () async {
+                    Navigator.pushReplacementNamed(context, '/transparent');
+                  },
+                  icon: const Icon(
+                    MaterialCommunityIcons.close_box,
+                    color: Colors.amber,
+                  )),
+            ),
             chatSenderFirst != null
                 ? Container(
                     alignment: Alignment.topCenter,
@@ -1828,42 +1802,25 @@ class _HomeState extends State<Home>
 
   Widget homeWidgetColumn() {
     return Center(
-      child: Column(
+      child: Flex(
+        direction: Axis.vertical,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showThrottle ? engineThrottleText() : null),
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showEngineTemp ? engineTempText() : null),
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showFuel ? fuelIndicator() : null),
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showAlt ? altitudeText() : null),
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showCompass ? compassText() : null),
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showIas ? iasText() : null),
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showClimb ? climbRate() : null),
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showOilTemp
-                  ? oilTempText(idData, normalHeight, smallHeight,
-                      boxShadowOpacity, oil, msgData, textColor, showOilTemp)
-                  : null),
-          AnimatedSwitcher(
-              duration: const Duration(seconds: 3),
-              child: showWaterTemp
-                  ? waterTempText(context, normalHeight, smallHeight,
-                      boxShadowOpacity, water, showWaterTemp, textColor)
-                  : null)
+          Expanded(child: engineThrottleText()),
+          Expanded(child: engineTempText()),
+          Expanded(child: fuelIndicator()),
+          Expanded(child: altitudeText()),
+          Expanded(child: compassText()),
+          Expanded(child: iasText()),
+          Expanded(child: climbRate()),
+          Expanded(
+            child: oilTempText(idData, normalHeight, smallHeight,
+                boxShadowOpacity, oil, msgData, textColor, showOilTemp),
+          ),
+          Expanded(
+            child: waterTempText(context, normalHeight, smallHeight,
+                boxShadowOpacity, water, showWaterTemp, textColor),
+          )
         ],
       ),
     );
@@ -1875,79 +1832,34 @@ class _HomeState extends State<Home>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            engineTempText(),
             Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showThrottle ? engineThrottleText() : null),
+              child: engineThrottleText(),
             ),
-            Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showEngineTemp ? engineTempText() : null),
-            ),
-            Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showFuel ? fuelIndicator() : null),
-            ),
+            fuelIndicator(),
           ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showAlt ? altitudeText() : null),
-            ),
-            Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showCompass ? compassText() : null),
-            ),
+            altitudeText(),
+            compassText(),
           ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showIas ? iasText() : null),
-            ),
-            Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showClimb ? climbRate() : null),
-            ),
+            iasText(),
+            climbRate(),
           ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showOilTemp
-                      ? oilTempText(
-                          idData,
-                          normalHeight,
-                          smallHeight,
-                          boxShadowOpacity,
-                          oil,
-                          msgData,
-                          textColor,
-                          showOilTemp)
-                      : null),
-            ),
-            Expanded(
-              child: AnimatedSwitcher(
-                  duration: const Duration(seconds: 3),
-                  child: showWaterTemp
-                      ? waterTempText(context, normalHeight, smallHeight,
-                          boxShadowOpacity, water, showWaterTemp, textColor)
-                      : null),
-            )
+            oilTempText(idData, normalHeight, smallHeight, boxShadowOpacity,
+                oil, msgData, textColor, showOilTemp),
+            waterTempText(context, normalHeight, smallHeight, boxShadowOpacity,
+                water, showWaterTemp, textColor)
           ],
         )
       ],
@@ -2077,7 +1989,14 @@ class _HomeState extends State<Home>
   String? chatPrefixSecond;
   String? imageData;
   String? ipAddress;
-
+  String pathScript = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets/AutoHotkeyU64.ahk'
+  ]);
+  String pathAHK = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets/AutoHotkeyU64.exe'
+  ]);
   String path = p.dirname(Platform.resolvedExecutable);
   String delPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
@@ -2107,6 +2026,7 @@ class _HomeState extends State<Home>
   // ValueNotifier<String> phoneIP = ValueNotifier('');
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
+
   // ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
   final ValueNotifier<int> _textForIasFlap = ValueNotifier(2000);
   final ValueNotifier<int> _textForIasGear = ValueNotifier(2000);
@@ -2215,9 +2135,6 @@ class _HomeState extends State<Home>
   @override
   void onTrayMenuItemClick(MenuItem menuItem) async {
     switch (menuItem.key) {
-      case 'exit-app':
-        windowManager.terminate();
-        break;
       case 'show-app':
         windowManager.show();
         break;
