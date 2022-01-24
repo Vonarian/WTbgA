@@ -11,7 +11,7 @@ IF EXIST ".\data\flutter_assets\assets\ffmpeg.exe" (
 
 @echo Starting Server...
 
-@start cmd /k .\data\flutter_assets\assets\mona\MonaTiny.exe
+ .\data\flutter_assets\assets\mona\MonaTiny.exe
 @timeout 1 /nobreak >NUL
 @echo Starting Stream...
 @timeout 2 /nobreak >NUL

@@ -62,7 +62,7 @@ lib/generated_plugin_registrant.dart
 android/app/build.gradle
 android/app/src/debug/AndroidManifest.xml
 android/app/src/main/AndroidManifest.xml
-android/app/src/main/kotlin/com/example/wtbgassistant/MainActivity.kt
+android/app/src/main/kotlin/com/Vonarian/wtbgassistant/MainActivity.kt
 android/app/src/main/res/drawable-v21/launch_background.xml
 android/app/src/main/res/drawable/launch_background.xml
 android/app/src/main/res/mipmap-hdpi/ic_launcher.png

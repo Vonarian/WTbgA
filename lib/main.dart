@@ -37,7 +37,7 @@ void main() async {
   await Window.initialize();
 
   await windowManager.ensureInitialized();
-
+  await windowManager.setTitle('WTbgA');
   var warningPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',

@@ -1,5 +1,5 @@
 name: wtbgassistant
-description: Something
+description: WTbgA
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -14,7 +14,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.0+1
+version: 2.1.0+1
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -43,7 +43,9 @@ dependencies:
   network_info_plus: ^2.0.2
   dart_discord_rpc: ^0.0.2
   draggable_widget: ^2.0.0
-
+  percent_indicator:
+  dio: ^4.0.4
+  archive: ^3.1.9
   #    flutter_riverpod: 1.0.0-dev.10
   libwinmedia: ^0.0.7
     #  response: ^1.0.0
@@ -63,7 +65,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  #  msix: ^2.1.3
+  msix:  2.8.2
   build_runner: ^2.0.0
   json_serializable:
 
@@ -96,6 +98,7 @@ flutter:
     - assets/terminate.bat
     - assets/AutoHotkeyU64.ahk
     - assets/AutoHotkeyU64.exe
+    - assets/Version/version.txt
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
@@ -121,19 +124,17 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
-#msix_config:
-#  display_name: War Thunder Background Assistant
-#  publisher_display_name: VonarianTheGreat
-#  identity_name: com.VonarianTheGreat.WTbgA
-#  msix_version: 1.0.9.3
-#  publisher: CN = Vonarian, O = VonarianTheGreat, L = Tehran, ST = Tehran, C = IR
-#  logo_path: C:\src\wtbgassistant\assets\logoWTbgA.jpg
-#  tile_icon_path: C:\src\wtbgassistant\assets\logoWTbgA.jpg
-#  certificate_path: C:\Users\vonar\CERTIFICATE.pfx
-#  certificate_password: 1234
-#  icons_background_color: transparent
-#  architecture: x64
-#  capabilities: 'internetClient'
+msix_config:
+  display_name: WTbgA
+  publisher_display_name: Vonarian
+  identity_name: Vonarian
+  msix_version: 2.1.0.0
+  publisher: CN = Vonarian
+  logo_path: C:\src\wtbgassistant\assets\logoWTbgA.jpg
+  
+  certificate_path: C:\Users\vonar\Documents\Certificates\wtbgassistant.pfx
+  certificate_password: Kakoli
+  architecture: x64
 
 ffigen:
   output: 'lib/generated/bindings.dart'

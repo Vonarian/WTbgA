@@ -116,7 +116,6 @@ class _TransparentPageState extends State<TransparentPage> {
             }
             if (snapshot.data!.load >= widget.gLoad) {
               // print(snapshot.data!.load);
-
               flashLoad = true;
             } else {
               flashLoad = false;

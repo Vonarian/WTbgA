@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 
@@ -18,8 +17,7 @@ class ChatEvents {
           .map<ChatEvents>((model) => ChatEvents.fromMap(model))
           .toList();
       return chatEvents;
-    } catch (e, stackTrace) {
-      log('Encountered error: $e', stackTrace: stackTrace);
+    } catch (e) {
       rethrow;
     }
   }
