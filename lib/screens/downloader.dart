@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data_receivers/github.dart';
 
@@ -55,7 +56,7 @@ class _DownloaderState extends State<Downloader> {
                 .create(recursive: true);
           }
         }
-        await Process.run('${p.dirname(filePath.path)}/out/installer.bat', []);
+        await launch('${p.dirname(filePath.path)}/out/installer.bat');
         await (Process.run('taskkill', ['/F', '/IM', 'wtbgassistant.exe']));
       }).timeout(const Duration(minutes: 8));
     } catch (e) {
