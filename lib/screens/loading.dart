@@ -1,9 +1,13 @@
-import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:blinking_text/blinking_text.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wtbgassistant/data_receivers/github.dart';
+
+import 'downloader.dart';
 
 class Loading extends StatefulWidget {
   const Loading({Key? key}) : super(key: key);
@@ -13,24 +17,34 @@ class Loading extends StatefulWidget {
 }
 
 class _LoadingState extends State<Loading> {
-  Future<void> setupToolData() async {
-    bool launch = await canLaunch('http://localhost:8111');
-    if (launch) {
-      Future.delayed(Duration(seconds: 1), () {
-        Navigator.pushReplacementNamed(context, '/home');
+  Future<void> checkVersion() async {
+    Data data = await Data.getData();
+    final File file = File(
+        '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/Version/version.txt');
+    final String version = await file.readAsString();
+    if (int.parse(data.tagName.replaceAll('.', '')) >
+        int.parse(version.replaceAll('.', ''))) {
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+            content: Text(
+                'Version: $version. Status: Proceeding to update in 4 seconds!')));
+
+      Future.delayed(Duration(seconds: 3), () async {
+        Navigator.of(context)
+            .pushReplacement(MaterialPageRoute(builder: (context) {
+          return Downloader();
+        }));
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text(
-            "If you didn't go to the next screen, click on More Info"),
-        action: SnackBarAction(
-          label: 'More Info',
-          onPressed: () async {
-            _launchURL();
-          },
-        ),
-        duration: const Duration(seconds: 5),
-      ));
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+            duration: Duration(seconds: 10),
+            content: Text('Version: $version ___ Status: Up-to-date!')));
+      Future.delayed(Duration(seconds: 4), () async {
+        Navigator.of(context).pushReplacementNamed('/home');
+      });
     }
   }
 
@@ -50,11 +64,8 @@ class _LoadingState extends State<Loading> {
 
   @override
   void initState() {
-    setupToolData();
+    checkVersion();
     super.initState();
-    Timer.periodic(Duration(milliseconds: 1300), (timer) {
-      if (mounted) setupToolData();
-    });
   }
 
   Future<void> _launchURL() => launch(_url);

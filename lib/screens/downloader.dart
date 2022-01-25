@@ -6,9 +6,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data_receivers/github.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
 class Downloader extends StatefulWidget {
   const Downloader({Key? key}) : super(key: key);
@@ -24,6 +24,10 @@ class _DownloaderState extends State<Downloader> {
     setupFuture();
   }
 
+  String errorLogPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/logs/errors'
+  ]);
   Future<void> setupFuture() async {
     Data data = await Data.getData();
     await windowManager.setMinimumSize(const Size(230, 300));
@@ -56,10 +60,34 @@ class _DownloaderState extends State<Downloader> {
                 .create(recursive: true);
           }
         }
-        await launch('${p.dirname(filePath.path)}/out/installer.bat');
-        await (Process.run('taskkill', ['/F', '/IM', 'wtbgassistant.exe']));
+
+        String properPath = (p.joinAll([
+          ...p.split(p.dirname(filePath.path)),
+          'out',
+          'installer.bat',
+        ]));
+
+        await Process.run('start', ['cmd.exe', '/c', properPath],
+            runInShell: true);
+
+        Future.delayed(Duration(seconds: 2), () async {
+          await Process.run('taskkill', ['/F', '/IM', 'wtbgassistant.exe']);
+        });
       }).timeout(const Duration(minutes: 8));
-    } catch (e) {
+    } catch (e, st) {
+      String path = await AppUtil.createFolderInAppDocDir(errorLogPath);
+      final File fileWrite = File('$path/downloader.txt');
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+            duration: Duration(seconds: 10), content: Text(e.toString())));
+      final String finalString = 'Logging:'
+          '\nError:\n'
+          '$e'
+          '\nStackTrace: '
+          '\n$st';
+      await fileWrite.writeAsString(finalString);
+
       error = true;
       setState(() {});
       rethrow;
@@ -81,12 +109,21 @@ class _DownloaderState extends State<Downloader> {
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text('Downloading'),
-                          Text('${progress.toStringAsFixed(1)} %'),
+                          const Text(
+                            'Downloading',
+                            style: TextStyle(fontSize: 15),
+                          ),
+                          Text(
+                            '${progress.toStringAsFixed(1)} %',
+                            style: TextStyle(fontSize: 15),
+                          ),
                         ],
                       )
                     : const Center(
-                        child: Text('ERROR'),
+                        child: Text(
+                          'ERROR',
+                          style: TextStyle(fontSize: 15),
+                        ),
                       ),
                 backgroundColor: Colors.blue,
                 percent: double.parse(progress.toStringAsFixed(0)) / 100,

@@ -18,8 +18,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/data_receivers/github.dart';
-import 'package:wtbgassistant/screens/downloader.dart';
 import 'package:wtbgassistant/screens/transparent.dart';
 
 import '../data_receivers/chat.dart';
@@ -489,34 +487,6 @@ class _HomeState extends State<Home>
     }
   }
 
-  Future<void> checkVersion() async {
-    Data data = await Data.getData();
-    final File file = File(
-        '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/Version/version.txt');
-    final String version = await file.readAsString();
-    if (int.parse(data.tagName.replaceAll('.', '')) >
-        int.parse(version.replaceAll('.', ''))) {
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-            content: Text(
-                'Version: $version. Status:Proceeding to update, closing app in 4 seconds!')));
-
-      Future.delayed(Duration(seconds: 4), () async {
-        Navigator.of(context)
-            .pushReplacement(MaterialPageRoute(builder: (context) {
-          return Downloader();
-        }));
-      });
-    } else {
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-            duration: Duration(seconds: 10),
-            content: Text('Version: $version ___ Status: Up-to-date!')));
-    }
-  }
-
   Future<void> critAoaChecker() async {
     if (aoa == null || critAoa == null || gear == null) return;
 
@@ -700,7 +670,6 @@ class _HomeState extends State<Home>
   @override
   void initState() {
     super.initState();
-    checkVersion();
     var dateTimeNow = DateTime.now().millisecondsSinceEpoch;
     rpc.updatePresence(
       DiscordPresence(

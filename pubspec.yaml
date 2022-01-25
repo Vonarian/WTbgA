@@ -32,6 +32,7 @@ dependencies:
   path: ^1.8.0
   window_manager: ^0.1.4
   flutter_vector_icons: ^1.0.0
+
   #  screen_recorder:
   #  dart_vlc:
   #  obs_websocket: ^2.2.7
