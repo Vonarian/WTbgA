@@ -1,12 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:blinking_text/blinking_text.dart';
+import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:wtbgassistant/data_receivers/github.dart';
 
+import '../main.dart';
 import 'downloader.dart';
 
 class Loading extends StatefulWidget {
@@ -28,7 +30,7 @@ class _LoadingState extends State<Loading> {
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
             content: Text(
-                'Version: $version. Status: Proceeding to update in 4 seconds!')));
+                'Version: $version. Status: Proceeding to update in 3 seconds!')));
 
       Future.delayed(Duration(seconds: 3), () async {
         Navigator.of(context)
@@ -46,7 +48,32 @@ class _LoadingState extends State<Loading> {
         Navigator.of(context).pushReplacementNamed('/home');
       });
     }
+
+    Process process = await Process.start(pathToChecker, []);
+    process.stdout.transform(utf8.decoder).forEach((event) {
+      if (event.contains('omg')) {
+        service!.show(toast);
+        toast.dispose();
+      }
+      if (event.contains('aces.exe')) {}
+    });
   }
+
+  Toast toast = Toast(
+      type: ToastType.text02,
+      title: 'War Thunder is not running!',
+      subtitle: "For the application's features to work, WT must be open.");
+  Toast toastDetect = Toast(
+      type: ToastType.text02,
+      title: 'War Thunder detected!',
+      subtitle: 'Awesome! War Thunder is running.');
+  String pathToChecker = (p.joinAll([
+    ...p.split(p.dirname(Platform.resolvedExecutable)),
+    'data',
+    'flutter_assets',
+    'assets',
+    'checker.bat'
+  ]));
 
   // hostChecker() async {
   //   if (!await canLaunch('http://localhost:8111/state')) {
@@ -64,13 +91,9 @@ class _LoadingState extends State<Loading> {
 
   @override
   void initState() {
-    checkVersion();
     super.initState();
+    checkVersion();
   }
-
-  Future<void> _launchURL() => launch(_url);
-  final _url =
-      'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga';
 
   @override
   Widget build(BuildContext context) {
