@@ -20,43 +20,57 @@ class Loading extends StatefulWidget {
 
 class _LoadingState extends State<Loading> {
   Future<void> checkVersion() async {
-    Data data = await Data.getData();
     final File file = File(
         '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/Version/version.txt');
     final String version = await file.readAsString();
-    if (int.parse(data.tagName.replaceAll('.', '')) >
-        int.parse(version.replaceAll('.', ''))) {
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-            content: Text(
-                'Version: $version. Status: Proceeding to update in 3 seconds!')));
 
-      Future.delayed(Duration(seconds: 3), () async {
-        Navigator.of(context)
-            .pushReplacement(MaterialPageRoute(builder: (context) {
-          return Downloader();
-        }));
+    try {
+      Data data = await Data.getData();
+
+      if (int.parse(data.tagName.replaceAll('.', '')) >
+          int.parse(version.replaceAll('.', ''))) {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+              content: Text(
+                  'Version: $version. Status: Proceeding to update in 3 seconds!')));
+
+        Future.delayed(Duration(seconds: 3), () async {
+          Navigator.of(context)
+              .pushReplacement(MaterialPageRoute(builder: (context) {
+            return Downloader();
+          }));
+        });
+      } else {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+              duration: Duration(seconds: 10),
+              content: Text('Version: $version ___ Status: Up-to-date!')));
+        Future.delayed(Duration(seconds: 4), () async {
+          Navigator.of(context).pushReplacementNamed('/home');
+        });
+      }
+
+      Process process = await Process.start(pathToChecker, []);
+      process.stdout.transform(utf8.decoder).forEach((event) {
+        if (event.contains('omg')) {
+          service!.show(toast);
+          toast.dispose();
+        }
+        if (event.contains('aces.exe')) {}
       });
-    } else {
+    } catch (e, st) {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
             duration: Duration(seconds: 10),
-            content: Text('Version: $version ___ Status: Up-to-date!')));
+            content: Text(
+                'Version: $version ___ Status: Error checking for update!')));
       Future.delayed(Duration(seconds: 4), () async {
         Navigator.of(context).pushReplacementNamed('/home');
       });
     }
-
-    Process process = await Process.start(pathToChecker, []);
-    process.stdout.transform(utf8.decoder).forEach((event) {
-      if (event.contains('omg')) {
-        service!.show(toast);
-        toast.dispose();
-      }
-      if (event.contains('aces.exe')) {}
-    });
   }
 
   Toast toast = Toast(
@@ -100,7 +114,7 @@ class _LoadingState extends State<Loading> {
     return Stack(children: [
       ImageFiltered(
           child: Image.asset(
-            'assets/event_korean_war.jpg',
+            'assets/bg.jpg',
             fit: BoxFit.cover,
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
@@ -112,7 +126,7 @@ class _LoadingState extends State<Loading> {
             centerTitle: true,
             backgroundColor: Colors.transparent,
             title: const Text(
-              'Loading WTbgI',
+              'Loading WTbgA',
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,

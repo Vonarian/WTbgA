@@ -2,12 +2,18 @@ import 'dart:io' show Platform;
 
 import 'package:dart_discord_rpc/dart_discord_rpc.dart';
 import 'package:desktoasts/desktoasts.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firedart/auth/firebase_auth.dart';
+import 'package:firedart/firestore/firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 import 'package:wtbgassistant/screens/loading.dart';
+import 'package:wtbgassistant/screens/vars.dart';
+import 'package:wtbgassistant/services/theme.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
 import 'screens/home.dart';
 
@@ -58,6 +64,22 @@ void main() async {
     'data/flutter_assets/assets',
     'PullUp.mp3'
   ]);
+  FirebaseOptions firebaseOptions = FirebaseOptions(
+    appId: fireBaseConfig['appId'] ?? '',
+    apiKey: fireBaseConfig['apiKey'] ?? '',
+    projectId: fireBaseConfig['projectId'] ?? '',
+    messagingSenderId: fireBaseConfig['messagingSenderId'] ?? '',
+    authDomain: fireBaseConfig['authDomain'],
+  );
+
+  await Firebase.initializeApp(options: firebaseOptions);
+  // await FirebaseAuth.initialize(
+  //     fireBaseConfig['apiKey'] ?? '', await PreferencesStore.create());
+  var firebaseAuth = FirebaseAuth.initialize(
+      fireBaseConfig['apiKey'] ?? '', await PreferencesStore.create());
+  var fireStore =
+      Firestore(fireBaseConfig['projectId'] ?? '', auth: firebaseAuth);
+  
 
   LWM.initialize();
   var player = Player(id: 0);
@@ -78,15 +100,10 @@ void main() async {
   );
   runApp(
     MaterialApp(
-      darkTheme: ThemeData(brightness: Brightness.dark),
-      theme: (ThemeData(
-          textTheme: TextTheme(
-              bodyText1: TextStyle(fontSize: 45),
-              bodyText2: TextStyle(fontSize: 45)),
-          brightness: Brightness.light,
-          primaryColor: Colors.black)),
-      title: 'WarThunderbgAssistant',
+      theme: lightThemeData,
+      darkTheme: darkThemeData,
       debugShowCheckedModeBanner: false,
+      title: 'WarThunderbgAssistant',
       initialRoute: '/',
       routes: {
         '/': (context) => const Loading(),

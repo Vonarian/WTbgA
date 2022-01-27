@@ -616,3 +616,4 @@ wtbgassistant.iml
 /lib/lib.zip
 /assets/mona/MonaTiny.log/0.log
 /data/flutter_assets/assets/ffmpeg.exe
+/lib/screens/vars.dart

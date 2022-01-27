@@ -19,6 +19,8 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/screens/transparent.dart';
+import 'package:wtbgassistant/screens/widgets/auth.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
@@ -670,6 +672,7 @@ class _HomeState extends State<Home>
   @override
   void initState() {
     super.initState();
+
     var dateTimeNow = DateTime.now().millisecondsSinceEpoch;
     rpc.updatePresence(
       DiscordPresence(
@@ -1491,13 +1494,149 @@ class _HomeState extends State<Home>
     vsync: this,
   )..repeat(reverse: false, period: Duration(seconds: 1));
 
+  final List _isHovering = [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ];
+
+  bool _isProcessing = false;
+
+  Widget topBar(BuildContext context, Widget drawer) {
+    var screenSize = MediaQuery.of(context).size;
+
+    return PreferredSize(
+      preferredSize: Size(screenSize.width, 1000),
+      child: Container(
+        color: Colors.blueGrey,
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'WTbgA',
+                style: TextStyle(
+                  color: Colors.blueGrey[100],
+                  fontSize: 20,
+                  fontFamily: 'Montserrat',
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 3,
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(width: screenSize.width / 8),
+                    SizedBox(width: screenSize.width / 20),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: screenSize.width / 50,
+              ),
+              InkWell(
+                onHover: (value) {
+                  setState(() {
+                    value ? _isHovering[3] = true : _isHovering[3] = false;
+                  });
+                },
+                onTap: userEmail == null
+                    ? () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AuthDialog(),
+                        );
+                      }
+                    : null,
+                child: userEmail == null
+                    ? Text(
+                        'Sign in',
+                        style: TextStyle(
+                          color: _isHovering[3] ? Colors.white : Colors.white70,
+                        ),
+                      )
+                    : Row(
+                        children: [
+                          SizedBox(width: 5),
+                          Text(
+                            name ?? userEmail!,
+                            style: TextStyle(
+                              color: _isHovering[3]
+                                  ? Colors.white
+                                  : Colors.white70,
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              primary: Colors.blueGrey,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            onPressed: _isProcessing
+                                ? null
+                                : () async {
+                                    setState(() {
+                                      _isProcessing = true;
+                                    });
+                                    await signOut().then((result) {
+                                      print(result);
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(
+                                          fullscreenDialog: true,
+                                          builder: (context) => Home(),
+                                        ),
+                                      );
+                                    }).catchError((error) {
+                                      print('Sign Out Error: $error');
+                                    });
+                                    setState(() {
+                                      _isProcessing = false;
+                                    });
+                                  },
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                top: 8.0,
+                                bottom: 8.0,
+                              ),
+                              child: _isProcessing
+                                  ? CircularProgressIndicator()
+                                  : Text(
+                                      'Sign out',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                            ),
+                          )
+                        ],
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    var screenSize = MediaQuery.of(context).size;
+
     return Stack(children: [
       ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+        imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Image.asset(
-          'assets/event_korean_war.jpg',
+          'assets/bg.jpg',
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           fit: BoxFit.cover,
@@ -1507,9 +1646,10 @@ class _HomeState extends State<Home>
           drawer: drawerBuilder(),
           backgroundColor: Colors.transparent,
           resizeToAvoidBottomInset: true,
-          appBar: MediaQuery.of(context).size.height >= 300
-              ? homeAppBar(context)
-              : null,
+          appBar: PreferredSize(
+            preferredSize: Size(screenSize.width, 1000),
+            child: topBar(context, drawerBuilder()),
+          ),
           body: Flex(
             direction: Axis.horizontal,
             children: [
@@ -1531,33 +1671,9 @@ class _HomeState extends State<Home>
                           children: [
                             Expanded(
                               child: Container(
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color.fromRGBO(
-                                            10, 123, 10, 0.403921568627451),
-                                        Color.fromRGBO(
-                                            0, 50, 158, 0.4196078431372549),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(20.0),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red
-                                            .withOpacity(boxShadowOpacity),
-                                        spreadRadius: 4,
-                                        blurRadius: 7,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ]),
                                 alignment: Alignment.center,
                                 child: RichText(
                                   text: TextSpan(children: [
-                                    WidgetSpan(child: Icon(Icons.airplay)),
                                     TextSpan(
                                         style: TextStyle(
                                             color: Colors.white,
@@ -1572,32 +1688,8 @@ class _HomeState extends State<Home>
                             Expanded(
                               child: Container(
                                 alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color.fromRGBO(
-                                            10, 123, 10, 0.403921568627451),
-                                        Color.fromRGBO(
-                                            0, 50, 158, 0.4196078431372549),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(20.0),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red
-                                            .withOpacity(boxShadowOpacity),
-                                        spreadRadius: 4,
-                                        blurRadius: 7,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ]),
                                 child: RichText(
                                   text: TextSpan(children: [
-                                    WidgetSpan(child: Icon(Icons.airplay)),
                                     TextSpan(
                                         style: TextStyle(
                                             color: Colors.white,
@@ -1611,32 +1703,8 @@ class _HomeState extends State<Home>
                             Expanded(
                               child: Container(
                                 alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color.fromRGBO(
-                                            10, 123, 10, 0.403921568627451),
-                                        Color.fromRGBO(
-                                            0, 50, 158, 0.4196078431372549),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(20.0),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red
-                                            .withOpacity(boxShadowOpacity),
-                                        spreadRadius: 4,
-                                        blurRadius: 7,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ]),
                                 child: RichText(
                                   text: TextSpan(children: [
-                                    WidgetSpan(child: Icon(Icons.airplay)),
                                     TextSpan(
                                         style: TextStyle(
                                             color: Colors.white,
@@ -1651,32 +1719,8 @@ class _HomeState extends State<Home>
                             Expanded(
                               child: Container(
                                 alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color.fromRGBO(
-                                            10, 123, 10, 0.403921568627451),
-                                        Color.fromRGBO(
-                                            0, 50, 158, 0.4196078431372549),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(20.0),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red
-                                            .withOpacity(boxShadowOpacity),
-                                        spreadRadius: 4,
-                                        blurRadius: 7,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ]),
                                 child: RichText(
                                   text: TextSpan(children: [
-                                    WidgetSpan(child: Icon(Icons.airplay)),
                                     TextSpan(
                                         style: TextStyle(
                                             color: Colors.white,
@@ -1691,32 +1735,8 @@ class _HomeState extends State<Home>
                             Expanded(
                               child: Container(
                                 alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color.fromRGBO(
-                                            10, 123, 10, 0.403921568627451),
-                                        Color.fromRGBO(
-                                            0, 50, 158, 0.4196078431372549),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(20.0),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red
-                                            .withOpacity(boxShadowOpacity),
-                                        spreadRadius: 4,
-                                        blurRadius: 7,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ]),
                                 child: RichText(
                                   text: TextSpan(children: [
-                                    WidgetSpan(child: Icon(Icons.airplay)),
                                     TextSpan(
                                         style: TextStyle(
                                             color: Colors.white,
@@ -1731,32 +1751,31 @@ class _HomeState extends State<Home>
                             Expanded(
                               child: Container(
                                 alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color.fromRGBO(
-                                            10, 123, 10, 0.403921568627451),
-                                        Color.fromRGBO(
-                                            0, 50, 158, 0.4196078431372549),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(20.0),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red
-                                            .withOpacity(boxShadowOpacity),
-                                        spreadRadius: 4,
-                                        blurRadius: 7,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ]),
+                                // decoration: BoxDecoration(
+                                //     gradient: const LinearGradient(
+                                //       colors: [
+                                //         Color.fromRGBO(
+                                //             10, 123, 10, 0.403921568627451),
+                                //         Color.fromRGBO(
+                                //             0, 50, 158, 0.4196078431372549),
+                                //       ],
+                                //       begin: Alignment.centerLeft,
+                                //       end: Alignment.centerRight,
+                                //     ),
+                                //     borderRadius: const BorderRadius.all(
+                                //       Radius.circular(20.0),
+                                //     ),
+                                //     boxShadow: [
+                                //       BoxShadow(
+                                //         color: Colors.red
+                                //             .withOpacity(boxShadowOpacity),
+                                //         spreadRadius: 4,
+                                //         blurRadius: 7,
+                                //         offset: const Offset(0, 3),
+                                //       )
+                                //     ]),
                                 child: RichText(
                                   text: TextSpan(children: [
-                                    WidgetSpan(child: Icon(Icons.airplay)),
                                     TextSpan(
                                         style: TextStyle(
                                             color: Colors.white,
@@ -1771,34 +1790,8 @@ class _HomeState extends State<Home>
                             Expanded(
                               child: Container(
                                 alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color.fromRGBO(
-                                            10, 123, 10, 0.403921568627451),
-                                        Color.fromRGBO(
-                                            0, 50, 158, 0.4196078431372549),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(20.0),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red
-                                            .withOpacity(boxShadowOpacity),
-                                        spreadRadius: 4,
-                                        blurRadius: 7,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ]),
                                 child: RichText(
                                   text: TextSpan(children: [
-                                    WidgetSpan(
-                                      child: Icon(Icons.airplay),
-                                    ),
                                     TextSpan(
                                         style: TextStyle(
                                             color: Colors.white,
@@ -1843,34 +1836,8 @@ class _HomeState extends State<Home>
                           Expanded(
                             child: Container(
                               alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color.fromRGBO(
-                                          10, 123, 10, 0.403921568627451),
-                                      Color.fromRGBO(
-                                          0, 50, 158, 0.4196078431372549),
-                                    ],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                  ),
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(20.0),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.red
-                                          .withOpacity(boxShadowOpacity),
-                                      spreadRadius: 4,
-                                      blurRadius: 7,
-                                      offset: const Offset(0, 3),
-                                    )
-                                  ]),
                               child: RichText(
                                 text: TextSpan(children: [
-                                  WidgetSpan(
-                                    child: Icon(Icons.airplay),
-                                  ),
                                   TextSpan(
                                       style: TextStyle(
                                           color: Colors.white,
@@ -1885,40 +1852,15 @@ class _HomeState extends State<Home>
                           Expanded(
                             child: Container(
                               alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color.fromRGBO(
-                                          10, 123, 10, 0.403921568627451),
-                                      Color.fromRGBO(
-                                          0, 50, 158, 0.4196078431372549),
-                                    ],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                  ),
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(20.0),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.red
-                                          .withOpacity(boxShadowOpacity),
-                                      spreadRadius: 4,
-                                      blurRadius: 7,
-                                      offset: const Offset(0, 3),
-                                    )
-                                  ]),
                               child: RichText(
                                 text: TextSpan(children: [
-                                  WidgetSpan(
-                                    child: Icon(Icons.airplay),
-                                  ),
                                   TextSpan(
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 40),
-                                      text: '  Mach= ${shot.data!.mach} M')
+                                      text:
+                                          '  Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
                                 ]),
                               ),
                             ),
@@ -1931,6 +1873,7 @@ class _HomeState extends State<Home>
                       return Center(
                           child: BlinkText(
                         'ERROR: NO DATA',
+                        style: TextStyle(fontSize: 35),
                         endColor: Colors.red,
                       ));
                     } else {

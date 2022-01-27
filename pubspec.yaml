@@ -32,6 +32,8 @@ dependencies:
   path: ^1.8.0
   window_manager: ^0.1.4
   flutter_vector_icons: ^1.0.0
+  firebase_core_desktop: ^0.1.1-dev.3
+  firedart: ^0.9.0+1
 
   #  screen_recorder:
   #  dart_vlc:
@@ -49,6 +51,7 @@ dependencies:
   archive: ^3.1.9
   #    flutter_riverpod: 1.0.0-dev.10
   libwinmedia: ^0.0.7
+  firebase_core: ^1.11.0
     #  response: ^1.0.0
 
     #  adaptive_theme:
@@ -84,7 +87,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/event_korean_war.jpg
+    - assets/bg.jpg
     - assets/WARNING.png
     - assets/warning_female.mp3
     - assets/logoWTbgA.jpg
@@ -133,9 +136,6 @@ msix_config:
   msix_version: 2.1.0.0
   publisher: CN = Vonarian
   logo_path: C:\src\wtbgassistant\assets\logoWTbgA.jpg
-  
-  certificate_path: C:\Users\vonar\Documents\Certificates\wtbgassistant.pfx
-  certificate_password: Kakoli
   architecture: x64
 
 ffigen:
