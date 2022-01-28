@@ -35,31 +35,22 @@ class _LoadingState extends State<Loading> {
               content: Text(
                   'Version: $version. Status: Proceeding to update in 3 seconds!')));
 
-        Future.delayed(Duration(seconds: 3), () async {
+        Future.delayed(const Duration(seconds: 3), () async {
           Navigator.of(context)
               .pushReplacement(MaterialPageRoute(builder: (context) {
-            return Downloader();
+            return const Downloader();
           }));
         });
       } else {
         ScaffoldMessenger.of(context)
           ..removeCurrentSnackBar()
           ..showSnackBar(SnackBar(
-              duration: Duration(seconds: 10),
+              duration: const Duration(seconds: 10),
               content: Text('Version: $version ___ Status: Up-to-date!')));
-        Future.delayed(Duration(seconds: 4), () async {
+        Future.delayed(const Duration(seconds: 4), () async {
           Navigator.of(context).pushReplacementNamed('/home');
         });
       }
-
-      Process process = await Process.start(pathToChecker, []);
-      process.stdout.transform(utf8.decoder).forEach((event) {
-        if (event.contains('omg')) {
-          service!.show(toast);
-          toast.dispose();
-        }
-        if (event.contains('aces.exe')) {}
-      });
     } catch (e, st) {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
@@ -67,10 +58,24 @@ class _LoadingState extends State<Loading> {
             duration: Duration(seconds: 10),
             content: Text(
                 'Version: $version ___ Status: Error checking for update!')));
-      Future.delayed(Duration(seconds: 4), () async {
+      Future.delayed(const Duration(seconds: 4), () async {
         Navigator.of(context).pushReplacementNamed('/home');
       });
     }
+  }
+
+  Future<void> checker() async {
+    Process process = await Process.start(pathToChecker, []);
+    process.stdout.transform(utf8.decoder).forEach((event) {
+      if (event.contains('omg')) {
+        service!.show(toast);
+        toast.dispose();
+      }
+      if (event.contains('aces.exe')) {
+        service!.show(toastDetect);
+        toast.dispose();
+      }
+    });
   }
 
   Toast toast = Toast(
@@ -107,6 +112,7 @@ class _LoadingState extends State<Loading> {
   void initState() {
     super.initState();
     checkVersion();
+    checker();
   }
 
   @override

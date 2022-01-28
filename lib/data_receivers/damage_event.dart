@@ -30,7 +30,7 @@ class DamageEvents {
 
   @override
   String toString() {
-    return 'DamageEvents{' + ' damage: $damage,' + '}';
+    return 'DamageEvents{' ' damage: $damage,' '}';
   }
 
   DamageEvents copyWith({
@@ -43,7 +43,7 @@ class DamageEvents {
 
   Map<String, dynamic> toMap() {
     return {
-      'damage': this.damage,
+      'damage': damage,
     };
   }
 
@@ -69,7 +69,7 @@ class Damage {
           .map<Damage>((model) => Damage.fromMap(model))
           .toList();
       return damageEvents;
-    } catch (e, stackTrace) {
+    } catch (e) {
       // log('Encountered error: $e', stackTrace: stackTrace);
       rethrow;
     }
@@ -97,7 +97,7 @@ class Damage {
 
   @override
   String toString() {
-    return 'Damage{' + ' id: $id,' + ' msg: $msg,' + '}';
+    return 'Damage{' ' id: $id,' ' msg: $msg,' '}';
   }
 
   Damage copyWith({
@@ -112,8 +112,8 @@ class Damage {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': this.id,
-      'msg': this.msg,
+      'id': id,
+      'msg': msg,
     };
   }
 

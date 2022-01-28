@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:path/path.dart' as p;
@@ -18,9 +18,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/screens/transparent.dart';
-import 'package:wtbgassistant/screens/widgets/auth.dart';
-import 'package:wtbgassistant/services/utility.dart';
+import 'package:wtbgassistant/screens/widgets/providers.dart';
+import 'package:wtbgassistant/screens/widgets/top_bar.dart';
 
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
@@ -28,118 +27,15 @@ import '../data_receivers/indicator_receiver.dart';
 import '../data_receivers/state_receiver.dart';
 import '../main.dart';
 
-final windowManager = WindowManager.instance;
-
-//Home
-
-class Home extends StatefulWidget {
+class Home extends ConsumerStatefulWidget {
   const Home({Key? key}) : super(key: key);
 
   @override
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home>
+class _HomeState extends ConsumerState<Home>
     with WindowListener, TrayListener, TickerProviderStateMixin {
-  static Route<int> dialogBuilderIasFlap(BuildContext context) {
-    TextEditingController userInputIasFlap = TextEditingController();
-    return DialogRoute(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        actions: [
-          ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Cancel')),
-          ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context)
-                  ..removeCurrentSnackBar()
-                  ..showSnackBar(SnackBar(
-                      content: Text(
-                          'You will be notified if IAS reaches red line speed of ${userInputIasFlap.text} km/h (With flaps open). ')));
-                Navigator.of(context).pop(int.parse(userInputIasFlap.text));
-              },
-              child: const Text('Notify')),
-        ],
-        title: const Text('Red line notifier (Enter red line flap speed). '),
-        content: TextField(
-          onChanged: (value) {},
-          controller: userInputIasFlap,
-          decoration: const InputDecoration(hintText: 'Enter the IAS in km/h'),
-        ),
-      ),
-    );
-  }
-
-  static Route<int> dialogBuilderOverG(BuildContext context) {
-    TextEditingController userInputOverG = TextEditingController();
-    return DialogRoute(
-        context: context,
-        builder: (BuildContext context) => AlertDialog(
-              content: TextField(
-                onChanged: (value) {},
-                controller: userInputOverG,
-                decoration:
-                    const InputDecoration(hintText: 'Enter the G load number'),
-              ),
-              title: const Text(
-                  'Red line notifier (Enter red line G load speed). '),
-              actions: [
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Cancel')),
-                ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context)
-                        ..removeCurrentSnackBar()
-                        ..showSnackBar(SnackBar(
-                            content: Text(
-                                'You will be notified if G load reaches red line load of ${userInputOverG.text}. ')));
-                      Navigator.of(context).pop(int.parse(userInputOverG.text));
-                    },
-                    child: const Text('Notify'))
-              ],
-            ));
-  }
-
-  static Route<int> dialogBuilderIasGear(BuildContext context) {
-    TextEditingController userInputIasGear = TextEditingController();
-    return DialogRoute(
-        context: context,
-        builder: (BuildContext context) => AlertDialog(
-              content: TextField(
-                onChanged: (value) {},
-                controller: userInputIasGear,
-                decoration:
-                    const InputDecoration(hintText: 'Enter the IAS in km/h'),
-              ),
-              title:
-                  const Text('Red line notifier (Enter red line gear speed). '),
-              actions: [
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Cancel')),
-                ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context)
-                        ..removeCurrentSnackBar()
-                        ..showSnackBar(SnackBar(
-                            content: Text(
-                                'You will be notified if IAS reaches red line speed of ${userInputIasGear.text} km/h (With gears open). ')));
-                      Navigator.of(context)
-                          .pop(int.parse(userInputIasGear.text));
-                    },
-                    child: const Text('Notify'))
-              ],
-            ));
-  }
-
   // Route<double> sliderFontSize(BuildContext context, double initialValue) {
   //   TextEditingController userInputIP =
   //       TextEditingController(text: initialValue.toString());
@@ -177,9 +73,10 @@ class _HomeState extends State<Home>
   // }
 
   void userRedLineFlap() {
+    var flapIas = ref.read(flapIasProvider.notifier);
     if (flap == null) return;
     if (ias != null) {
-      if (ias! >= _textForIasFlap.value && isUserIasFlapNew && flap! > 0) {
+      if (ias! >= flapIas.state && isUserIasFlapNew && flap! > 0) {
         Toast toast = Toast(
             type: ToastType.imageAndText02,
             title: '😳Flap WARNING!',
@@ -196,7 +93,7 @@ class _HomeState extends State<Home>
         player.play();
         isUserIasFlapNew = false;
       }
-      if (ias! < _textForIasFlap.value) {
+      if (ias! < flapIas.state) {
         if (!mounted) return;
         setState(() {
           isUserIasFlapNew = true;
@@ -206,9 +103,11 @@ class _HomeState extends State<Home>
   }
 
   void userRedLineGear() {
+    var gearIas = ref.read(gearIasProvider.notifier);
+
     if (!mounted) return;
     if (ias != null) {
-      if (ias! >= _textForIasGear.value && isUserIasGearNew && gear! > 0) {
+      if (ias! >= gearIas.state && isUserIasGearNew && gear! > 0) {
         Toast toast = Toast(
             type: ToastType.imageAndText02,
             title: '😳Gear WARNING!',
@@ -225,10 +124,10 @@ class _HomeState extends State<Home>
         gearUpPlayer.play();
         isUserIasGearNew = false;
       }
-      if (ias! >= _textForIasGear.value && gear! > 0) {
+      if (ias! >= gearIas.state && gear! > 0) {
         gearUpPlayer.play();
       }
-      if (ias! < _textForIasGear.value) {
+      if (ias! < gearIas.state) {
         setState(() {
           isUserIasGearNew = true;
         });
@@ -237,7 +136,9 @@ class _HomeState extends State<Home>
   }
 
   Future<void> pullUpChecker() async {
-    if (!mounted || !isPullUpEnabled) return;
+    var pullUpNotif = ref.read(pullUpNotifProvider.notifier);
+
+    if (!mounted || !pullUpNotif.state) return;
     if (vertical != null &&
         (ias! > 400 &&
             climb != null &&
@@ -250,18 +151,27 @@ class _HomeState extends State<Home>
   }
 
   Future<void> loadChecker() async {
-    if (!mounted) return;
-    if (!_isFullNotifOn) return;
+    var gLoad = ref.read(gLoadProvider.notifier);
+    var fullNotif = ref.read(fullNotifProvider.notifier);
 
-    if (isUserGLoadNew && load != null && load! >= _textForGLoad.value) {
+    if (!mounted) return;
+    if (!fullNotif.state) return;
+
+    if (isUserGLoadNew && load != null && load! >= gLoad.state) {
       overGPlayer.play();
     }
   }
 
   Future<void> vehicleStateCheck() async {
-    if (!_isFullNotifOn) return;
+    var fullNotif = ref.read(fullNotifProvider.notifier);
+    var engineDeath = ref.read(engineDeathNotifProvider.notifier);
+
+    var oilNotif = ref.read(oilNotifProvider.notifier);
+    var waterNotif = ref.read(waterNotifProvider.notifier);
+    var engineOh = ref.read(engineOhNotifProvider.notifier);
+    if (!fullNotif.state) return;
     if (!run) return;
-    if (_isOilNotifOn &&
+    if (engineDeath.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine died: no fuel' &&
@@ -277,7 +187,7 @@ class _HomeState extends State<Home>
       isDamageIDNew = false;
       player.play();
     }
-    if (_isOilNotifOn &&
+    if (oilNotif.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Oil overheated') {
@@ -292,7 +202,7 @@ class _HomeState extends State<Home>
       isDamageIDNew = false;
       player.play();
     }
-    if (isEngineNotifOn &&
+    if (engineOh.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
@@ -307,7 +217,7 @@ class _HomeState extends State<Home>
       isDamageIDNew = false;
       player.play();
     }
-    if (_isWaterNotifOn &&
+    if (waterNotif.state &&
         water != 15 &&
         isDamageIDNew &&
         msgData == 'Water overheated') {
@@ -322,7 +232,7 @@ class _HomeState extends State<Home>
       isDamageIDNew = false;
       player.play();
     }
-    if (_isEngineDeathNotifOn &&
+    if (engineDeath.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine died: overheating') {
@@ -337,7 +247,7 @@ class _HomeState extends State<Home>
       isDamageIDNew = false;
       player.play();
     }
-    if (_isEngineDeathNotifOn &&
+    if (engineDeath.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine died: propeller broken') {
@@ -415,41 +325,40 @@ class _HomeState extends State<Home>
 
   Future<void> updateChat() async {
     List<ChatEvents> dataForChatId = await ChatEvents.getChat();
-    List<ChatEvents> dataForChatMsg = await ChatEvents.getChat();
-    List<ChatEvents> dataForChatEnemy = await ChatEvents.getChat();
-    List<ChatEvents> dataForChatSender = await ChatEvents.getChat();
-    List<ChatEvents> dataForChatMode = await ChatEvents.getChat();
+    // List<ChatEvents> dataForChatMsg = await ChatEvents.getChat();
+    // List<ChatEvents> dataForChatSender = await ChatEvents.getChat();
+    // List<ChatEvents> dataForChatMode = await ChatEvents.getChat();
     if (!mounted) return;
     chatIdFirst.value = dataForChatId.isNotEmpty
         ? dataForChatId[dataForChatId.length - 1].id
         : emptyInt;
-    chatMsgFirst = dataForChatMsg.isNotEmpty
-        ? dataForChatMsg[dataForChatMsg.length - 1].msg
-        : emptyString;
-    chatModeFirst = dataForChatMode.isNotEmpty
-        ? dataForChatMode[dataForChatMode.length - 1].mode
-        : emptyString;
-    chatEnemyFirst = dataForChatEnemy.isNotEmpty
-        ? dataForChatEnemy[dataForChatEnemy.length - 1].enemy
-        : emptyBool;
-    chatSenderFirst = dataForChatSender.isNotEmpty
-        ? dataForChatSender[dataForChatSender.length - 1].sender
-        : emptyString;
+    // chatMsgFirst = dataForChatMsg.isNotEmpty
+    //     ? dataForChatMsg[dataForChatMsg.length - 1].msg
+    //     : emptyString;
+    // chatModeFirst = dataForChatMode.isNotEmpty
+    //     ? dataForChatMode[dataForChatMode.length - 1].mode
+    //     : emptyString;
+    // chatEnemyFirst = dataForChatEnemy.isNotEmpty
+    //     ? dataForChatEnemy[dataForChatEnemy.length - 1].enemy
+    //     : emptyBool;
+    // chatSenderFirst = dataForChatSender.isNotEmpty
+    //     ? dataForChatSender[dataForChatSender.length - 1].sender
+    //     : emptyString;
     chatIdSecond.value = dataForChatId.isNotEmpty
         ? dataForChatId[dataForChatId.length - 2].id
         : emptyInt;
-    chatMsgSecond = dataForChatMsg.isNotEmpty
-        ? dataForChatMsg[dataForChatMsg.length - 2].msg
-        : emptyString;
-    chatModeSecond = dataForChatMode.isNotEmpty
-        ? dataForChatMode[dataForChatMode.length - 2].mode
-        : emptyString;
-    chatEnemySecond = dataForChatEnemy.isNotEmpty
-        ? dataForChatEnemy[dataForChatEnemy.length - 2].enemy
-        : emptyBool;
-    chatSenderSecond = dataForChatSender.isNotEmpty
-        ? dataForChatSender[dataForChatSender.length - 2].sender
-        : emptyString;
+    // chatMsgSecond = dataForChatMsg.isNotEmpty
+    //     ? dataForChatMsg[dataForChatMsg.length - 2].msg
+    //     : emptyString;
+    // chatModeSecond = dataForChatMode.isNotEmpty
+    //     ? dataForChatMode[dataForChatMode.length - 2].mode
+    //     : emptyString;
+    // chatEnemySecond = dataForChatEnemy.isNotEmpty
+    //     ? dataForChatEnemy[dataForChatEnemy.length - 2].enemy
+    //     : emptyBool;
+    // chatSenderSecond = dataForChatSender.isNotEmpty
+    //     ? dataForChatSender[dataForChatSender.length - 2].sender
+    //     : emptyString;
   }
 
   void flapChecker() {
@@ -490,18 +399,19 @@ class _HomeState extends State<Home>
   }
 
   Future<void> critAoaChecker() async {
-    if (aoa == null || critAoa == null || gear == null) return;
+    var stallNotif = ref.read(stallNotifProvider.notifier);
+    if (aoa == null || critAoa == 10000 || gear == null) return;
 
     if (gear! > 0) return;
     if (secondSpeed == null || firstSpeed == null) return;
     int averageIas = secondSpeed! - firstSpeed!;
     if (averageIas <= 10) return;
 
-    if (critAoa != null && (aoa! >= (critAoa! * -1)) && playStallWarning) {
+    if (critAoa != 10000 && (aoa! >= (critAoa * -1)) && stallNotif.state) {
       pullUpPlayer.play();
       critAoaBool = true;
     }
-    if (!(critAoa != null && (aoa! >= (critAoa! * -1)))) {
+    if (!(critAoa != 10000 && (aoa! >= (critAoa * -1)))) {
       critAoaBool = false;
     }
   }
@@ -511,34 +421,24 @@ class _HomeState extends State<Home>
     windowManager.show();
   }
 
-  // Future<void> hostChecker() async {
-  //   if (!await canLaunch('http://localhost:8111')) {
-  //     ScaffoldMessenger.of(context)
-  //       ..removeCurrentSnackBar()
-  //       ..showSnackBar(const SnackBar(
-  //         content: BlinkText(
-  //           'Unable to connect to game server.',
-  //           endColor: Colors.red,
-  //         ),
-  //         duration: Duration(seconds: 10),
-  //       ));
-  //   }
-  // }
-
   Future<void> startServer() async {
+    var nonePost = ref.read(nonePostProvider.notifier);
+    var phoneConnected = ref.read(phoneConnectedProvider.notifier);
+    var vehicleName = ref.read(vehicleNameProvider.notifier);
+    var ipAddress = ref.read(ipAddressProvider.notifier);
     int check = 0;
-    Future.delayed(Duration(milliseconds: 800), () {
+    Future.delayed(const Duration(milliseconds: 800), () {
       HttpServer.bind(InternetAddress.anyIPv4, 55200).then((HttpServer server) {
-        print('[+]WebSocket listening at -- ws://$ipAddress:55200');
+        print('[+]WebSocket listening at -- ws://${ipAddress.state}:55200');
         server.listen((HttpRequest request) {
           WebSocketTransformer.upgrade(request).then((WebSocket ws) {
             ws.listen(
               (data) {
-                nonePost = false;
+                nonePost.state = false;
                 headerColor = Colors.deepPurple;
                 drawerIcon = Icons.settings;
                 Map<String, dynamic> serverData = {
-                  'vehicleName': vehicleName,
+                  'vehicleName': vehicleName.state,
                   'ias': ias,
                   'climb': climb,
                   'damageId': idData.value,
@@ -553,51 +453,52 @@ class _HomeState extends State<Home>
                   'minFuel': minFuel,
                   'maxFuel': maxFuel,
                   'gear': gear,
-                  'chat1': chatMsgFirst,
+                  // 'chat1': chatMsgFirst,
                   'chatId1': chatIdFirst.value,
-                  'chat2': chatMsgSecond,
+                  // 'chat2': chatMsgSecond,
                   'chatId2': chatIdSecond.value,
-                  'chatMode1': chatModeFirst,
-                  'chatMode2': chatModeSecond,
-                  'chatSender1': chatSenderFirst,
-                  'chatSender2': chatSenderSecond,
-                  'chatEnemy1': chatEnemyFirst,
-                  'chatEnemy2': chatEnemySecond,
+                  // 'chatMode1': chatModeFirst,
+                  // 'chatMode2': chatModeSecond,
+                  // 'chatSender1': chatSenderFirst,
+                  // 'chatSender2': chatSenderSecond,
+                  // 'chatEnemy1': chatEnemyFirst,
+                  // 'chatEnemy2': chatEnemySecond,
                   'check': check++
                 };
                 var internalData = jsonDecode(data);
                 if (internalData == null) {
-                  nonePost = true;
+                  nonePost.state = true;
                   headerColor = Colors.red;
                   drawerIcon = Icons.warning;
                   ws.close();
                   ScaffoldMessenger.of(context)
                     ..removeCurrentSnackBar
-                    ..showSnackBar(SnackBar(
+                    ..showSnackBar(const SnackBar(
                         content: Text('Abnormal connection request detected')));
                 }
-                phoneConnected.value = (internalData['WTbgA']);
+                phoneConnected.state = (internalData['WTbgA']);
                 phoneState.value = (internalData['state']);
                 streamState.value = internalData['startStream'];
-                Timer(Duration(milliseconds: 300), () {
-                  if (ws.readyState == WebSocket.open)
+                Timer(const Duration(milliseconds: 300), () {
+                  if (ws.readyState == WebSocket.open) {
                     ws.add(json.encode(serverData));
+                  }
                 });
               },
               onDone: () {
                 print('[+]Done :)');
-                phoneConnected.value = false;
+                phoneConnected.state = false;
               },
               onError: (err) => print('[!]Error -- ${err.toString()}'),
               cancelOnError: false,
             );
           }, onError: (err) {
-            nonePost = true;
+            nonePost.state = true;
             headerColor = Colors.red;
             drawerIcon = Icons.warning;
             ScaffoldMessenger.of(context)
               ..removeCurrentSnackBar
-              ..showSnackBar(SnackBar(
+              ..showSnackBar(const SnackBar(
                   content: BlinkText(
                 'Abnormal connection request detected',
                 style:
@@ -612,67 +513,77 @@ class _HomeState extends State<Home>
   }
 
   void receiveDiskValues() {
-    // _prefs.then((SharedPreferences prefs) {
-    //   phoneIP.value = (prefs.getString('phoneIP') ?? '');
-    // });
+    var fullNotif = ref.read(fullNotifProvider.notifier);
+    var oilNotif = ref.read(oilNotifProvider.notifier);
+    var engineDeath = ref.read(engineDeathNotifProvider.notifier);
+    var pullUpNotif = ref.read(pullUpNotifProvider.notifier);
+    var waterNotif = ref.read(waterNotifProvider.notifier);
+    var tray = ref.read(trayProvider.notifier);
+    var flapIas = ref.read(flapIasProvider.notifier);
+    var gearIas = ref.read(gearIasProvider.notifier);
+    var gLoad = ref.read(gLoadProvider.notifier);
+    var stallNotif = ref.read(stallNotifProvider.notifier);
+
+    var transparentFont = ref.read(transparentFontProvider.notifier);
     _prefs.then((SharedPreferences prefs) {
       lastId = (prefs.getInt('lastId') ?? 0);
     });
     _prefs.then((SharedPreferences prefs) {
-      transparentFont = (prefs.getDouble('fontSize') ?? 40);
+      transparentFont.state = (prefs.getDouble('fontSize') ?? 40);
     });
     _prefs.then((SharedPreferences prefs) {
-      isPullUpEnabled = (prefs.getBool('isPullUpEnabled') ?? true);
+      pullUpNotif.state = (prefs.getBool('isPullUpEnabled') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
-      _isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
+      oilNotif.state = (prefs.getBool('isOilNotifOn') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
-      playStallWarning = (prefs.getBool('playStallWarning') ?? true);
+      stallNotif.state = (prefs.getBool('playStallWarning') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
-      _isTrayEnabled = (prefs.getBool('isTrayEnabled') ?? true);
+      tray.state = (prefs.getBool('isTrayEnabled') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
-      _isWaterNotifOn = (prefs.getBool('isWaterNotifOn') ?? true);
+      waterNotif.state = (prefs.getBool('isWaterNotifOn') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
-      _isEngineDeathNotifOn = (prefs.getBool('isEngineDeathNotifOn') ?? true);
+      engineDeath.state = (prefs.getBool('isEngineDeathNotifOn') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
-      _isFullNotifOn = (prefs.getBool('isFullNotifOn') ?? true);
+      fullNotif.state = (prefs.getBool('isFullNotifOn') ?? true);
     });
     _prefs.then((SharedPreferences prefs) {
-      _textForIasFlap.value = (prefs.getInt('textForIasFlap') ?? 2000);
-      if (_textForIasFlap.value != 2000) {
+      flapIas.state = (prefs.getInt('textForIasFlap') ?? 2000);
+      if (flapIas.state != 2000) {
         isUserIasFlapNew = true;
       }
     });
     _prefs.then((SharedPreferences prefs) {
-      _textForIasGear.value = (prefs.getInt('textForIasGear') ?? 2000);
-      if (_textForIasGear.value != 2000) {
+      gearIas.state = (prefs.getInt('textForIasGear') ?? 2000);
+      if (gearIas.state != 2000) {
         isUserIasGearNew = true;
       }
     });
     _prefs.then((SharedPreferences prefs) {
-      _textForGLoad.value = (prefs.getInt('textForGLoad') ?? 12);
-      if (_textForGLoad.value != 200) {
+      gLoad.state = (prefs.getInt('textForGLoad') ?? 12);
+      if (gLoad.state != 2000) {
         isUserGLoadNew = true;
       }
     });
   }
 
   Future<void> giveIps() async {
+    var ipAddress = ref.read(ipAddressProvider.notifier);
     final info = NetworkInfo();
 
     var wifiIP = await info.getWifiIP();
-    ipAddress = wifiIP;
+    ipAddress.state = wifiIP!;
   }
 
   @override
   void initState() {
     super.initState();
-
+    var vehicleName = ref.read(vehicleNameProvider.notifier);
     var dateTimeNow = DateTime.now().millisecondsSinceEpoch;
     rpc.updatePresence(
       DiscordPresence(
@@ -699,16 +610,17 @@ class _HomeState extends State<Home>
     windowManager.addListener(this);
     updateMsgId();
     updateChat();
-    chatSettingsManager();
+    // chatSettingsManager();
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) async {
+      var phoneConnected = ref.read(phoneConnectedProvider.notifier);
       if (!mounted || isStopped) t.cancel();
       rpc.updatePresence(
         DiscordPresence(
-          state: phoneConnected.value ? 'Using WTbgA - Mobile!' : 'Using WTbgA',
-          details: phoneConnected.value
+          state: phoneConnected.state ? 'Using WTbgA - Mobile!' : 'Using WTbgA',
+          details: phoneConnected.state
               ? 'Enjoying both desktop and mobile WTbgA!'
-              : phoneConnected.value && phoneState.value == 'image'
+              : phoneConnected.state && phoneState.value == 'image'
                   ? 'Streaming using WTbgA'
                   : 'Enjoying WTbgA!',
           startTimeStamp: dateTimeNow,
@@ -722,7 +634,7 @@ class _HomeState extends State<Home>
       updateMsgId();
       flapChecker();
       updateChat();
-      chatSettingsManager();
+      // chatSettingsManager();
       critAoaChecker();
     });
     const Duration oneSec = Duration(milliseconds: 200);
@@ -744,43 +656,10 @@ class _HomeState extends State<Home>
         sendScreen = false;
       }
     });
-    phoneConnected.addListener(() async {
-      if (phoneConnected.value) {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-              duration: Duration(seconds: 3),
-              content: BlinkText(
-                'Phone connected!',
-                style: TextStyle(color: Colors.blue),
-                endColor: Colors.red,
-              )));
-        Toast toast = Toast(
-          type: ToastType.text02,
-          title: '✅Connection Detected!',
-          subtitle: 'WTbgA Mobile connected',
-        );
-        service!.show(toast);
-        toast.dispose();
-      } else {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-              duration: Duration(seconds: 3),
-              content: BlinkText(
-                'Phone disconnected!',
-                style: TextStyle(color: Colors.blue),
-                endColor: Colors.red,
-              )));
-        Toast toast = Toast(
-          type: ToastType.text02,
-          title: '✅Connection ended!',
-          subtitle: 'WTbgA Mobile disconnected',
-        );
-        service!.show(toast);
-        toast.dispose();
-      }
+    vehicleName.addListener((state) {
+      _csvThing();
     });
+
     idData.addListener(() async {
       if (lastId != idData.value) {
         isDamageIDNew = true;
@@ -797,35 +676,23 @@ class _HomeState extends State<Home>
       if (streamState.value == true) displayCapture();
       if (streamState.value == false) await Process.run(terminatePath, []);
     });
-    _textForIasFlap.addListener(() {
-      isUserIasFlapNew = true;
-    });
-    // msgDataNotifier.addListener(() {
-    //   isDamageMsgNew = true;
-    // });
-    _textForIasGear.addListener(() {
-      isUserIasGearNew = true;
-    });
-    _textForGLoad.addListener(() {
-      isUserGLoadNew = true;
-    });
-    chatIdFirst.addListener(() {
-      chatSettingsManager();
-    });
+
+    var fullNotif = ref.read(fullNotifProvider.notifier);
     const redLineTimer = Duration(milliseconds: 1500);
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
-      if (!_isFullNotifOn) return;
+      if (!fullNotif.state) return;
       {
         userRedLineFlap();
         userRedLineGear();
         loadChecker();
         pullUpChecker();
       }
-      _csvThing();
+      // _csvThing();
     });
     Future.delayed(const Duration(milliseconds: 250), () async {
       widget1Opacity = 1;
+      _csvThing();
     });
   }
 
@@ -836,29 +703,62 @@ class _HomeState extends State<Home>
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
-    _textForIasFlap.removeListener((userRedLineFlap));
-    _textForIasGear.removeListener((userRedLineGear));
-    _textForGLoad.removeListener((loadChecker));
+
     chatIdFirst.removeListener(() {});
     chatIdSecond.removeListener(() {});
-    phoneConnected.removeListener(() {});
+
     isStopped = true;
   }
 
   Future<void> _csvThing() async {
-    final csvString = File(csvPath).readAsStringSync();
-    Future.delayed(const Duration(milliseconds: 250), () {
-      critAoa =
-          convertCsvFileToMap(csvString)[vehicleName.toString().toLowerCase()];
-    });
+    var vehicleName = ref.read(vehicleNameProvider.notifier);
+    String csvFm = await File(fmPath).readAsString();
+    final String csvNames = await File(namesPath).readAsString();
+    Map<String, String> namesMap = convertNamesToMap(csvNames);
+    csvFm = csvFm.replaceAll(',', ';');
+    critAoa = convertFmToMap(csvFm)[namesMap[vehicleName.state]]!['critAoA'];
   }
 
-  Map<String, double> convertCsvFileToMap(String csvString) => {
-        for (final columns in LineSplitter.split(csvString)
-            .skip(1)
-            .map((line) => line.split(';')))
-          columns.first: double.parse(columns.last.split(',').last)
+  Map<String, Map<String, dynamic>> convertFmToMap(String csvString) {
+    Map<String, Map<String, dynamic>> map = {};
+
+    for (final rows in LineSplitter.split(csvString)
+        .skip(1)
+        .map((line) => line.split(';'))) {
+      map[rows.first] = {
+        'length': double.parse(rows[1]),
+        'wingSpan': double.parse(rows[2]),
+        'wingArea': rows[3],
+        'emptyMass': rows[4],
+        'maxFuelMass': rows[5],
+        'critAirSpd': rows[6],
+        'critAirSpdMach': rows[7],
+        'critGearSpd': rows[8],
+        'combatFlaps': rows[9],
+        'takeoffFlaps': rows[10],
+        'critFlapsSpd': rows[11],
+        'critWingOverload': rows[12],
+        'numEngines': rows[13],
+        'maxNitro': rows[14],
+        'nitroConsum': rows[15],
+        'critAoA': double.parse(rows.last),
       };
+    }
+
+    return map;
+  }
+
+  Map<String, String> convertNamesToMap(String csvStringNames) {
+    Map<String, String> map = {};
+
+    for (final rows in LineSplitter.split(csvStringNames)
+        .skip(1)
+        .map((line) => line.split(';'))) {
+      map[rows.first] = rows[1];
+    }
+
+    return map;
+  }
 
   Future<void> _trayInit() async {
     await TrayManager.instance.setIcon(
@@ -877,491 +777,101 @@ class _HomeState extends State<Home>
     await hotKey.unregisterAll();
   }
 
-  Widget chatBuilder(String? chatSender, String? chatMsg, String? chatPrefix) {
-    return ValueListenableBuilder(
-        valueListenable: chatIdFirst,
-        builder: (BuildContext context, value, Widget? child) {
-          return Column(
-            children: [
-              Container(
-                  alignment: Alignment.topCenter,
-                  height: 30,
-                  child: chatMsg != 'No Data'
-                      ? Text(
-                          '$chatSender says:',
-                          style: TextStyle(color: chatColorFirst),
-                        )
-                      : null),
-              Container(
-                  alignment: Alignment.topLeft,
-                  height: 40,
-                  child: chatMsg != 'No Data'
-                      ? ListView(children: [
-                          Text(
-                            '$chatPrefix $chatMsg',
-                            style: TextStyle(color: chatColorFirst),
-                          )
-                        ])
-                      : null),
-            ],
-          );
-        });
-  }
-
-  chatSettingsManager() {
-    if (!mounted) return;
-    if (chatModeFirst == 'All') {
-      chatPrefixFirst = '[ALL]';
-    }
-    if (chatModeFirst == 'Team') {
-      chatPrefixFirst = '[Team]';
-    }
-    if (chatModeFirst == 'Squad') {
-      chatPrefixFirst = '[Squad]';
-    }
-    if (chatModeFirst == null) {
-      chatPrefixFirst = null;
-    }
-    if (chatSenderFirst == null) {
-      chatSenderFirst == emptyString;
-    }
-    if (chatEnemyFirst == true) {
-      chatColorFirst = Colors.red;
-    } else {
-      chatColorFirst = Colors.lightBlueAccent;
-    }
-    if (chatModeSecond == 'All') {
-      chatPrefixSecond = '[ALL]';
-    }
-    if (chatModeSecond == 'Team') {
-      chatPrefixSecond = '[Team]';
-    }
-    if (chatModeSecond == 'Squad') {
-      chatPrefixSecond = '[Squad]';
-    }
-    if (chatModeSecond == null) {
-      chatPrefixSecond = null;
-    }
-    if (chatSenderSecond == null) {
-      chatSenderSecond == emptyString;
-    }
-    if (chatEnemyFirst == true) {
-      chatColorSecond = Colors.red;
-    } else {
-      chatColorSecond = Colors.lightBlueAccent;
-    }
-  }
+  // chatSettingsManager() {
+  //   if (!mounted) return;
+  //   if (chatModeFirst == 'All') {
+  //     chatPrefixFirst = '[ALL]';
+  //   }
+  //   if (chatModeFirst == 'Team') {
+  //     chatPrefixFirst = '[Team]';
+  //   }
+  //   if (chatModeFirst == 'Squad') {
+  //     chatPrefixFirst = '[Squad]';
+  //   }
+  //   if (chatModeFirst == null) {
+  //     chatPrefixFirst = null;
+  //   }
+  //   if (chatSenderFirst == null) {
+  //     chatSenderFirst == emptyString;
+  //   }
+  //   // if (chatEnemyFirst == true) {
+  //   //   chatColorFirst = Colors.red;
+  //   // } else {
+  //   //   chatColorFirst = Colors.lightBlueAccent;
+  //   // }
+  //   if (chatModeSecond == 'All') {
+  //     chatPrefixSecond = '[ALL]';
+  //   }
+  //   if (chatModeSecond == 'Team') {
+  //     chatPrefixSecond = '[Team]';
+  //   }
+  //   if (chatModeSecond == 'Squad') {
+  //     chatPrefixSecond = '[Squad]';
+  //   }
+  //   if (chatModeSecond == null) {
+  //     chatPrefixSecond = null;
+  //   }
+  //   if (chatSenderSecond == null) {
+  //     chatSenderSecond == emptyString;
+  //   }
+  //   // if (chatEnemyFirst == true) {
+  //   //   chatColorSecond = Colors.red;
+  //   // } else {
+  //   //   chatColorSecond = Colors.lightBlueAccent;
+  //   // }
+  // }
 
   Color headerColor = Colors.teal;
   IconData drawerIcon = Icons.settings;
 
-  Widget drawerBuilder() {
-    return Drawer(
-      child: Container(
-        decoration: const BoxDecoration(color: Colors.black),
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              curve: Curves.bounceIn,
-              duration: Duration(seconds: 4),
-              decoration: BoxDecoration(
-                color: headerColor,
-              ),
-              child: Icon(
-                drawerIcon,
-                size: 100,
-              ),
-            ),
-            Container(
-                padding: EdgeInsets.only(left: 12),
-                alignment: Alignment.topLeft,
-                decoration: const BoxDecoration(color: Colors.black87),
-                child: phoneConnected.value
-                    ? BlinkText(
-                        'PC IP: ${ipAddress.toString()}',
-                        endColor: Colors.green,
-                      )
-                    : nonePost
-                        ? BlinkText(
-                            'PC IP: ${ipAddress.toString()}',
-                            endColor: Colors.red,
-                          )
-                        : Text(
-                            'PC IP: ${ipAddress.toString()}',
-                            style: const TextStyle(
-                                color: Colors.redAccent, fontSize: 20),
-                          )),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    bool isFullNotifOn =
-                        (prefs.getBool('isFullNotifOn') ?? true);
-                    isFullNotifOn = !isFullNotifOn;
-                    setState(() {
-                      _isFullNotifOn = isFullNotifOn;
-                    });
-                    prefs.setBool('isFullNotifOn', isFullNotifOn);
-                  },
-                  label: _isFullNotifOn
-                      ? const Text(
-                          'Notifications: On',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : const Text(
-                          'Notifications: Off',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                  icon: _isFullNotifOn
-                      ? const Icon(Icons.notifications)
-                      : const Icon(Icons.notifications_off)),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    bool _playStallWarning =
-                        (prefs.getBool('playStallWarning') ?? true);
-                    _playStallWarning = !_playStallWarning;
-                    setState(() {
-                      playStallWarning = _playStallWarning;
-                    });
-                    prefs.setBool('playStallWarning', _playStallWarning);
-                  },
-                  label: playStallWarning
-                      ? const Text(
-                          'Play stall warning sound: On',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : const Text(
-                          'Play stall warning sound: Off',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                  icon: const Icon(MaterialCommunityIcons.shield_airplane)),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    bool _isPullUpEnabled =
-                        (prefs.getBool('isPullUpEnabled') ?? true);
-                    _isPullUpEnabled = !_isPullUpEnabled;
-                    setState(() {
-                      isPullUpEnabled = _isPullUpEnabled;
-                    });
-                    prefs.setBool('isPullUpEnabled', _isPullUpEnabled);
-                  },
-                  label: isPullUpEnabled
-                      ? const Text(
-                          'Play dive warning sound: On',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : const Text(
-                          'Play dive warning sound: Off',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                  icon: const Icon(FontAwesome.plane)),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    bool isEngineDeathNotifOn =
-                        (prefs.getBool('isEngineDeathNotifOn') ?? true);
-                    isEngineDeathNotifOn = !isEngineDeathNotifOn;
-                    setState(() {
-                      _isEngineDeathNotifOn = isEngineDeathNotifOn;
-                    });
-                    prefs.setBool('isEngineDeathNotifOn', isEngineDeathNotifOn);
-                  },
-                  label: _isEngineDeathNotifOn
-                      ? const Text(
-                          'Engine Notification: On',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : const Text(
-                          'Engine Notification: Off',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                  icon: _isEngineDeathNotifOn
-                      ? const Icon(MaterialCommunityIcons.engine)
-                      : const Icon(Icons.notifications_off)),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    bool isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
-                    isOilNotifOn = !isOilNotifOn;
-                    setState(() {
-                      _isOilNotifOn = isOilNotifOn;
-                    });
-                    prefs.setBool('isOilNotifOn', isOilNotifOn);
-                  },
-                  label: _isOilNotifOn
-                      ? const Text(
-                          'Oil Notification: On',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : const Text(
-                          'Oil Notification: Off',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                  icon: _isOilNotifOn
-                      ? const Icon(MaterialCommunityIcons.oil_temperature)
-                      : const Icon(Icons.notifications_off)),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    bool isWaterNotifOn =
-                        (prefs.getBool('isWaterNotifOn') ?? true);
-                    isWaterNotifOn = !isWaterNotifOn;
-                    setState(() {
-                      _isWaterNotifOn = isWaterNotifOn;
-                    });
-                    prefs.setBool('isWaterNotifOn', isWaterNotifOn);
-                  },
-                  label: _isWaterNotifOn
-                      ? const Text(
-                          'Water Notification: On',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : const Text(
-                          'Water Notification: Off',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                  icon: _isWaterNotifOn
-                      ? const Icon(MaterialCommunityIcons.water)
-                      : const Icon(Icons.notifications_off)),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    bool isTrayEnabled =
-                        (prefs.getBool('isTrayEnabled') ?? true);
-                    isTrayEnabled = !isTrayEnabled;
-                    setState(() {
-                      _isTrayEnabled = isTrayEnabled;
-                    });
-                    prefs.setBool('isTrayEnabled', isTrayEnabled);
-                  },
-                  label: _isTrayEnabled
-                      ? const Text(
-                          'Minimize to tray: On',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : const Text(
-                          'Minimize to tray: Off',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                  icon: const Icon(MaterialCommunityIcons.tray)),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                label: const Text('More Info'),
-                icon: const Icon(
-                  Icons.info,
-                  color: Colors.cyanAccent,
-                ),
-                onPressed: () async {
-                  await launch(
-                      'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga/');
-                },
-              ),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                label: Text(
-                    'Current red line IAS for flaps: ${_textForIasFlap.value}Km/h'),
-                icon: const Icon(
-                  MaterialCommunityIcons.airplane_takeoff,
-                  color: Colors.red,
-                ),
-                onPressed: () async {
-                  final SharedPreferences prefs = await _prefs;
-                  _textForIasFlap.value = (await Navigator.of(context)
-                      .push(dialogBuilderIasFlap(context)))!;
-                  int textForIasFlap = (prefs.getInt('textForIasFlap') ?? 2000);
-                  setState(() {
-                    textForIasFlap = _textForIasFlap.value;
-                  });
-                  prefs.setInt('textForIasFlap', textForIasFlap);
-                },
-              ),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                label: Text(
-                    'Current red line IAS for gears: ${_textForIasGear.value}Km/h'),
-                onPressed: () async {
-                  final SharedPreferences prefs = await _prefs;
-                  _textForIasGear.value = (await Navigator.of(context)
-                      .push(dialogBuilderIasGear(context)))!;
-                  int textForIasGear = (prefs.getInt('textForIasGear') ?? 2000);
-
-                  setState(() {
-                    textForIasGear = _textForIasGear.value;
-                  });
-                  prefs.setInt('textForIasGear', textForIasGear);
-                },
-                icon: const Icon(
-                  EvilIcons.gear,
-                  color: Colors.deepPurple,
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  label:
-                      Text('Current red line G load: ${_textForGLoad.value}G'),
-                  onPressed: () async {
-                    final SharedPreferences prefs = await _prefs;
-                    _textForGLoad.value = (await Navigator.of(context)
-                        .push(dialogBuilderOverG(context)))!;
-                    int textForGLoad = (prefs.getInt('textForGLoad') ?? 12);
-                    setState(() {
-                      textForGLoad = _textForGLoad.value;
-                    });
-                    prefs.setInt('textForGLoad', textForGLoad);
-                  },
-                  icon: const Icon(
-                    MaterialCommunityIcons.airplane_landing,
-                    color: Colors.amber,
-                  )),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  label: Text(
-                    'In-game Overlay (Hold for font size)',
-                  ),
-                  onLongPress: () async {
-                    showGeneralDialog(
-                        context: context,
-                        pageBuilder: (context, an, an2) {
-                          return SliderClass(
-                              defaultText: transparentFont,
-                              callback: (double value) {
-                                setState(() {
-                                  transparentFont = value;
-                                });
-                              });
-                        });
-                  },
-                  onPressed: () async {
-                    await Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => TransparentPage(
-                          flapLimit: _textForIasFlap.value,
-                          gearLimit: _textForIasGear.value,
-                          gLoad: _textForGLoad.value,
-                          fontSize: transparentFont,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(
-                    MaterialCommunityIcons.window_open,
-                    color: Colors.amber,
-                  )),
-            ),
-            chatSenderFirst != null
-                ? Container(
-                    alignment: Alignment.topCenter,
-                    decoration: const BoxDecoration(color: Colors.black87),
-                    child: chatBuilder(
-                        chatSenderSecond, chatMsgSecond, chatPrefixSecond),
-                  )
-                : Container(),
-            chatSenderFirst != null
-                ? Container(
-                    alignment: Alignment.topCenter,
-                    decoration: const BoxDecoration(color: Colors.black87),
-                    child: chatBuilder(
-                        chatSenderFirst, chatMsgFirst, chatPrefixFirst),
-                  )
-                : Container(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  PreferredSizeWidget? homeAppBar(BuildContext context) {
-    return AppBar(
-        actions: [
-          phoneConnected.value
-              ? RotationTransition(
-                  turns: _controller,
-                  child: IconButton(
-                    onPressed: () async {
-                      displayCapture();
-                    },
-                    icon: Icon(
-                      Icons.wifi_rounded,
-                      color: Colors.green,
-                    ),
-                    tooltip: 'Phone Connected = ${phoneConnected.value}',
-                  ),
-                )
-              : IconButton(
-                  onPressed: () {
-                    displayCapture();
-                  },
-                  icon: Icon(
-                    Icons.wifi_rounded,
-                    color: Colors.red,
-                  ),
-                  tooltip: 'Toggle Stream Mode',
-                ),
-        ],
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.list),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
-        automaticallyImplyLeading: false,
-        elevation: 0.75,
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: vehicleName != 'NULL' && vehicleName != null
-            ? Text("You're flying ${vehicleName}")
-            : (altitude == 32 && minFuel == 0 && flap == 0)
-                ? const Text("You're in Hangar...")
-                : const Text('No vehicle data available / Not flying.'));
-  }
+  // PreferredSizeWidget? homeAppBar(BuildContext context) {
+  //   return AppBar(
+  //       actions: [
+  //         phoneConnected.value
+  //             ? RotationTransition(
+  //                 turns: _controller,
+  //                 child: IconButton(
+  //                   onPressed: () async {
+  //                     displayCapture();
+  //                   },
+  //                   icon: const Icon(
+  //                     Icons.wifi_rounded,
+  //                     color: Colors.green,
+  //                   ),
+  //                   tooltip: 'Phone Connected = ${phoneConnected.value}',
+  //                 ),
+  //               )
+  //             : IconButton(
+  //                 onPressed: () {
+  //                   displayCapture();
+  //                 },
+  //                 icon: const Icon(
+  //                   Icons.wifi_rounded,
+  //                   color: Colors.red,
+  //                 ),
+  //                 tooltip: 'Toggle Stream Mode',
+  //               ),
+  //       ],
+  //       leading: Builder(
+  //         builder: (BuildContext context) {
+  //           return IconButton(
+  //             icon: const Icon(Icons.list),
+  //             onPressed: () {
+  //               Scaffold.of(context).openDrawer();
+  //             },
+  //           );
+  //         },
+  //       ),
+  //       automaticallyImplyLeading: false,
+  //       elevation: 0.75,
+  //       backgroundColor: Colors.transparent,
+  //       centerTitle: true,
+  //       title: vehicleName.value != 'NULL' && vehicleName != null
+  //           ? Text("You're flying ${vehicleName}")
+  //           : (altitude == 32 && minFuel == 0 && flap == 0)
+  //               ? const Text("You're in Hangar...")
+  //               : const Text('No vehicle data available / Not flying.'));
+  // }
 
   void displayCapture() async {
     await launch(delPath);
@@ -1379,7 +889,7 @@ class _HomeState extends State<Home>
   double? engine;
   double? fuelPercent;
   double? avgTAS;
-  double? critAoa;
+  double critAoa = 10000;
   double boxShadowOpacity = 0.07;
   double widget1Opacity = 0.0;
   double normalHeight = 60;
@@ -1401,18 +911,15 @@ class _HomeState extends State<Home>
   int? oil;
   int? water;
 
-  String? vehicleName;
   String? msgData;
-  String? chatMsgFirst;
-  String? chatModeFirst;
-  String? chatSenderFirst;
-  String? chatSenderSecond;
-  String? chatMsgSecond;
-  String? chatModeSecond;
-  String? chatPrefixFirst;
-  String? chatPrefixSecond;
-  String? imageData;
-  String? ipAddress;
+  // String? chatMsgFirst;
+  // String? chatModeFirst;
+  // String? chatSenderFirst;
+  // String? chatSenderSecond;
+  // String? chatMsgSecond;
+  // String? chatModeSecond;
+  // String? chatPrefixFirst;
+  // String? chatPrefixSecond;
   String pathScript = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets/AutoHotkeyU64.ahk'
@@ -1439,10 +946,15 @@ class _HomeState extends State<Home>
     'data/flutter_assets/assets',
     'WARNING.png'
   ]);
-  String csvPath = p.joinAll([
+  String fmPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'fm_data_db.csv'
+  ]);
+  String namesPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'fm_names_db.csv'
   ]);
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
@@ -1452,186 +964,74 @@ class _HomeState extends State<Home>
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
 
   // ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
-  final ValueNotifier<int> _textForIasFlap = ValueNotifier(2000);
-  final ValueNotifier<int> _textForIasGear = ValueNotifier(2000);
-  final ValueNotifier<int> _textForGLoad = ValueNotifier(200);
+
   final ValueNotifier<bool> streamState = ValueNotifier(false);
 
-  ValueNotifier<bool> phoneConnected = ValueNotifier(false);
   ValueNotifier<String?> phoneState = ValueNotifier('');
   bool isStopped = false;
-  bool _isTrayEnabled = true;
   final bool _removeIconAfterRestored = true;
   final bool _showWindowBelowTrayIcon = false;
   bool? valid;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
   bool isUserGLoadNew = false;
-  bool _isFullNotifOn = true;
   bool isDamageIDNew = false;
   bool isDamageMsgNew = false;
   bool run = true;
-  bool isEngineNotifOn = true;
-  bool _isOilNotifOn = true;
-  bool _isEngineDeathNotifOn = true;
-  bool _isWaterNotifOn = true;
+
   bool sendScreen = false;
-  bool playStallWarning = true;
-  bool? chatEnemySecond;
-  bool? chatEnemyFirst;
+
   bool critAoaBool = false;
-  bool nonePost = false;
-  bool isPullUpEnabled = true;
-  double transparentFont = 30.0;
-  Color? chatColorFirst;
-  Color? chatColorSecond;
+
   Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
   final windowManager = WindowManager.instance;
 
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(seconds: 2),
-    vsync: this,
-  )..repeat(reverse: false, period: Duration(seconds: 1));
-
-  final List _isHovering = [
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false
-  ];
-
-  bool _isProcessing = false;
-
-  Widget topBar(BuildContext context, Widget drawer) {
-    var screenSize = MediaQuery.of(context).size;
-
-    return PreferredSize(
-      preferredSize: Size(screenSize.width, 1000),
-      child: Container(
-        color: Colors.blueGrey,
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                'WTbgA',
-                style: TextStyle(
-                  color: Colors.blueGrey[100],
-                  fontSize: 20,
-                  fontFamily: 'Montserrat',
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 3,
-                ),
-              ),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    SizedBox(width: screenSize.width / 8),
-                    SizedBox(width: screenSize.width / 20),
-                  ],
-                ),
-              ),
-              SizedBox(
-                width: screenSize.width / 50,
-              ),
-              InkWell(
-                onHover: (value) {
-                  setState(() {
-                    value ? _isHovering[3] = true : _isHovering[3] = false;
-                  });
-                },
-                onTap: userEmail == null
-                    ? () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AuthDialog(),
-                        );
-                      }
-                    : null,
-                child: userEmail == null
-                    ? Text(
-                        'Sign in',
-                        style: TextStyle(
-                          color: _isHovering[3] ? Colors.white : Colors.white70,
-                        ),
-                      )
-                    : Row(
-                        children: [
-                          SizedBox(width: 5),
-                          Text(
-                            name ?? userEmail!,
-                            style: TextStyle(
-                              color: _isHovering[3]
-                                  ? Colors.white
-                                  : Colors.white70,
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              primary: Colors.blueGrey,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                            onPressed: _isProcessing
-                                ? null
-                                : () async {
-                                    setState(() {
-                                      _isProcessing = true;
-                                    });
-                                    await signOut().then((result) {
-                                      print(result);
-                                      Navigator.of(context).pushReplacement(
-                                        MaterialPageRoute(
-                                          fullscreenDialog: true,
-                                          builder: (context) => Home(),
-                                        ),
-                                      );
-                                    }).catchError((error) {
-                                      print('Sign Out Error: $error');
-                                    });
-                                    setState(() {
-                                      _isProcessing = false;
-                                    });
-                                  },
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                top: 8.0,
-                                bottom: 8.0,
-                              ),
-                              child: _isProcessing
-                                  ? CircularProgressIndicator()
-                                  : Text(
-                                      'Sign out',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                            ),
-                          )
-                        ],
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // late final AnimationController _controller = AnimationController(
+  //   duration: const Duration(seconds: 2),
+  //   vsync: this,
+  // )..repeat(reverse: false, period: const Duration(seconds: 1));
 
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
-
+    ref.listen(phoneConnectedProvider, (previous, next) {
+      if (next as bool) {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(const SnackBar(
+              duration: Duration(seconds: 3),
+              content: BlinkText(
+                'Phone connected!',
+                style: TextStyle(color: Colors.blue),
+                endColor: Colors.red,
+              )));
+        Toast toast = Toast(
+          type: ToastType.text02,
+          title: '✅Connection Detected!',
+          subtitle: 'WTbgA Mobile connected',
+        );
+        service!.show(toast);
+        toast.dispose();
+      } else {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(const SnackBar(
+              duration: Duration(seconds: 3),
+              content: BlinkText(
+                'Phone disconnected!',
+                style: TextStyle(color: Colors.blue),
+                endColor: Colors.red,
+              )));
+        Toast toast = Toast(
+          type: ToastType.text02,
+          title: '✅Connection ended!',
+          subtitle: 'WTbgA Mobile disconnected',
+        );
+        service!.show(toast);
+        toast.dispose();
+      }
+    });
     return Stack(children: [
       ImageFiltered(
         imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -1643,12 +1043,11 @@ class _HomeState extends State<Home>
         ),
       ),
       Scaffold(
-          drawer: drawerBuilder(),
           backgroundColor: Colors.transparent,
           resizeToAvoidBottomInset: true,
           appBar: PreferredSize(
             preferredSize: Size(screenSize.width, 1000),
-            child: topBar(context, drawerBuilder()),
+            child: const TopBar(),
           ),
           body: Flex(
             direction: Axis.horizontal,
@@ -1671,134 +1070,117 @@ class _HomeState extends State<Home>
                           children: [
                             Expanded(
                               child: Container(
-                                alignment: Alignment.center,
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
                                 child: RichText(
                                   text: TextSpan(children: [
                                     TextSpan(
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 40),
                                         text:
-                                            '  Throttle= ${shot.data!.throttle1} %')
+                                            'Throttle= ${shot.data!.throttle1} %')
                                   ]),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                alignment: Alignment.center,
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
                                 child: RichText(
                                   text: TextSpan(children: [
                                     TextSpan(
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 40),
-                                        text: '  IAS= ${shot.data!.ias} km/h')
+                                        text: 'IAS= ${shot.data!.ias} km/h')
                                   ]),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                alignment: Alignment.center,
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
                                 child: RichText(
                                   text: TextSpan(children: [
                                     TextSpan(
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 40),
                                         text:
-                                            '  Altitude= ${shot.data!.altitude} m')
+                                            'Altitude= ${shot.data!.altitude} m')
                                   ]),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                alignment: Alignment.center,
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
                                 child: RichText(
                                   text: TextSpan(children: [
                                     TextSpan(
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 40),
-                                        text:
-                                            '  Climb= ${shot.data!.climb} m/s')
+                                        text: 'Climb= ${shot.data!.climb} m/s')
                                   ]),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                alignment: Alignment.center,
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
                                 child: RichText(
                                   text: TextSpan(children: [
                                     TextSpan(
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 40),
                                         text:
-                                            '  Fuel= ${fuel.toStringAsFixed(1)} %')
+                                            'Fuel= ${fuel.toStringAsFixed(1)} %')
                                   ]),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                alignment: Alignment.center,
-                                // decoration: BoxDecoration(
-                                //     gradient: const LinearGradient(
-                                //       colors: [
-                                //         Color.fromRGBO(
-                                //             10, 123, 10, 0.403921568627451),
-                                //         Color.fromRGBO(
-                                //             0, 50, 158, 0.4196078431372549),
-                                //       ],
-                                //       begin: Alignment.centerLeft,
-                                //       end: Alignment.centerRight,
-                                //     ),
-                                //     borderRadius: const BorderRadius.all(
-                                //       Radius.circular(20.0),
-                                //     ),
-                                //     boxShadow: [
-                                //       BoxShadow(
-                                //         color: Colors.red
-                                //             .withOpacity(boxShadowOpacity),
-                                //         spreadRadius: 4,
-                                //         blurRadius: 7,
-                                //         offset: const Offset(0, 3),
-                                //       )
-                                //     ]),
+                                alignment: Alignment.topLeft,
+                                padding: const EdgeInsets.only(left: 20),
                                 child: RichText(
                                   text: TextSpan(children: [
                                     TextSpan(
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 40),
                                         text:
-                                            '  Oil Temp= ${shot.data!.oilTemp1C}°c')
+                                            'Oil Temp= ${shot.data!.oilTemp1C}°c')
                                   ]),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                alignment: Alignment.center,
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
                                 child: RichText(
                                   text: TextSpan(children: [
                                     TextSpan(
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 40),
                                         text:
-                                            '  Water Temp= ${shot.data!.waterTemp1C}°c')
+                                            'Water Temp= ${shot.data!.waterTemp1C}°c')
                                   ]),
                                 ),
                               ),
@@ -1807,13 +1189,14 @@ class _HomeState extends State<Home>
                         );
                       } else if (shot.hasError) {
                         // print(shot.error);
-                        return Center(
+                        return const Center(
                             child: BlinkText(
                           'ERROR: NO DATA',
                           endColor: Colors.red,
+                          style: TextStyle(color: Colors.white, fontSize: 40),
                         ));
                       } else {
-                        return Center(
+                        return const Center(
                             child: SizedBox(
                           height: 100,
                           width: 100,
@@ -1827,40 +1210,44 @@ class _HomeState extends State<Home>
               FutureBuilder<ToolDataIndicator>(
                   future: ToolDataIndicator.getIndicator(),
                   builder: (context, AsyncSnapshot<ToolDataIndicator> shot) {
+                    var vehicleName = ref.read(vehicleNameProvider.notifier);
+
                     if (shot.hasData) {
-                      vehicleName = shot.data!.type;
+                      vehicleName.state = shot.data!.type;
                       if (shot.data!.mach == null) shot.data!.mach = -0;
                       return Flex(
                         direction: Axis.vertical,
                         children: [
                           Expanded(
                             child: Container(
+                              padding: const EdgeInsets.only(left: 20),
                               alignment: Alignment.center,
                               child: RichText(
                                 text: TextSpan(children: [
                                   TextSpan(
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 40),
                                       text:
-                                          '  Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
+                                          'Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
                                 ]),
                               ),
                             ),
                           ),
                           Expanded(
                             child: Container(
+                              padding: const EdgeInsets.only(left: 20),
                               alignment: Alignment.center,
                               child: RichText(
                                 text: TextSpan(children: [
                                   TextSpan(
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 40),
                                       text:
-                                          '  Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
+                                          'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
                                 ]),
                               ),
                             ),
@@ -1870,14 +1257,17 @@ class _HomeState extends State<Home>
                     }
                     if (shot.hasError) {
                       // print(shot.error);
-                      return Center(
-                          child: BlinkText(
-                        'ERROR: NO DATA',
-                        style: TextStyle(fontSize: 35),
-                        endColor: Colors.red,
+                      return const Center(
+                          child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: BlinkText(
+                          'ERROR: NO DATA',
+                          style: TextStyle(fontSize: 35),
+                          endColor: Colors.black,
+                        ),
                       ));
                     } else {
-                      return Center(
+                      return const Center(
                           child: SizedBox(
                         height: 100,
                         width: 100,
@@ -1927,7 +1317,9 @@ class _HomeState extends State<Home>
 
   @override
   void onWindowMinimize() {
-    if (_isTrayEnabled) {
+    var tray = ref.read(trayProvider.notifier);
+
+    if (tray.state) {
       windowManager.hide();
       _trayInit();
     }
@@ -1939,75 +1331,5 @@ class _HomeState extends State<Home>
       windowManager.show();
       _trayUnInit();
     }
-  }
-}
-
-class SliderClass extends StatefulWidget {
-  double defaultText;
-  final DoubleCallBack callback;
-
-  SliderClass({Key? key, required this.defaultText, required this.callback})
-      : super(key: key);
-
-  @override
-  _SliderClassState createState() => _SliderClassState();
-}
-
-typedef DoubleCallBack(double value);
-
-class _SliderClassState extends State<SliderClass> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  Future<void> loadPrefs() async {
-    prefs.then((SharedPreferences prefs) {
-      widget.defaultText = (prefs.getDouble('fontSize') ?? 40);
-    });
-  }
-
-  Future<SharedPreferences> prefs = SharedPreferences.getInstance();
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.blueGrey,
-      appBar: AppBar(
-        backgroundColor: Colors.purple,
-        title: Text('Set font size'),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Padding(padding: EdgeInsets.only(top: 100)),
-          Center(
-            child: Slider(
-              min: 20,
-              max: 80,
-              divisions: 60,
-              label: widget.defaultText.round().toString(),
-              value: widget.defaultText,
-              onChanged: (double value) async {
-                widget.callback(value);
-                widget.defaultText = value;
-                setState(() {});
-                final SharedPreferences _prefs = await prefs;
-
-                double _defaultText = (_prefs.getDouble('fontSize') ?? 40);
-                setState(() {
-                  _defaultText = widget.defaultText;
-                });
-                _prefs.setDouble('fontSize', _defaultText);
-              },
-            ),
-          ),
-          Center(
-              child: Text(
-            'Example:',
-            style: TextStyle(fontSize: widget.defaultText),
-          ))
-        ],
-      ),
-    );
   }
 }

@@ -31,7 +31,7 @@ class ChatEvents {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['msg'] = msg;
     data['sender'] = sender;
@@ -71,12 +71,12 @@ class ChatEvents {
 
   @override
   String toString() {
-    return 'ChatEvents{' +
-        ' id: $id,' +
-        ' msg: $msg,' +
-        ' sender: $sender,' +
-        ' enemy: $enemy,' +
-        ' mode: $mode,' +
+    return 'ChatEvents{'
+        ' id: $id,'
+        ' msg: $msg,'
+        ' sender: $sender,'
+        ' enemy: $enemy,'
+        ' mode: $mode,'
         '}';
   }
 
@@ -98,11 +98,11 @@ class ChatEvents {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': this.id,
-      'msg': this.msg,
-      'sender': this.sender,
-      'enemy': this.enemy,
-      'mode': this.mode,
+      'id': id,
+      'msg': msg,
+      'sender': sender,
+      'enemy': enemy,
+      'mode': mode,
     };
   }
 

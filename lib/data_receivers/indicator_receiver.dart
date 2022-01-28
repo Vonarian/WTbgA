@@ -35,8 +35,9 @@ class ToolDataIndicator {
         ToolDataIndicator toolDataIndicator =
             ToolDataIndicator.fromMap(indicatorData);
         return toolDataIndicator;
-      } else
+      } else {
         throw 0;
+      }
     } catch (e) {
       rethrow;
     }
@@ -44,15 +45,15 @@ class ToolDataIndicator {
 
   Map<String, dynamic> toMap() {
     return {
-      'name': this.type,
-      'throttle': this.throttle,
-      'mach': this.mach,
-      'compass': this.compass,
-      'engine': this.engine,
-      'flap1': this.flap1,
-      'flap2': this.flap2,
-      'vertical': this.vertical,
-      'valid': this.valid,
+      'name': type,
+      'throttle': throttle,
+      'mach': mach,
+      'compass': compass,
+      'engine': engine,
+      'flap1': flap1,
+      'flap2': flap2,
+      'vertical': vertical,
+      'valid': valid,
     };
   }
 

@@ -32,8 +32,8 @@ dependencies:
   path: ^1.8.0
   window_manager: ^0.1.4
   flutter_vector_icons: ^1.0.0
-  firebase_core_desktop: ^0.1.1-dev.3
-  firedart: ^0.9.0+1
+#  firebase_core_desktop: ^0.1.1-dev.3
+#  firedart: ^0.9.0+1
 
   #  screen_recorder:
   #  dart_vlc:
@@ -51,7 +51,9 @@ dependencies:
   archive: ^3.1.9
   #    flutter_riverpod: 1.0.0-dev.10
   libwinmedia: ^0.0.7
-  firebase_core: ^1.11.0
+  flutter_riverpod: ^1.0.3
+
+    #  firebase_core: ^1.11.0
     #  response: ^1.0.0
 
     #  adaptive_theme:
@@ -72,6 +74,7 @@ dev_dependencies:
   msix:  2.8.2
   build_runner: ^2.0.0
   json_serializable:
+  flutter_lints: ^1.0.4
 
 
 # For information on the generic Dart part of this file, see the
@@ -91,11 +94,12 @@ flutter:
     - assets/WARNING.png
     - assets/warning_female.mp3
     - assets/logoWTbgA.jpg
-    - assets/OverG.mp3
-    - assets/GearUp.wav
-    - assets/PullUp.mp3
+    - assets/sounds/OverG.mp3
+    - assets/sounds/GearUp.wav
+    - assets/sounds/PullUp.mp3
     - assets/app_icon.ico
     - assets/fm_data_db.csv
+    - assets/fm_names_db.csv
     #    - assets/ffmpeg.exe
     - assets/del.bat
     - assets/mona/

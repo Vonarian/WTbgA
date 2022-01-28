@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data_receivers/github.dart';
 import 'package:wtbgassistant/services/utility.dart';
@@ -17,11 +18,20 @@ class Downloader extends StatefulWidget {
   _DownloaderState createState() => _DownloaderState();
 }
 
-class _DownloaderState extends State<Downloader> {
+class _DownloaderState extends State<Downloader>
+    with WindowListener, TrayListener {
   @override
   void initState() {
     super.initState();
     setupFuture();
+    windowManager.setAsFrameless();
+    windowManager.addListener(this);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    windowManager.removeListener(this);
   }
 
   String errorLogPath = p.joinAll([
@@ -70,7 +80,7 @@ class _DownloaderState extends State<Downloader> {
         await Process.run('start', ['cmd.exe', '/c', properPath],
             runInShell: true);
 
-        Future.delayed(Duration(seconds: 2), () async {
+        Future.delayed(const Duration(seconds: 2), () async {
           await Process.run('taskkill', ['/F', '/IM', 'wtbgassistant.exe']);
         });
       }).timeout(const Duration(minutes: 8));
@@ -80,7 +90,8 @@ class _DownloaderState extends State<Downloader> {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
-            duration: Duration(seconds: 10), content: Text(e.toString())));
+            duration: const Duration(seconds: 10),
+            content: Text(e.toString())));
       final String finalString = 'Logging:'
           '\nError:\n'
           '$e'
@@ -115,7 +126,7 @@ class _DownloaderState extends State<Downloader> {
                           ),
                           Text(
                             '${progress.toStringAsFixed(1)} %',
-                            style: TextStyle(fontSize: 15),
+                            style: const TextStyle(fontSize: 15),
                           ),
                         ],
                       )
@@ -130,5 +141,30 @@ class _DownloaderState extends State<Downloader> {
                 radius: 100,
               )),
         ));
+  }
+
+  final bool _showWindowBelowTrayIcon = false;
+  Future<void> _handleClickRestore() async {
+    windowManager.restore();
+    windowManager.show();
+  }
+
+  @override
+  void onTrayIconMouseDown() async {
+    if (_showWindowBelowTrayIcon) {
+      Size windowSize = await windowManager.getSize();
+      Rect trayIconBounds = await TrayManager.instance.getBounds();
+      Size trayIconSize = trayIconBounds.size;
+      Offset trayIconNewPosition = trayIconBounds.topLeft;
+
+      Offset newPosition = Offset(
+        trayIconNewPosition.dx - ((windowSize.width - trayIconSize.width) / 2),
+        trayIconNewPosition.dy,
+      );
+
+      windowManager.setPosition(newPosition);
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    _handleClickRestore();
   }
 }
