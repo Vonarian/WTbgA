@@ -1011,13 +1011,19 @@ class _HomeState extends ConsumerState<Home>
       }
     });
     return Stack(children: [
-      ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Image.asset(
-          'assets/bg.jpg',
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          fit: BoxFit.cover,
+      Container(
+        foregroundDecoration: const BoxDecoration(
+          color: Colors.grey,
+          backgroundBlendMode: BlendMode.saturation,
+        ),
+        child: ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Image.asset(
+            'assets/bg.jpg',
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
       Scaffold(
@@ -1049,6 +1055,8 @@ class _HomeState extends ConsumerState<Home>
                             Expanded(
                               child: Container(
                                 padding: const EdgeInsets.only(left: 20),
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
                                 alignment: Alignment.topLeft,
                                 child: RichText(
                                   text: TextSpan(children: [
@@ -1065,6 +1073,8 @@ class _HomeState extends ConsumerState<Home>
                             ),
                             Expanded(
                               child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
                                 padding: const EdgeInsets.only(left: 20),
                                 alignment: Alignment.topLeft,
                                 child: RichText(
@@ -1081,6 +1091,8 @@ class _HomeState extends ConsumerState<Home>
                             ),
                             Expanded(
                               child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
                                 padding: const EdgeInsets.only(left: 20),
                                 alignment: Alignment.topLeft,
                                 child: RichText(
@@ -1098,6 +1110,8 @@ class _HomeState extends ConsumerState<Home>
                             ),
                             Expanded(
                               child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
                                 padding: const EdgeInsets.only(left: 20),
                                 alignment: Alignment.topLeft,
                                 child: RichText(
@@ -1114,6 +1128,8 @@ class _HomeState extends ConsumerState<Home>
                             ),
                             Expanded(
                               child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
                                 padding: const EdgeInsets.only(left: 20),
                                 alignment: Alignment.topLeft,
                                 child: RichText(
@@ -1131,6 +1147,8 @@ class _HomeState extends ConsumerState<Home>
                             ),
                             Expanded(
                               child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
                                 alignment: Alignment.topLeft,
                                 padding: const EdgeInsets.only(left: 20),
                                 child: RichText(
@@ -1148,6 +1166,8 @@ class _HomeState extends ConsumerState<Home>
                             ),
                             Expanded(
                               child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
                                 padding: const EdgeInsets.only(left: 20),
                                 alignment: Alignment.topLeft,
                                 child: RichText(
@@ -1166,13 +1186,16 @@ class _HomeState extends ConsumerState<Home>
                           ],
                         );
                       } else if (shot.hasError) {
-                        // print(shot.error);
-                        return const Center(
-                            child: BlinkText(
-                          'ERROR: NO DATA',
-                          endColor: Colors.red,
-                          style: TextStyle(color: Colors.white, fontSize: 40),
-                        ));
+                        return Container(
+                          decoration: BoxDecoration(
+                              color: Colors.blueGrey.withOpacity(0.3)),
+                          child: const Center(
+                              child: BlinkText(
+                            'ERROR: NO DATA',
+                            endColor: Colors.red,
+                            style: TextStyle(color: Colors.white, fontSize: 40),
+                          )),
+                        );
                       } else {
                         return const Center(
                             child: SizedBox(
@@ -1185,75 +1208,90 @@ class _HomeState extends ConsumerState<Home>
                       }
                     }),
               ),
-              FutureBuilder<ToolDataIndicator>(
-                  future: ToolDataIndicator.getIndicator(),
-                  builder: (context, AsyncSnapshot<ToolDataIndicator> shot) {
-                    if (shot.hasData) {
-                      ref.read(vehicleNameProvider.notifier).state =
-                          shot.data!.type;
+              Expanded(
+                child: FutureBuilder<ToolDataIndicator>(
+                    future: ToolDataIndicator.getIndicator(),
+                    builder: (context, AsyncSnapshot<ToolDataIndicator> shot) {
+                      if (shot.hasData) {
+                        WidgetsBinding.instance?.addPostFrameCallback((_) {
+                          ref.read(vehicleNameProvider.notifier).state =
+                              shot.data!.type;
+                        });
 
-                      if (shot.data!.mach == null) shot.data!.mach = -0;
-                      return Flex(
-                        direction: Axis.vertical,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.only(right: 20),
-                              alignment: Alignment.center,
-                              child: RichText(
-                                text: TextSpan(children: [
-                                  TextSpan(
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 40),
-                                      text:
-                                          'Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
-                                ]),
+                        if (shot.data!.mach == null) shot.data!.mach = -0;
+                        return Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
+                                padding: const EdgeInsets.only(right: 20),
+                                alignment: Alignment.center,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
+                                  ]),
+                                ),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.only(right: 20),
-                              alignment: Alignment.center,
-                              child: RichText(
-                                text: TextSpan(children: [
-                                  TextSpan(
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 40),
-                                      text:
-                                          'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
-                                ]),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.blueGrey.withOpacity(0.3)),
+                                padding: const EdgeInsets.only(right: 20),
+                                alignment: Alignment.center,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
+                                  ]),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      );
-                    }
-                    if (shot.hasError) {
-                      return const Center(
-                          child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: BlinkText(
+                          ],
+                        );
+                      }
+                      if (shot.hasError) {
+                        WidgetsBinding.instance?.addPostFrameCallback((_) {
+                          ref.read(vehicleNameProvider.notifier).state =
+                              'Vehicle Name not available';
+                        });
+                        return Center(
+                          child: Container(
+                              decoration: BoxDecoration(
+                                  color: Colors.blueGrey.withOpacity(0.3)),
+                              padding: const EdgeInsets.all(8.0),
+                              child: const BlinkText(
                                 'ERROR: NO DATA',
                                 endColor: Colors.red,
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 40),
-                              )));
-                    } else {
-                      return const Center(
-                          child: SizedBox(
-                        height: 100,
-                        width: 100,
-                        child: CircularProgressIndicator(
-                          color: Colors.red,
-                        ),
-                      ));
-                    }
-                  })
+                              )),
+                        );
+                      } else {
+                        return const Center(
+                            child: SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: CircularProgressIndicator(
+                            color: Colors.red,
+                          ),
+                        ));
+                      }
+                    }),
+              )
             ],
           ))
     ]);
