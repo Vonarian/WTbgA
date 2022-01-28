@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:wtbgassistant/screens/widgets/providers.dart';
 import 'package:wtbgassistant/screens/widgets/slider.dart';
 
+import '../downloader.dart';
 import '../transparent.dart';
 
 class TopDrawer extends ConsumerStatefulWidget {
@@ -365,6 +366,10 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
                   color: Colors.cyanAccent,
                 ),
                 onPressed: () async {
+                  Navigator.of(context)
+                      .pushReplacement(MaterialPageRoute(builder: (context) {
+                    return const Downloader();
+                  }));
                   await launch(
                       'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga/');
                 },

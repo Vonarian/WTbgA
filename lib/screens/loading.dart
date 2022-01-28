@@ -55,7 +55,7 @@ class _LoadingState extends State<Loading> {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
-            duration: Duration(seconds: 10),
+            duration: const Duration(seconds: 10),
             content: Text(
                 'Version: $version ___ Status: Error checking for update!')));
       Future.delayed(const Duration(seconds: 4), () async {

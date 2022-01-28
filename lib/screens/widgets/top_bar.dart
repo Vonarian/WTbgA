@@ -43,7 +43,7 @@ class _TopBarState extends ConsumerState<TopBar> {
                 ),
               ),
               Text(
-                (vehicleName.state ?? 'ERROR').toUpperCase(),
+                (ref.watch(vehicleNameProvider) ?? 'ERROR').toUpperCase(),
                 style: TextStyle(
                   color: Colors.blueGrey[100],
                   fontSize: 20,

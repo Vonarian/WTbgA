@@ -95,9 +95,7 @@ class _HomeState extends ConsumerState<Home>
       }
       if (ias! < flapIas.state) {
         if (!mounted) return;
-        setState(() {
-          isUserIasFlapNew = true;
-        });
+        isUserIasFlapNew = true;
       }
     }
   }
@@ -128,9 +126,7 @@ class _HomeState extends ConsumerState<Home>
         gearUpPlayer.play();
       }
       if (ias! < gearIas.state) {
-        setState(() {
-          isUserIasGearNew = true;
-        });
+        isUserIasGearNew = true;
       }
     }
   }
@@ -285,29 +281,12 @@ class _HomeState extends ConsumerState<Home>
   bool? emptyBool;
   ValueNotifier<int?> idData = ValueNotifier<int?>(null);
 
-  // Future<void> updatePhone() async {
-  //   Timer.periodic(const Duration(milliseconds: 4000), (_) async {
-  //     PhoneData dataForPhone = await PhoneData.getPhoneData(phoneIP.value);
-  //     phoneConnected.value = dataForPhone.active!;
-  //     phoneState.value = dataForPhone.state;
-  //   });
-  // }
-
   Future<ToolDataState> updateState() async {
     try {
       ToolDataState state = await ToolDataState.getState();
       return state;
     } catch (e) {
       // log(e.toString(), stackTrace: st);
-      rethrow;
-    }
-  }
-
-  Future<ToolDataIndicator> updateIndicator() async {
-    try {
-      ToolDataIndicator indicator = await ToolDataIndicator.getIndicator();
-      return indicator;
-    } catch (e) {
       rethrow;
     }
   }
@@ -387,13 +366,9 @@ class _HomeState extends ConsumerState<Home>
     if (!mounted) return;
     if (secondSpeed == null) return;
     if (ias != null) {
-      setState(() {
-        firstSpeed = ias;
-      });
+      firstSpeed = ias;
       Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          secondSpeed = ias;
-        });
+        secondSpeed = ias;
       });
     }
   }
@@ -646,6 +621,7 @@ class _HomeState extends ConsumerState<Home>
     const Duration averageTimer = Duration(milliseconds: 2000);
     Timer.periodic(averageTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
+      if (!mounted || isStopped) t.cancel();
       averageIasForStall();
       // hostChecker();
     });
@@ -692,6 +668,8 @@ class _HomeState extends ConsumerState<Home>
     });
     Future.delayed(const Duration(milliseconds: 250), () async {
       widget1Opacity = 1;
+      await windowManager.setMaximumSize(const Size(2000, 2000));
+
       _csvThing();
     });
   }
@@ -1210,17 +1188,17 @@ class _HomeState extends ConsumerState<Home>
               FutureBuilder<ToolDataIndicator>(
                   future: ToolDataIndicator.getIndicator(),
                   builder: (context, AsyncSnapshot<ToolDataIndicator> shot) {
-                    var vehicleName = ref.read(vehicleNameProvider.notifier);
-
                     if (shot.hasData) {
-                      vehicleName.state = shot.data!.type;
+                      ref.read(vehicleNameProvider.notifier).state =
+                          shot.data!.type;
+
                       if (shot.data!.mach == null) shot.data!.mach = -0;
                       return Flex(
                         direction: Axis.vertical,
                         children: [
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.only(left: 20),
+                              padding: const EdgeInsets.only(right: 20),
                               alignment: Alignment.center,
                               child: RichText(
                                 text: TextSpan(children: [
@@ -1237,7 +1215,7 @@ class _HomeState extends ConsumerState<Home>
                           ),
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.only(left: 20),
+                              padding: const EdgeInsets.only(right: 20),
                               alignment: Alignment.center,
                               child: RichText(
                                 text: TextSpan(children: [
@@ -1256,16 +1234,15 @@ class _HomeState extends ConsumerState<Home>
                       );
                     }
                     if (shot.hasError) {
-                      // print(shot.error);
                       return const Center(
                           child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: BlinkText(
-                          'ERROR: NO DATA',
-                          style: TextStyle(fontSize: 35),
-                          endColor: Colors.black,
-                        ),
-                      ));
+                              padding: EdgeInsets.all(8.0),
+                              child: BlinkText(
+                                'ERROR: NO DATA',
+                                endColor: Colors.red,
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 40),
+                              )));
                     } else {
                       return const Center(
                           child: SizedBox(

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:desktoasts/desktoasts.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -9,6 +10,7 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data_receivers/github.dart';
+import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
 class Downloader extends StatefulWidget {
@@ -24,26 +26,35 @@ class _DownloaderState extends State<Downloader>
   void initState() {
     super.initState();
     setupFuture();
-    windowManager.setAsFrameless();
+    // windowManager.setAsFrameless();
     windowManager.addListener(this);
+    trayManager.addListener(this);
   }
 
   @override
   void dispose() {
     super.dispose();
     windowManager.removeListener(this);
+    trayManager.removeListener(this);
   }
 
   String errorLogPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/logs/errors'
   ]);
+
+  Toast toast = Toast(
+      type: ToastType.text02,
+      title: 'Downloading WTbgA update',
+      subtitle: 'Please do not close the application!');
+
   Future<void> setupFuture() async {
-    Data data = await Data.getData();
     await windowManager.setMinimumSize(const Size(230, 300));
     await windowManager.setMaximumSize(const Size(600, 600));
     await windowManager.setSize(const Size(230, 300));
-
+    service!.show(toast);
+    toast.dispose();
+    Data data = await Data.getData();
     try {
       Dio dio = Dio();
       await dio.download(data.assets.last.browserDownloadUrl,
