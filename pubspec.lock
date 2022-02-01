@@ -176,6 +176,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.1"
+  csv:
+    dependency: "direct main"
+    description:
+      name: csv
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "5.0.1"
   dart_discord_rpc:
     dependency: "direct main"
     description:
@@ -218,13 +225,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.0.4"
-  draggable_widget:
-    dependency: "direct main"
-    description:
-      name: draggable_widget
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.0"
   fake_async:
     dependency: transitive
     description:
@@ -834,7 +834,7 @@ packages:
     source: hosted
     version: "2.1.0"
   win32:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: win32
       url: "https://pub.dartlang.org"

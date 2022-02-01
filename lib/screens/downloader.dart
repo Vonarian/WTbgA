@@ -26,7 +26,7 @@ class _DownloaderState extends State<Downloader>
   void initState() {
     super.initState();
     setupFuture();
-    // windowManager.setAsFrameless();
+    windowManager.setAsFrameless();
     windowManager.addListener(this);
     trayManager.addListener(this);
   }
@@ -54,8 +54,9 @@ class _DownloaderState extends State<Downloader>
     await windowManager.setSize(const Size(230, 300));
     service!.show(toast);
     toast.dispose();
-    Data data = await Data.getData();
     try {
+      Data data = await Data.getData();
+
       Dio dio = Dio();
       await dio.download(data.assets.last.browserDownloadUrl,
           '${p.dirname(Platform.resolvedExecutable)}/data/update.zip',

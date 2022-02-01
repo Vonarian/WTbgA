@@ -13,7 +13,6 @@ class ToolDataIndicator {
   double? flap2;
   double? vertical;
   bool valid;
-
   ToolDataIndicator(
       {required this.type,
       required this.throttle,
@@ -52,7 +51,7 @@ class ToolDataIndicator {
       'engine': engine,
       'flap1': flap1,
       'flap2': flap2,
-      'vertical': vertical,
+      'aviahorizon_pitch': vertical,
       'valid': valid,
     };
   }
@@ -66,7 +65,9 @@ class ToolDataIndicator {
       engine: map.containsKey('engine') ? map['engine'] as double : null,
       flap1: map.containsKey('flap1') ? map['flap1'] as double : null,
       flap2: map.containsKey('flap2') ? map['flap2'] as double : null,
-      vertical: map.containsKey('vertical') ? map['vertical'] as double : null,
+      vertical: map.containsKey('aviahorizon_pitch')
+          ? -map['aviahorizon_pitch'] as double
+          : null,
       valid: map['valid'] as bool,
     );
   }

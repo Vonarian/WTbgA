@@ -28,28 +28,28 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
   await Window.initialize();
-
+  // captureScreen();
   await windowManager.ensureInitialized();
   await windowManager.setTitle('WTbgA');
   var warningPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
-    'warning_female.mp3'
+    'sounds/warning_female.mp3'
   ]);
   var overGPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
-    'OverG.mp3'
+    'sounds/OverG.mp3'
   ]);
   var gearUpPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
-    'GearUp.wav'
+    'sounds/GearUp.wav'
   ]);
   var pullUpPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
-    'PullUp.mp3'
+    'sounds/PullUp.mp3'
   ]);
   // FirebaseOptions firebaseOptions = FirebaseOptions(
   //   appId: fireBaseConfig['appId'] ?? '',
@@ -77,10 +77,9 @@ void main() async {
   overGPlayer.open([Media(uri: overGPath)]);
   gearUpPlayer.open([Media(uri: gearUpPath)]);
   pullUpPlayer.open([Media(uri: pullUpPath)]);
-  pullUpPlayer.open([Media(uri: pullUpPath)]);
 
   service = ToastService(
-    appName: 'WarThunder Background Assistant',
+    appName: 'WTbgA',
     companyName: 'VonarianTheGreat',
     productName: 'WarThunder Background Assistant',
   );

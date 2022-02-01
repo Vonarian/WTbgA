@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:blinking_text/blinking_text.dart';
-import 'package:draggable_widget/draggable_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
@@ -29,18 +28,18 @@ class TransparentPage extends StatefulWidget {
 
 class _TransparentPageState extends State<TransparentPage> {
   WindowEffect effect = WindowEffect.transparent;
-  Color color = Platform.isWindows ? Color(0x00222222) : Colors.transparent;
-  final dragController = DragController();
+  Color color =
+      Platform.isWindows ? const Color(0x00222222) : Colors.transparent;
 
   @override
   void initState() {
     super.initState();
 
-    Timer.periodic(Duration(milliseconds: 500), (timer) {
+    Timer.periodic(const Duration(milliseconds: 500), (timer) async {
       if (!mounted) return;
       setState(() {});
     });
-    this.setWindowEffect(this.effect);
+    setWindowEffect(effect);
     setWindow();
   }
 
@@ -69,8 +68,8 @@ class _TransparentPageState extends State<TransparentPage> {
   }
 
   Future<void> setWindowEffect(WindowEffect? value) async {
-    Window.setEffect(effect: value!, color: this.color);
-    this.setState(() => this.effect = value);
+    Window.setEffect(effect: value!, color: color);
+    setState(() => effect = value);
   }
 
   String path = p.joinAll([
@@ -81,11 +80,16 @@ class _TransparentPageState extends State<TransparentPage> {
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets/AutoHotkeyU64.exe'
   ]);
+  String pathPng = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets/image.png'
+  ]);
   bool flashGear = false;
   bool flashFlap = false;
   bool flashLoad = false;
   bool inHangar = true;
   bool show = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,14 +129,14 @@ class _TransparentPageState extends State<TransparentPage> {
                 ? Center(
                     child: Column(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           height: 0150,
                         ),
                         Center(
                           child: Flex(
                             direction: Axis.horizontal,
                             children: [
-                              Expanded(flex: 1, child: SizedBox()),
+                              const Expanded(flex: 1, child: SizedBox()),
                               Expanded(
                                   flex: 3,
                                   child: Column(
@@ -198,7 +202,7 @@ class _TransparentPageState extends State<TransparentPage> {
                                       ),
                                     ],
                                   )),
-                              Expanded(flex: 1, child: SizedBox()),
+                              const Expanded(flex: 1, child: SizedBox()),
                               Expanded(
                                   flex: 3,
                                   child: Column(
@@ -273,7 +277,7 @@ class _TransparentPageState extends State<TransparentPage> {
                                       ),
                                     ],
                                   )),
-                              Expanded(flex: 1, child: SizedBox()),
+                              const Expanded(flex: 1, child: SizedBox()),
                             ],
                           ),
                         ),
@@ -283,7 +287,7 @@ class _TransparentPageState extends State<TransparentPage> {
                 : Container();
           }
           if (snapshot.hasError && show) {
-            return Text('ERROR: INVALID DATA');
+            return const Text('ERROR: INVALID DATA');
           } else {
             return Container();
           }

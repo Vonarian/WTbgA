@@ -3,7 +3,7 @@
 @echo Network IP: %NetworkIP%
 goto main
 :main
-IF EXIST ".\data\flutter_assets\assets\ffmpeg.exe" (
+IF EXIST "%~dp0\ffmpeg.exe" (
 @echo FOUND FFMPEG.EXE
   @timeout 1 /nobreak >NUL
   @echo Loading...
@@ -11,7 +11,7 @@ IF EXIST ".\data\flutter_assets\assets\ffmpeg.exe" (
 
 @echo Starting Server...
 
- .\data\flutter_assets\assets\mona\MonaTiny.exe
+start /IM  %~dp0\mona\MonaTiny.exe
 @timeout 1 /nobreak >NUL
 @echo Starting Stream...
 @timeout 2 /nobreak >NUL

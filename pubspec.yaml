@@ -14,7 +14,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 2.1.0+1
+version: 2.5.1
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -23,8 +23,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.3
-  #  flutter_spinkit: "^5.0.0"
-  #  image:
+
   desktoasts: ^0.0.2
   blinking_text: ^1.0.1+2
   json_annotation:
@@ -32,12 +31,7 @@ dependencies:
   path: ^1.8.0
   window_manager: ^0.1.4
   flutter_vector_icons: ^1.0.0
-#  firebase_core_desktop: ^0.1.1-dev.3
-#  firedart: ^0.9.0+1
 
-  #  screen_recorder:
-  #  dart_vlc:
-  #  obs_websocket: ^2.2.7
   tray_manager: ^0.1.0
   shared_preferences: ^2.0.7
   hotkey_manager: ^0.1.1
@@ -45,24 +39,18 @@ dependencies:
   flutter_acrylic:
   network_info_plus: ^2.0.2
   dart_discord_rpc: ^0.0.2
-  draggable_widget: ^2.0.0
   percent_indicator:
   dio: ^4.0.4
   archive: ^3.1.9
-  #    flutter_riverpod: 1.0.0-dev.10
   libwinmedia: ^0.0.7
   flutter_riverpod: ^1.0.3
-
+  csv: ^5.0.1
+  win32:
     #  firebase_core: ^1.11.0
     #  response: ^1.0.0
 
     #  adaptive_theme:
 
-  #  just_audio_platform_interface: ^4.0.0
-  #  just_audio: ^0.9.10
-  #  bitsdojo_window:
-  #  animations: ^2.0.1
-  #  plugin_platform_interface: ^2.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -108,6 +96,7 @@ flutter:
     - assets/AutoHotkeyU64.exe
     - assets/Version/version.txt
     - assets/checker.bat
+#    - assets/lib/gdi32.dll
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

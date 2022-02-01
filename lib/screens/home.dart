@@ -16,10 +16,10 @@ import 'package:network_info_plus/network_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/screens/widgets/providers.dart';
 import 'package:wtbgassistant/screens/widgets/top_bar.dart';
+import 'package:wtbgassistant/services/csv_class.dart';
+import 'package:wtbgassistant/services/providers.dart';
 
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
@@ -73,59 +73,25 @@ class _HomeState extends ConsumerState<Home>
   // }
 
   void userRedLineFlap() {
-    var flapIas = ref.read(flapIasProvider.notifier);
+    var flapIas = ref.read(flapLimitProvider.notifier);
     if (flap == null) return;
     if (ias != null) {
-      if (ias! >= flapIas.state && isUserIasFlapNew && flap! > 0) {
-        Toast toast = Toast(
-            type: ToastType.imageAndText02,
-            title: '😳Flap WARNING!',
-            subtitle:
-                'Be careful, flaps are open and IAS has reached red line!',
-            image: File(warningLogo));
-        service!.show(toast);
-        toast.dispose();
-        service?.stream.listen((event) {
-          if (event is ToastActivated) {
-            windowManager.show();
-          }
-        });
+      if (ias! >= flapIas.state && flap! >= 10) {
         player.play();
-        isUserIasFlapNew = false;
-      }
-      if (ias! < flapIas.state) {
-        if (!mounted) return;
-        isUserIasFlapNew = true;
       }
     }
   }
 
   void userRedLineGear() {
-    var gearIas = ref.read(gearIasProvider.notifier);
-
     if (!mounted) return;
     if (ias != null) {
-      if (ias! >= gearIas.state && isUserIasGearNew && gear! > 0) {
-        Toast toast = Toast(
-            type: ToastType.imageAndText02,
-            title: '😳Gear WARNING!',
-            subtitle:
-                'Be careful, gears are open and IAS has reached red line!',
-            image: File(warningLogo));
-        service!.show(toast);
-        toast.dispose();
-        service?.stream.listen((event) {
-          if (event is ToastActivated) {
-            windowManager.show();
-          }
-        });
-        gearUpPlayer.play();
-        isUserIasGearNew = false;
-      }
-      if (ias! >= gearIas.state && gear! > 0) {
+      if (ias! >= ref.read(gearLimitProvider.notifier).state && gear! > 0) {
         gearUpPlayer.play();
       }
-      if (ias! < gearIas.state) {
+      if (ias! >= ref.read(gearLimitProvider.notifier).state && gear! > 0) {
+        gearUpPlayer.play();
+      }
+      if (ias! < ref.read(gearLimitProvider.notifier).state) {
         isUserIasGearNew = true;
       }
     }
@@ -135,25 +101,19 @@ class _HomeState extends ConsumerState<Home>
     var pullUpNotif = ref.read(pullUpNotifProvider.notifier);
 
     if (!mounted || !pullUpNotif.state) return;
-    if (vertical != null &&
-        (ias! > 400 &&
-            climb != null &&
-            climb! < -60 &&
-            vertical! <= 135 &&
-            vertical! >= 50) &&
-        altitude! < 2200) {
-      pullUpPlayer.play();
+    if (vertical != null && ias != null) {
+      if (vertical! <= -65 && ias! >= 600) {
+        pullUpPlayer.play();
+      }
     }
   }
 
-  Future<void> loadChecker() async {
+  void loadChecker() {
     var gLoad = ref.read(gLoadProvider.notifier);
     var fullNotif = ref.read(fullNotifProvider.notifier);
-
     if (!mounted) return;
     if (!fullNotif.state) return;
-
-    if (isUserGLoadNew && load != null && load! >= gLoad.state) {
+    if (load != null && load! >= gLoad.state) {
       overGPlayer.play();
     }
   }
@@ -280,7 +240,7 @@ class _HomeState extends ConsumerState<Home>
   String? emptyString = 'No Data';
   bool? emptyBool;
   ValueNotifier<int?> idData = ValueNotifier<int?>(null);
-
+  late Future<ToolDataState> stateFuture = updateState();
   Future<ToolDataState> updateState() async {
     try {
       ToolDataState state = await ToolDataState.getState();
@@ -341,10 +301,8 @@ class _HomeState extends ConsumerState<Home>
   }
 
   void flapChecker() {
-    if (flap1 == null) return;
     if (!run) return;
-    if (((flap1 != flap2) ||
-        msgData == 'Asymmetric flap extension' && isDamageIDNew)) {
+    if (msgData == 'Asymmetric flap extension' && isDamageIDNew) {
       Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳Flap WARNING!!',
@@ -352,11 +310,6 @@ class _HomeState extends ConsumerState<Home>
           image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
-      service?.stream.listen((event) {
-        if (event is ToastActivated) {
-          windowManager.show();
-        }
-      });
       isDamageIDNew = false;
       player.play();
     }
@@ -375,18 +328,26 @@ class _HomeState extends ConsumerState<Home>
 
   Future<void> critAoaChecker() async {
     var stallNotif = ref.read(stallNotifProvider.notifier);
-    if (aoa == null || critAoa == 10000 || gear == null) return;
-
-    if (gear! > 0) return;
-    if (secondSpeed == null || firstSpeed == null) return;
-    int averageIas = secondSpeed! - firstSpeed!;
-    if (averageIas <= 10) return;
-
-    if (critAoa != 10000 && (aoa! >= (critAoa * -1)) && stallNotif.state) {
-      pullUpPlayer.play();
-      critAoaBool = true;
+    if (aoa == null || critAoa == 10000) return;
+    if (!stallNotif.state) return;
+    if (gear! > 0) {
+      critAoaBool = false;
+      return;
     }
-    if (!(critAoa != 10000 && (aoa! >= (critAoa * -1)))) {
+    if (vertical! >= 10 && flap! <= 10 && aoa! >= critAoa) {
+      // pullUpPlayer.play();
+      critAoaBool = true;
+    } else if (vertical! <= -10 && flap! <= 10 && aoa! <= critAoa) {
+      // pullUpPlayer.play();
+      critAoaBool = true;
+    } else if (vertical! <= -10 && flap! >= 10 && aoa! <= critAoa) {
+      critAoa = fmData!.critAoa4;
+      // pullUpPlayer.play();
+      critAoaBool = true;
+    } else if (vertical! >= 10 && flap! >= 10 && aoa! >= critAoa) {
+      // pullUpPlayer.play();
+      critAoaBool = true;
+    } else {
       critAoaBool = false;
     }
   }
@@ -401,6 +362,9 @@ class _HomeState extends ConsumerState<Home>
     var phoneConnected = ref.read(phoneConnectedProvider.notifier);
     var vehicleName = ref.read(vehicleNameProvider.notifier);
     var ipAddress = ref.read(ipAddressProvider.notifier);
+    var streamState = ref.read(streamStateProvider.notifier);
+    var phoneState = ref.read(phoneStateProvider.notifier);
+
     int check = 0;
     Future.delayed(const Duration(milliseconds: 800), () {
       HttpServer.bind(InternetAddress.anyIPv4, 55200).then((HttpServer server) {
@@ -409,6 +373,7 @@ class _HomeState extends ConsumerState<Home>
           WebSocketTransformer.upgrade(request).then((WebSocket ws) {
             ws.listen(
               (data) {
+                phoneConnected.state = true;
                 nonePost.state = false;
                 headerColor = Colors.deepPurple;
                 drawerIcon = Icons.settings;
@@ -452,8 +417,8 @@ class _HomeState extends ConsumerState<Home>
                         content: Text('Abnormal connection request detected')));
                 }
                 phoneConnected.state = (internalData['WTbgA']);
-                phoneState.value = (internalData['state']);
-                streamState.value = internalData['startStream'];
+                phoneState.state = (internalData['state']);
+                streamState.state = internalData['startStream'];
                 Timer(const Duration(milliseconds: 300), () {
                   if (ws.readyState == WebSocket.open) {
                     ws.add(json.encode(serverData));
@@ -494,8 +459,6 @@ class _HomeState extends ConsumerState<Home>
     var pullUpNotif = ref.read(pullUpNotifProvider.notifier);
     var waterNotif = ref.read(waterNotifProvider.notifier);
     var tray = ref.read(trayProvider.notifier);
-    var flapIas = ref.read(flapIasProvider.notifier);
-    var gearIas = ref.read(gearIasProvider.notifier);
     var gLoad = ref.read(gLoadProvider.notifier);
     var stallNotif = ref.read(stallNotifProvider.notifier);
 
@@ -527,22 +490,51 @@ class _HomeState extends ConsumerState<Home>
     _prefs.then((SharedPreferences prefs) {
       fullNotif.state = (prefs.getBool('isFullNotifOn') ?? true);
     });
-    _prefs.then((SharedPreferences prefs) {
-      flapIas.state = (prefs.getInt('textForIasFlap') ?? 2000);
-      if (flapIas.state != 2000) {
-        isUserIasFlapNew = true;
-      }
-    });
-    _prefs.then((SharedPreferences prefs) {
-      gearIas.state = (prefs.getInt('textForIasGear') ?? 2000);
-      if (gearIas.state != 2000) {
-        isUserIasGearNew = true;
-      }
-    });
+
     _prefs.then((SharedPreferences prefs) {
       gLoad.state = (prefs.getInt('textForGLoad') ?? 12);
       if (gLoad.state != 2000) {
         isUserGLoadNew = true;
+      }
+    });
+  }
+
+  void listener() {
+    ref.listen(phoneConnectedProvider, (previous, next) {
+      if (next as bool) {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(const SnackBar(
+              duration: Duration(seconds: 3),
+              content: BlinkText(
+                'Phone connected!',
+                style: TextStyle(color: Colors.blue),
+                endColor: Colors.red,
+              )));
+        Toast toast = Toast(
+          type: ToastType.text02,
+          title: '✅Connection Detected!',
+          subtitle: 'WTbgA Mobile connected',
+        );
+        service!.show(toast);
+        toast.dispose();
+      } else {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(const SnackBar(
+              duration: Duration(seconds: 3),
+              content: BlinkText(
+                'Phone disconnected!',
+                style: TextStyle(color: Colors.blue),
+                endColor: Colors.red,
+              )));
+        Toast toast = Toast(
+          type: ToastType.text02,
+          title: '✅Connection ended!',
+          subtitle: 'WTbgA Mobile disconnected',
+        );
+        service!.show(toast);
+        toast.dispose();
       }
     });
   }
@@ -552,7 +544,9 @@ class _HomeState extends ConsumerState<Home>
     final info = NetworkInfo();
 
     var wifiIP = await info.getWifiIP();
-    ipAddress.state = wifiIP!;
+    if (wifiIP != null) {
+      ipAddress.state = wifiIP;
+    }
   }
 
   @override
@@ -586,16 +580,18 @@ class _HomeState extends ConsumerState<Home>
     updateMsgId();
     updateChat();
     // chatSettingsManager();
+
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) async {
-      var phoneConnected = ref.read(phoneConnectedProvider.notifier);
+      var phoneConnected = ref.watch(phoneConnectedProvider);
       if (!mounted || isStopped) t.cancel();
       rpc.updatePresence(
         DiscordPresence(
-          state: phoneConnected.state ? 'Using WTbgA - Mobile!' : 'Using WTbgA',
-          details: phoneConnected.state
+          state: phoneConnected ? 'Using WTbgA - Mobile!' : 'Using WTbgA',
+          details: phoneConnected
               ? 'Enjoying both desktop and mobile WTbgA!'
-              : phoneConnected.state && phoneState.value == 'image'
+              : phoneConnected &&
+                      ref.read(phoneStateProvider.notifier).state == 'image'
                   ? 'Streaming using WTbgA'
                   : 'Enjoying WTbgA!',
           startTimeStamp: dateTimeNow,
@@ -610,30 +606,37 @@ class _HomeState extends ConsumerState<Home>
       flapChecker();
       updateChat();
       // chatSettingsManager();
-      critAoaChecker();
+      // critAoaChecker();
     });
-    const Duration oneSec = Duration(milliseconds: 200);
+    const Duration oneSec = Duration(milliseconds: 50);
     Timer.periodic(oneSec, (Timer t) async {
       if (!mounted || isStopped) return;
-
-      setState(() {});
+      stateFuture = updateState();
+      if (!inTray) {
+        setState(() {});
+      }
     });
-    const Duration averageTimer = Duration(milliseconds: 2000);
+    Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!mounted || isStopped) return;
+
+      if (inTray) {
+        setState(() {});
+      }
+    });
+    const Duration averageTimer = Duration(milliseconds: 1200);
     Timer.periodic(averageTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
-      if (!mounted || isStopped) t.cancel();
       averageIasForStall();
+      critAoaChecker();
+
       // hostChecker();
     });
     windowManager.addListener(this);
 
-    phoneState.addListener(() {
-      if (phoneState.value == 'home') {
+    ref.read(phoneStateProvider.notifier).addListener((state) {
+      if (ref.read(phoneStateProvider.notifier).state == 'home') {
         sendScreen = false;
       }
-    });
-    vehicleName.addListener((state) {
-      _csvThing();
     });
 
     idData.addListener(() async {
@@ -648,29 +651,36 @@ class _HomeState extends ConsumerState<Home>
 
       run = true;
     });
-    streamState.addListener(() async {
-      if (streamState.value == true) displayCapture();
-      if (streamState.value == false) await Process.run(terminatePath, []);
+    ref.read(streamStateProvider.notifier).addListener((state) async {
+      if (state == true) displayCapture();
+      if (state == false) await Process.run(terminatePath, []);
     });
 
     var fullNotif = ref.read(fullNotifProvider.notifier);
-    const redLineTimer = Duration(milliseconds: 1500);
+    const redLineTimer = Duration(milliseconds: 350);
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       if (!fullNotif.state) return;
-      {
-        userRedLineFlap();
-        userRedLineGear();
-        loadChecker();
-        pullUpChecker();
-      }
+      userRedLineFlap();
+      userRedLineGear();
+      loadChecker();
+      pullUpChecker();
+      checkCritAoa();
       // _csvThing();
     });
     Future.delayed(const Duration(milliseconds: 250), () async {
-      widget1Opacity = 1;
       await windowManager.setMaximumSize(const Size(2000, 2000));
+      csvNames = await File(namesPath).readAsString();
 
-      _csvThing();
+      Map<String, String> namesMap = convertNamesToMap(csvNames);
+      fmData = await FmData.setObject(namesMap[vehicleName.state] ?? '');
+    });
+    vehicleName.addListener((state) async {
+      Map<String, String> namesMap = convertNamesToMap(csvNames);
+      fmData = await FmData.setObject(namesMap[state] ?? '');
+      if (fmData != null) {
+        ref.read(gearLimitProvider.notifier).state = fmData!.critGearSpd;
+      }
     });
   }
 
@@ -688,42 +698,21 @@ class _HomeState extends ConsumerState<Home>
     isStopped = true;
   }
 
-  Future<void> _csvThing() async {
-    var vehicleName = ref.read(vehicleNameProvider.notifier);
-    String csvFm = await File(fmPath).readAsString();
-    final String csvNames = await File(namesPath).readAsString();
-    Map<String, String> namesMap = convertNamesToMap(csvNames);
-    csvFm = csvFm.replaceAll(',', ';');
-    critAoa = convertFmToMap(csvFm)[namesMap[vehicleName.state]]!['critAoA'];
-  }
-
-  Map<String, Map<String, dynamic>> convertFmToMap(String csvString) {
-    Map<String, Map<String, dynamic>> map = {};
-
-    for (final rows in LineSplitter.split(csvString)
-        .skip(1)
-        .map((line) => line.split(';'))) {
-      map[rows.first] = {
-        'length': double.parse(rows[1]),
-        'wingSpan': double.parse(rows[2]),
-        'wingArea': rows[3],
-        'emptyMass': rows[4],
-        'maxFuelMass': rows[5],
-        'critAirSpd': rows[6],
-        'critAirSpdMach': rows[7],
-        'critGearSpd': rows[8],
-        'combatFlaps': rows[9],
-        'takeoffFlaps': rows[10],
-        'critFlapsSpd': rows[11],
-        'critWingOverload': rows[12],
-        'numEngines': rows[13],
-        'maxNitro': rows[14],
-        'nitroConsum': rows[15],
-        'critAoA': double.parse(rows.last),
-      };
+  Future<void> checkCritAoa() async {
+    if (fmData != null) {
+      if (vertical! >= 10 && flap! <= 10) {
+        critAoa = fmData!.critAoa1;
+      }
+      if (vertical! <= -10 && flap! <= 10) {
+        critAoa = fmData!.critAoa2;
+      }
+      if (vertical! <= -10 && flap! >= 10) {
+        critAoa = fmData!.critAoa4;
+      }
+      if (vertical! >= 10 && flap! >= 10) {
+        critAoa = fmData!.critAoa3;
+      }
     }
-
-    return map;
   }
 
   Map<String, String> convertNamesToMap(String csvStringNames) {
@@ -744,10 +733,12 @@ class _HomeState extends ConsumerState<Home>
     );
     List<MenuItem> menuItems = [MenuItem(key: 'show-app', title: 'Show')];
     await TrayManager.instance.setContextMenu(menuItems);
+    inTray = true;
   }
 
   void _trayUnInit() async {
     await TrayManager.instance.destroy();
+    inTray = false;
   }
 
   Future<void> exitFS() async {
@@ -852,7 +843,7 @@ class _HomeState extends ConsumerState<Home>
   // }
 
   void displayCapture() async {
-    await launch(delPath);
+    await Process.run(delPath, [], runInShell: true);
   }
 
   Player pullUpPlayer = Player(id: 3);
@@ -875,10 +866,9 @@ class _HomeState extends ConsumerState<Home>
   double normalFont = 20;
   double smallFont = 17;
   double? compass;
-  double? flap1, flap2, vertical;
   double? load, throttle;
   double? mach;
-
+  double? vertical;
   int counter = 0;
   int? lastId;
   int? firstSpeed;
@@ -888,8 +878,9 @@ class _HomeState extends ConsumerState<Home>
   int? altitude;
   int? oil;
   int? water;
-
+  FmData? fmData;
   String? msgData;
+  String csvNames = '';
   // String? chatMsgFirst;
   // String? chatModeFirst;
   // String? chatSenderFirst;
@@ -937,15 +928,9 @@ class _HomeState extends ConsumerState<Home>
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  // ValueNotifier<String> phoneIP = ValueNotifier('');
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
 
-  // ValueNotifier<String?> msgDataNotifier = ValueNotifier('2000');
-
-  final ValueNotifier<bool> streamState = ValueNotifier(false);
-
-  ValueNotifier<String?> phoneState = ValueNotifier('');
   bool isStopped = false;
   final bool _removeIconAfterRestored = true;
   final bool _showWindowBelowTrayIcon = false;
@@ -958,58 +943,39 @@ class _HomeState extends ConsumerState<Home>
   bool run = true;
 
   bool sendScreen = false;
-
+  bool inTray = false;
   bool critAoaBool = false;
-
+  List<Color> colorList = [
+    // Colors.grey.withOpacity(0.3),
+    // Colors.grey.withOpacity(0.3),
+    Colors.blueGrey.withOpacity(0.3),
+    Colors.blueGrey.withOpacity(0.3),
+    Colors.blueGrey.withOpacity(0.3),
+    Colors.black.withOpacity(0.3),
+    Colors.black.withOpacity(0.3),
+  ];
+  List<Alignment> alignmentList = [
+    Alignment.bottomLeft,
+    Alignment.bottomRight,
+    Alignment.topRight,
+    Alignment.topLeft,
+  ];
+  int index = 0;
+  Color bottomColor = Colors.grey.withOpacity(0.3);
+  Color topColor = Colors.blueGrey.withOpacity(0.3);
+  Alignment begin = Alignment.bottomLeft;
+  Alignment end = Alignment.topRight;
   Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
   final windowManager = WindowManager.instance;
-
-  // late final AnimationController _controller = AnimationController(
-  //   duration: const Duration(seconds: 2),
-  //   vsync: this,
-  // )..repeat(reverse: false, period: const Duration(seconds: 1));
-
+  bool inHangar = false;
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
-    ref.listen(phoneConnectedProvider, (previous, next) {
-      if (next as bool) {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(const SnackBar(
-              duration: Duration(seconds: 3),
-              content: BlinkText(
-                'Phone connected!',
-                style: TextStyle(color: Colors.blue),
-                endColor: Colors.red,
-              )));
-        Toast toast = Toast(
-          type: ToastType.text02,
-          title: '✅Connection Detected!',
-          subtitle: 'WTbgA Mobile connected',
-        );
-        service!.show(toast);
-        toast.dispose();
-      } else {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(const SnackBar(
-              duration: Duration(seconds: 3),
-              content: BlinkText(
-                'Phone disconnected!',
-                style: TextStyle(color: Colors.blue),
-                endColor: Colors.red,
-              )));
-        Toast toast = Toast(
-          type: ToastType.text02,
-          title: '✅Connection ended!',
-          subtitle: 'WTbgA Mobile disconnected',
-        );
-        service!.show(toast);
-        toast.dispose();
-      }
+    Future.delayed(const Duration(milliseconds: 10), () {
+      bottomColor = Colors.black.withOpacity(0.7);
     });
+    listener();
     return Stack(children: [
       Container(
         foregroundDecoration: const BoxDecoration(
@@ -1033,266 +999,344 @@ class _HomeState extends ConsumerState<Home>
             preferredSize: Size(screenSize.width, 1000),
             child: const TopBar(),
           ),
-          body: Flex(
-            direction: Axis.horizontal,
-            children: [
-              Expanded(
-                child: FutureBuilder<ToolDataState>(
-                    future: updateState(),
-                    builder: (context, AsyncSnapshot<ToolDataState> shot) {
-                      if (shot.hasData) {
-                        ias = shot.data!.ias;
-                        gear = shot.data!.gear;
-                        flap = shot.data!.flaps;
-                        altitude = shot.data!.altitude;
-                        oil = shot.data!.oilTemp1C;
-                        water = shot.data!.waterTemp1C;
-                        double fuel =
-                            shot.data!.fuel / shot.data!.maxFuel * 100;
-                        return Flex(
-                          direction: Axis.vertical,
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 20),
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Throttle= ${shot.data!.throttle1} %')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text: 'IAS= ${shot.data!.ias} km/h')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Altitude= ${shot.data!.altitude} m')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text: 'Climb= ${shot.data!.climb} m/s')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Fuel= ${fuel.toStringAsFixed(1)} %')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                alignment: Alignment.topLeft,
-                                padding: const EdgeInsets.only(left: 20),
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Oil Temp= ${shot.data!.oilTemp1C}°c')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Water Temp= ${shot.data!.waterTemp1C}°c')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      } else if (shot.hasError) {
-                        return Container(
-                          decoration: BoxDecoration(
-                              color: Colors.blueGrey.withOpacity(0.3)),
-                          child: const Center(
-                              child: BlinkText(
-                            'ERROR: NO DATA',
-                            endColor: Colors.red,
-                            style: TextStyle(color: Colors.white, fontSize: 40),
-                          )),
-                        );
-                      } else {
-                        return const Center(
-                            child: SizedBox(
-                          height: 100,
-                          width: 100,
-                          child: CircularProgressIndicator(
-                            color: Colors.red,
-                          ),
-                        ));
-                      }
-                    }),
-              ),
-              Expanded(
-                child: FutureBuilder<ToolDataIndicator>(
-                    future: ToolDataIndicator.getIndicator(),
-                    builder: (context, AsyncSnapshot<ToolDataIndicator> shot) {
-                      if (shot.hasData) {
-                        WidgetsBinding.instance?.addPostFrameCallback((_) {
-                          ref.read(vehicleNameProvider.notifier).state =
-                              shot.data!.type;
-                        });
+          body: AnimatedContainer(
+            onEnd: () {
+              index = index + 1;
+              // animate the color
+              bottomColor = colorList[index % colorList.length];
+              topColor = colorList[(index + 1) % colorList.length];
 
-                        if (shot.data!.mach == null) shot.data!.mach = -0;
-                        return Flex(
-                          direction: Axis.vertical,
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                padding: const EdgeInsets.only(right: 20),
-                                alignment: Alignment.center,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
-                                  ]),
+              //// animate the alignment
+              begin = alignmentList[index % alignmentList.length];
+              end = alignmentList[(index + 2) % alignmentList.length];
+            },
+            duration: const Duration(seconds: 2),
+            decoration: BoxDecoration(
+                // color: Colors.blueGrey.withOpacity(0.3),
+                gradient: LinearGradient(
+              begin: begin,
+              end: end,
+              colors: [topColor, bottomColor],
+            )),
+            child: Flex(
+              direction: Axis.horizontal,
+              children: [
+                Expanded(
+                  child: FutureBuilder<ToolDataState>(
+                      future: stateFuture,
+                      builder: (context, AsyncSnapshot<ToolDataState> shot) {
+                        if (shot.hasData) {
+                          ias = shot.data!.ias;
+                          gear = shot.data!.gear;
+                          flap = shot.data!.flaps;
+                          altitude = shot.data!.altitude;
+                          oil = shot.data!.oilTemp1C;
+                          water = shot.data!.waterTemp1C;
+                          aoa = shot.data!.aoa;
+                          load = shot.data!.load;
+                          if ((shot.data!.altitude == 32 ||
+                                  shot.data!.altitude == 31) &&
+                              shot.data!.gear == 100 &&
+                              shot.data!.ias == 0) {
+                            inHangar = true;
+                          } else {
+                            inHangar = false;
+                          }
+                          double fuel =
+                              shot.data!.fuel / shot.data!.maxFuel * 100;
+                          if (inHangar) {
+                            return Flex(
+                              direction: Axis.vertical,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.only(left: 20),
+                                    // decoration: BoxDecoration(
+                                    //     color:
+                                    //         Colors.blueGrey.withOpacity(0.3)),
+                                    alignment: Alignment.center,
+                                    child: RichText(
+                                      text: const TextSpan(
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text: 'In Hangar'),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          return Flex(
+                            direction: Axis.vertical,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Throttle= ${shot.data!.throttle1} %')
+                                    ]),
+                                  ),
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blueGrey.withOpacity(0.3)),
-                                padding: const EdgeInsets.only(right: 20),
-                                alignment: Alignment.center,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
-                                  ]),
+                              Expanded(
+                                child: Container(
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text: 'IAS= ${shot.data!.ias} km/h')
+                                    ]),
+                                  ),
                                 ),
                               ),
+                              Expanded(
+                                child: Container(
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    'Altitude= ${shot.data!.altitude} m',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    'Climb= ${shot.data!.climb} m/s',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                    // decoration: BoxDecoration(
+                                    //   color: Colors.blueGrey.withOpacity(0.3),
+                                    // ),
+                                    padding: const EdgeInsets.only(left: 20),
+                                    alignment: Alignment.topLeft,
+                                    child: fuel <= 13
+                                        ? BlinkText(
+                                            'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 40),
+                                            endColor: Colors.red,
+                                          )
+                                        : Text(
+                                            'Fuel= ${fuel.toStringAsFixed(1)} %',
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 40),
+                                          )),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  alignment: Alignment.topLeft,
+                                  padding: const EdgeInsets.only(left: 20),
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Oil Temp= ${shot.data!.oilTemp1C}°c')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Water Temp= ${shot.data!.waterTemp1C}°c')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: !critAoaBool
+                                      ? Text(
+                                          'AoA= ${shot.data!.aoa}°',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                        )
+                                      : BlinkText(
+                                          'AoA= ${shot.data!.aoa}°',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                        ),
+                                ),
+                              ),
+                            ],
+                          );
+                        } else if (shot.hasError) {
+                          return Container(
+                            // decoration: BoxDecoration(
+                            //     color: Colors.blueGrey.withOpacity(0.3)),
+                            child: const Center(
+                                child: BlinkText(
+                              'ERROR: NO DATA',
+                              endColor: Colors.red,
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 40),
+                            )),
+                          );
+                        } else {
+                          return const Center(
+                              child: SizedBox(
+                            height: 100,
+                            width: 100,
+                            child: CircularProgressIndicator(
+                              color: Colors.red,
                             ),
-                          ],
-                        );
-                      }
-                      if (shot.hasError) {
-                        WidgetsBinding.instance?.addPostFrameCallback((_) {
-                          ref.read(vehicleNameProvider.notifier).state =
-                              'Vehicle Name not available';
-                        });
-                        return Center(
-                          child: Container(
-                              decoration: BoxDecoration(
-                                  color: Colors.blueGrey.withOpacity(0.3)),
-                              padding: const EdgeInsets.all(8.0),
-                              child: const BlinkText(
-                                'ERROR: NO DATA',
-                                endColor: Colors.red,
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 40),
-                              )),
-                        );
-                      } else {
-                        return const Center(
-                            child: SizedBox(
-                          height: 100,
-                          width: 100,
-                          child: CircularProgressIndicator(
-                            color: Colors.red,
-                          ),
-                        ));
-                      }
-                    }),
-              )
-            ],
+                          ));
+                        }
+                      }),
+                ),
+                Expanded(
+                  child: FutureBuilder<ToolDataIndicator>(
+                      future: ToolDataIndicator.getIndicator(),
+                      builder:
+                          (context, AsyncSnapshot<ToolDataIndicator> shot) {
+                        if (shot.hasData) {
+                          WidgetsBinding.instance?.addPostFrameCallback((_) {
+                            ref.read(vehicleNameProvider.notifier).state =
+                                shot.data!.type;
+                            vertical = shot.data!.vertical;
+                          });
+
+                          if (shot.data!.mach == null) shot.data!.mach = -0;
+                          return Flex(
+                            direction: Axis.vertical,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  padding: const EdgeInsets.only(right: 20),
+                                  alignment: Alignment.center,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  // decoration: BoxDecoration(
+                                  //     color: Colors.blueGrey.withOpacity(0.3)),
+                                  padding: const EdgeInsets.only(right: 20),
+                                  alignment: Alignment.center,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                        if (shot.hasError) {
+                          WidgetsBinding.instance?.addPostFrameCallback((_) {
+                            ref.read(vehicleNameProvider.notifier).state =
+                                'Vehicle Name not available';
+                          });
+                          return Center(
+                            child: Container(
+                                // decoration: BoxDecoration(
+                                //     color: Colors.blueGrey.withOpacity(0.3)),
+                                padding: const EdgeInsets.all(8.0),
+                                child: const BlinkText(
+                                  'ERROR: NO DATA',
+                                  endColor: Colors.red,
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 40),
+                                )),
+                          );
+                        } else {
+                          return const Center(
+                              child: SizedBox(
+                            height: 100,
+                            width: 100,
+                            child: CircularProgressIndicator(
+                              color: Colors.red,
+                            ),
+                          ));
+                        }
+                      }),
+                )
+              ],
+            ),
           ))
     ]);
   }
@@ -1346,5 +1390,15 @@ class _HomeState extends ConsumerState<Home>
       windowManager.show();
       _trayUnInit();
     }
+  }
+
+  @override
+  void onWindowFocus() {
+    inTray = false;
+  }
+
+  @override
+  void onWindowBlur() {
+    inTray = true;
   }
 }

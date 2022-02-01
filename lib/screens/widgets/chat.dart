@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wtbgassistant/screens/widgets/providers.dart';
+import 'package:wtbgassistant/services/providers.dart';
 
 class Chat extends ConsumerStatefulWidget {
   const Chat({Key? key}) : super(key: key);

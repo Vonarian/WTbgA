@@ -51,7 +51,7 @@ class _LoadingState extends State<Loading> {
           Navigator.of(context).pushReplacementNamed('/home');
         });
       }
-    } catch (e, st) {
+    } catch (e) {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
@@ -140,7 +140,7 @@ class _LoadingState extends State<Loading> {
             ),
           ),
           body: Center(
-            child: Stack(children: [
+            child: Stack(children: const [
               Center(
                 child: BlinkText(
                   '..: Loading :..',
@@ -152,7 +152,7 @@ class _LoadingState extends State<Loading> {
                 ),
               ),
               Center(
-                child: Container(
+                child: SizedBox(
                   height: 400,
                   width: 400,
                   child: CircularProgressIndicator(
