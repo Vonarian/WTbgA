@@ -9,9 +9,10 @@ import 'package:path/path.dart' as p;
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/data_receivers/github.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/services/utility.dart';
+
+import '../data_receivers/github.dart';
 
 class Downloader extends StatefulWidget {
   const Downloader({Key? key}) : super(key: key);
@@ -83,18 +84,18 @@ class _DownloaderState extends State<Downloader>
           }
         }
 
-        String properPath = (p.joinAll([
+        String msiXPath = (p.joinAll([
           ...p.split(p.dirname(filePath.path)),
           'out',
-          'installer.bat',
+          'WTbgA.msix',
         ]));
-
-        await Process.run('start', ['cmd.exe', '/c', properPath],
-            runInShell: true);
-
-        Future.delayed(const Duration(seconds: 2), () async {
-          exit(0);
-        });
+        await Process.run(
+                'powershell.exe', ['Add-AppPackage', '-path', msiXPath],
+                runInShell: true)
+            .whenComplete(
+                () => Future.delayed(const Duration(seconds: 2), () async {
+                      exit(0);
+                    }));
       }).timeout(const Duration(minutes: 8));
     } catch (e, st) {
       String path = await AppUtil.createFolderInAppDocDir(errorLogPath);
