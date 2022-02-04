@@ -2,7 +2,7 @@
 <p>
 </p>
 
-> A featureful application made for WarThunder, stream your screen, see al in-game values, get warnings for preventing damage (high G-load, gear speed, flap, etc.)
+> A featureful application made for WarThunder, stream your screen, see all in-game values, get warnings for preventing damage (high G-load, gear speed, flap, etc.)
 
 ## Usage
 
