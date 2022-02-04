@@ -10,6 +10,7 @@ import 'package:wtbgassistant/data_receivers/github.dart';
 
 import '../main.dart';
 import 'downloader.dart';
+import 'home.dart';
 
 class Loading extends StatefulWidget {
   const Loading({Key? key}) : super(key: key);
@@ -48,7 +49,15 @@ class _LoadingState extends State<Loading> {
               duration: const Duration(seconds: 10),
               content: Text('Version: $version ___ Status: Up-to-date!')));
         Future.delayed(const Duration(seconds: 4), () async {
-          Navigator.of(context).pushReplacementNamed('/home');
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (c, a1, a2) => const Home(),
+              transitionsBuilder: (c, anim, a2, child) =>
+                  FadeTransition(opacity: anim, child: child),
+              transitionDuration: const Duration(milliseconds: 2000),
+            ),
+          );
         });
       }
     } catch (e) {
@@ -59,7 +68,15 @@ class _LoadingState extends State<Loading> {
             content: Text(
                 'Version: $version ___ Status: Error checking for update!')));
       Future.delayed(const Duration(seconds: 4), () async {
-        Navigator.of(context).pushReplacementNamed('/home');
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (c, a1, a2) => const Home(),
+            transitionsBuilder: (c, anim, a2, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 2000),
+          ),
+        );
       });
     }
   }

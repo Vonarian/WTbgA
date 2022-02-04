@@ -8,6 +8,7 @@ String fmPath = p.joinAll([
   'data/flutter_assets/assets',
   'fm_data_db.csv'
 ]);
+List<String>? rowList;
 
 class FmData {
   String name;
@@ -61,11 +62,10 @@ class FmData {
     required this.critAoa3,
     required this.critAoa4,
   });
-
   static Future<FmData?> setObject(String name) async {
-    List<String> rowList = convertFmToList(await csvString());
+    rowList ??= convertFmToList(await csvString());
     FmData? fmData;
-    for (var element in rowList.skip(1)) {
+    for (var element in rowList!.skip(1)) {
       if (element.split(';')[0] == name) {
         fmData = FmData(
             name: element.split(';')[0],
@@ -79,12 +79,18 @@ class FmData {
             critGearSpd: int.parse(element.split(';')[8]),
             combatFlaps: int.parse(element.split(';')[9]),
             takeOffFlaps: int.parse(element.split(';')[10]),
-            flapState1: double.parse(element.split(';')[11].split(',')[0]),
-            flapState2: double.parse(element.split(';')[11].split(',')[2]),
-            flapDestruction1:
-                double.parse(element.split(';')[11].split(',')[1]),
-            flapDestruction2:
-                double.parse(element.split(';')[11].split(',')[3]),
+            flapState1: element.split(';')[11].isNotEmpty
+                ? double.parse(element.split(';')[11].split(',')[0])
+                : 0,
+            flapState2: element.split(';')[11].isNotEmpty
+                ? double.parse(element.split(';')[11].split(',')[2])
+                : 0,
+            flapDestruction1: element.split(';')[11].isNotEmpty
+                ? double.parse(element.split(';')[11].split(',')[1])
+                : 0,
+            flapDestruction2: element.split(';')[11].isNotEmpty
+                ? double.parse(element.split(';')[11].split(',')[3])
+                : 0,
             critWingOverload1:
                 double.parse(element.split(';')[12].split(',').first)
                     .toDouble(),

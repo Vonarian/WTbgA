@@ -14,8 +14,7 @@ final StateProvider<bool> engineDeathNotifProvider =
 final StateProvider<bool> waterNotifProvider = StateProvider((ref) => true);
 final StateProvider<bool> stallNotifProvider = StateProvider((ref) => true);
 final StateProvider<bool> pullUpNotifProvider = StateProvider((ref) => true);
-// final StateProvider<bool> stallNotifProvider = StateProvider((ref) => true);
-// final StateProvider<bool> pullUpNotifProvider = StateProvider((ref) => true);
+
 final StateProvider<bool> trayProvider = StateProvider((ref) => true);
 final StateProvider<String> ipAddressProvider = StateProvider((ref) => '');
 final StateProvider<String> chatMsgProvider = StateProvider((ref) => '');
@@ -33,7 +32,7 @@ final StateProvider<String> chatPrefixProvider = StateProvider((ref) => '');
 final StateProvider<int> gearLimitProvider = StateProvider((ref) => 1000);
 
 final StateProvider<int> flapLimitProvider = StateProvider((ref) => 800);
-final StateProvider<int> gLoadProvider = StateProvider((ref) => 18);
+
 final StateProvider<double> transparentFontProvider =
     StateProvider((ref) => 40);
 final StateProvider<bool> streamStateProvider = StateProvider((ref) => false);

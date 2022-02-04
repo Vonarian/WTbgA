@@ -31,26 +31,27 @@ void main() async {
   // captureScreen();
   await windowManager.ensureInitialized();
   await windowManager.setTitle('WTbgA');
-  var warningPath = p.joinAll([
+  String warningPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'sounds/warning_female.mp3'
   ]);
-  var overGPath = p.joinAll([
+  String overGPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'sounds/OverG.mp3'
   ]);
-  var gearUpPath = p.joinAll([
+  String gearUpPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'sounds/GearUp.wav'
   ]);
-  var pullUpPath = p.joinAll([
+  String pullUpPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'sounds/PullUp.mp3'
   ]);
+
   // FirebaseOptions firebaseOptions = FirebaseOptions(
   //   appId: fireBaseConfig['appId'] ?? '',
   //   apiKey: fireBaseConfig['apiKey'] ?? '',
@@ -68,10 +69,10 @@ void main() async {
   //     Firestore(fireBaseConfig['projectId'] ?? '', auth: firebaseAuth);
 
   LWM.initialize();
-  var player = Player(id: 0);
-  var overGPlayer = Player(id: 1);
-  var gearUpPlayer = Player(id: 2);
-  var pullUpPlayer = Player(id: 3);
+  Player player = Player(id: 0);
+  Player overGPlayer = Player(id: 1);
+  Player gearUpPlayer = Player(id: 2);
+  Player pullUpPlayer = Player(id: 3);
 
   player.open([Media(uri: warningPath)]);
   overGPlayer.open([Media(uri: overGPath)]);

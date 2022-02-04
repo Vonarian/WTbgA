@@ -6,8 +6,6 @@ import 'dart:ui';
 import 'package:blinking_text/blinking_text.dart';
 import 'package:dart_discord_rpc/dart_discord_rpc.dart';
 import 'package:desktoasts/desktoasts.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,42 +34,6 @@ class Home extends ConsumerStatefulWidget {
 
 class _HomeState extends ConsumerState<Home>
     with WindowListener, TrayListener, TickerProviderStateMixin {
-  // Route<double> sliderFontSize(BuildContext context, double initialValue) {
-  //   TextEditingController userInputIP =
-  //       TextEditingController(text: initialValue.toString());
-  //   return DialogRoute(
-  //       context: context,
-  //       builder: (BuildContext context) => AlertDialog(
-  //             content: Slider(
-  //               min: 20,
-  //               max: 100,
-  //               divisions: 8,
-  //               label: userInputIP.text,
-  //               value: initialValue,
-  //               onChanged: (double value) {
-  //                 userInputIP.text = value.toString();
-  //                 setState(() {});
-  //               },
-  //             ),
-  //             title: const Text('Change font size of transparent page:'),
-  //             actions: [
-  //               ElevatedButton(
-  //                   onPressed: () {
-  //                     Navigator.pop(context);
-  //                   },
-  //                   child: const Text('Cancel')),
-  //               ElevatedButton(
-  //                   onPressed: () {
-  //                     WidgetsBinding.instance!.addPostFrameCallback((_) {
-  //                       Navigator.of(context)
-  //                           .pop(double.parse(userInputIP.text));
-  //                     });
-  //                   },
-  //                   child: const Text('Update'))
-  //             ],
-  //           ));
-  // }
-
   void userRedLineFlap() {
     var flapIas = ref.read(flapLimitProvider.notifier);
     if (flap == null) return;
@@ -109,12 +71,16 @@ class _HomeState extends ConsumerState<Home>
   }
 
   void loadChecker() {
-    var gLoad = ref.read(gLoadProvider.notifier);
     var fullNotif = ref.read(fullNotifProvider.notifier);
     if (!mounted) return;
     if (!fullNotif.state) return;
-    if (load != null && load! >= gLoad.state) {
-      overGPlayer.play();
+    if (fmData != null) {
+      double maxLoad = (fmData!.critWingOverload2 /
+          ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
+
+      if ((load!) >= (maxLoad - 0.4)) {
+        overGPlayer.play();
+      }
     }
   }
 
@@ -264,52 +230,20 @@ class _HomeState extends ConsumerState<Home>
 
   Future<void> updateChat() async {
     List<ChatEvents> dataForChatId = await ChatEvents.getChat();
-    // List<ChatEvents> dataForChatMsg = await ChatEvents.getChat();
-    // List<ChatEvents> dataForChatSender = await ChatEvents.getChat();
-    // List<ChatEvents> dataForChatMode = await ChatEvents.getChat();
+
     if (!mounted) return;
     chatIdFirst.value = dataForChatId.isNotEmpty
         ? dataForChatId[dataForChatId.length - 1].id
         : emptyInt;
-    // chatMsgFirst = dataForChatMsg.isNotEmpty
-    //     ? dataForChatMsg[dataForChatMsg.length - 1].msg
-    //     : emptyString;
-    // chatModeFirst = dataForChatMode.isNotEmpty
-    //     ? dataForChatMode[dataForChatMode.length - 1].mode
-    //     : emptyString;
-    // chatEnemyFirst = dataForChatEnemy.isNotEmpty
-    //     ? dataForChatEnemy[dataForChatEnemy.length - 1].enemy
-    //     : emptyBool;
-    // chatSenderFirst = dataForChatSender.isNotEmpty
-    //     ? dataForChatSender[dataForChatSender.length - 1].sender
-    //     : emptyString;
+
     chatIdSecond.value = dataForChatId.isNotEmpty
         ? dataForChatId[dataForChatId.length - 2].id
         : emptyInt;
-    // chatMsgSecond = dataForChatMsg.isNotEmpty
-    //     ? dataForChatMsg[dataForChatMsg.length - 2].msg
-    //     : emptyString;
-    // chatModeSecond = dataForChatMode.isNotEmpty
-    //     ? dataForChatMode[dataForChatMode.length - 2].mode
-    //     : emptyString;
-    // chatEnemySecond = dataForChatEnemy.isNotEmpty
-    //     ? dataForChatEnemy[dataForChatEnemy.length - 2].enemy
-    //     : emptyBool;
-    // chatSenderSecond = dataForChatSender.isNotEmpty
-    //     ? dataForChatSender[dataForChatSender.length - 2].sender
-    //     : emptyString;
   }
 
   void flapChecker() {
     if (!run) return;
     if (msgData == 'Asymmetric flap extension' && isDamageIDNew) {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳Flap WARNING!!',
-          subtitle: 'Flaps are not opened equally, be careful',
-          image: File(warningLogo));
-      service!.show(toast);
-      toast.dispose();
       isDamageIDNew = false;
       player.play();
     }
@@ -391,7 +325,7 @@ class _HomeState extends ConsumerState<Home>
                   'water': water,
                   'altitude': altitude,
                   'minFuel': minFuel,
-                  'maxFuel': maxFuel,
+                  'maxFuel': fuelMass,
                   'gear': gear,
                   // 'chat1': chatMsgFirst,
                   'chatId1': chatIdFirst.value,
@@ -459,7 +393,6 @@ class _HomeState extends ConsumerState<Home>
     var pullUpNotif = ref.read(pullUpNotifProvider.notifier);
     var waterNotif = ref.read(waterNotifProvider.notifier);
     var tray = ref.read(trayProvider.notifier);
-    var gLoad = ref.read(gLoadProvider.notifier);
     var stallNotif = ref.read(stallNotifProvider.notifier);
 
     var transparentFont = ref.read(transparentFontProvider.notifier);
@@ -489,13 +422,6 @@ class _HomeState extends ConsumerState<Home>
     });
     _prefs.then((SharedPreferences prefs) {
       fullNotif.state = (prefs.getBool('isFullNotifOn') ?? true);
-    });
-
-    _prefs.then((SharedPreferences prefs) {
-      gLoad.state = (prefs.getInt('textForGLoad') ?? 12);
-      if (gLoad.state != 2000) {
-        isUserGLoadNew = true;
-      }
     });
   }
 
@@ -612,17 +538,15 @@ class _HomeState extends ConsumerState<Home>
     Timer.periodic(oneSec, (Timer t) async {
       if (!mounted || isStopped) return;
       stateFuture = updateState();
-      if (!inTray) {
-        setState(() {});
-      }
+      setState(() {});
     });
-    Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (!mounted || isStopped) return;
-
-      if (inTray) {
-        setState(() {});
-      }
-    });
+    // Timer.periodic(const Duration(seconds: 5), (timer) {
+    //   if (!mounted || isStopped) return;
+    //
+    //   if (inTray) {
+    //     setState(() {});
+    //   }
+    // });
     const Duration averageTimer = Duration(milliseconds: 1200);
     Timer.periodic(averageTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
@@ -850,7 +774,6 @@ class _HomeState extends ConsumerState<Home>
   Player gearUpPlayer = Player(id: 2);
   Player overGPlayer = Player(id: 1);
   Player player = Player(id: 0);
-  int? maxFuel;
   int? minFuel;
   int? gear;
   double? aoa;
@@ -941,30 +864,33 @@ class _HomeState extends ConsumerState<Home>
   bool isDamageIDNew = false;
   bool isDamageMsgNew = false;
   bool run = true;
-
+  int fuelMass = 500;
   bool sendScreen = false;
   bool inTray = false;
   bool critAoaBool = false;
   List<Color> colorList = [
-    // Colors.grey.withOpacity(0.3),
-    // Colors.grey.withOpacity(0.3),
     Colors.blueGrey.withOpacity(0.3),
-    Colors.blueGrey.withOpacity(0.3),
-    Colors.blueGrey.withOpacity(0.3),
+    Colors.black.withOpacity(0.3),
+    Colors.black.withOpacity(0.3),
     Colors.black.withOpacity(0.3),
     Colors.black.withOpacity(0.3),
   ];
   List<Alignment> alignmentList = [
-    Alignment.bottomLeft,
+    // Alignment.bottomLeft,
+    Alignment.bottomCenter,
     Alignment.bottomRight,
+    Alignment.centerRight,
     Alignment.topRight,
+    Alignment.topCenter,
     Alignment.topLeft,
+    Alignment.centerLeft,
+    Alignment.bottomLeft,
   ];
   int index = 0;
   Color bottomColor = Colors.grey.withOpacity(0.3);
   Color topColor = Colors.blueGrey.withOpacity(0.3);
   Alignment begin = Alignment.bottomLeft;
-  Alignment end = Alignment.topRight;
+  Alignment end = Alignment.bottomLeft;
   Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
   final windowManager = WindowManager.instance;
@@ -1002,11 +928,9 @@ class _HomeState extends ConsumerState<Home>
           body: AnimatedContainer(
             onEnd: () {
               index = index + 1;
-              // animate the color
               bottomColor = colorList[index % colorList.length];
               topColor = colorList[(index + 1) % colorList.length];
 
-              //// animate the alignment
               begin = alignmentList[index % alignmentList.length];
               end = alignmentList[(index + 2) % alignmentList.length];
             },
@@ -1034,6 +958,7 @@ class _HomeState extends ConsumerState<Home>
                           water = shot.data!.waterTemp1C;
                           aoa = shot.data!.aoa;
                           load = shot.data!.load;
+                          fuelMass = shot.data!.fuel;
                           if ((shot.data!.altitude == 32 ||
                                   shot.data!.altitude == 31) &&
                               shot.data!.gear == 100 &&
@@ -1226,17 +1151,12 @@ class _HomeState extends ConsumerState<Home>
                             ],
                           );
                         } else if (shot.hasError) {
-                          return Container(
-                            // decoration: BoxDecoration(
-                            //     color: Colors.blueGrey.withOpacity(0.3)),
-                            child: const Center(
-                                child: BlinkText(
-                              'ERROR: NO DATA',
-                              endColor: Colors.red,
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 40),
-                            )),
-                          );
+                          return const Center(
+                              child: BlinkText(
+                            'ERROR: NO DATA',
+                            endColor: Colors.red,
+                            style: TextStyle(color: Colors.white, fontSize: 40),
+                          ));
                         } else {
                           return const Center(
                               child: SizedBox(
@@ -1250,10 +1170,10 @@ class _HomeState extends ConsumerState<Home>
                       }),
                 ),
                 Expanded(
-                  child: FutureBuilder<ToolDataIndicator>(
+                  child: FutureBuilder<ToolDataIndicator?>(
                       future: ToolDataIndicator.getIndicator(),
                       builder:
-                          (context, AsyncSnapshot<ToolDataIndicator> shot) {
+                          (context, AsyncSnapshot<ToolDataIndicator?> shot) {
                         if (shot.hasData) {
                           WidgetsBinding.instance?.addPostFrameCallback((_) {
                             ref.read(vehicleNameProvider.notifier).state =
@@ -1324,6 +1244,10 @@ class _HomeState extends ConsumerState<Home>
                                 )),
                           );
                         } else {
+                          WidgetsBinding.instance?.addPostFrameCallback((_) {
+                            ref.read(vehicleNameProvider.notifier).state =
+                                'Vehicle Name not available';
+                          });
                           return const Center(
                               child: SizedBox(
                             height: 100,

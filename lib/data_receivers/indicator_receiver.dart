@@ -24,7 +24,7 @@ class ToolDataIndicator {
       required this.vertical,
       required this.valid});
 
-  static Future<ToolDataIndicator> getIndicator() async {
+  static Future<ToolDataIndicator?> getIndicator() async {
     // make the request
     try {
       Response? response =
@@ -34,8 +34,6 @@ class ToolDataIndicator {
         ToolDataIndicator toolDataIndicator =
             ToolDataIndicator.fromMap(indicatorData);
         return toolDataIndicator;
-      } else {
-        throw 0;
       }
     } catch (e) {
       rethrow;

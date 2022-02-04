@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wtbgassistant/services/providers.dart';
 
-class SliderClass extends StatefulWidget {
+class SliderClass extends ConsumerStatefulWidget {
   final double defaultText;
   final DoubleCallBack callback;
 
@@ -15,23 +17,23 @@ class SliderClass extends StatefulWidget {
 
 typedef DoubleCallBack = Function(double value);
 
-class _SliderClassState extends State<SliderClass> {
+class _SliderClassState extends ConsumerState<SliderClass> {
   @override
   void initState() {
     super.initState();
+    loadPrefs();
   }
 
   Future<void> loadPrefs() async {
     prefs.then((SharedPreferences prefs) {
-      defaultText = (prefs.getDouble('fontSize') ?? 40);
+      ref.read(transparentFontProvider.notifier).state =
+          (prefs.getDouble('fontSize') ?? 40);
     });
   }
 
-  double defaultText = 40;
   Future<SharedPreferences> prefs = SharedPreferences.getInstance();
   @override
   Widget build(BuildContext context) {
-    defaultText = widget.defaultText;
     return Scaffold(
       backgroundColor: Colors.blueGrey,
       appBar: AppBar(
@@ -44,20 +46,23 @@ class _SliderClassState extends State<SliderClass> {
           const Padding(padding: EdgeInsets.only(top: 100)),
           Center(
             child: Slider(
+              activeColor: Colors.red,
+              inactiveColor: Colors.blue,
               min: 20,
               max: 80,
               divisions: 60,
-              label: defaultText.round().toString(),
-              value: defaultText,
+              label: ref.watch(transparentFontProvider).round().toString(),
+              value: ref.watch(transparentFontProvider),
               onChanged: (double value) async {
                 widget.callback(value);
-                defaultText = value;
+                ref.read(transparentFontProvider.notifier).state = value;
                 setState(() {});
                 final SharedPreferences _prefs = await prefs;
 
                 double _defaultText = (_prefs.getDouble('fontSize') ?? 40);
                 setState(() {
-                  _defaultText = defaultText;
+                  _defaultText =
+                      ref.read(transparentFontProvider.notifier).state;
                 });
                 _prefs.setDouble('fontSize', _defaultText);
               },
@@ -66,7 +71,8 @@ class _SliderClassState extends State<SliderClass> {
           Center(
               child: Text(
             'Example:',
-            style: TextStyle(fontSize: defaultText),
+            style: TextStyle(
+                fontSize: ref.read(transparentFontProvider.notifier).state),
           ))
         ],
       ),

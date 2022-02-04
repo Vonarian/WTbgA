@@ -86,9 +86,7 @@ class _TopBarState extends ConsumerState<TopBar> with TickerProviderStateMixin {
                   ? RotationTransition(
                       turns: _controller,
                       child: IconButton(
-                        onPressed: () async {
-                          displayCapture();
-                        },
+                        onPressed: displayCapture,
                         icon: const Icon(
                           Icons.wifi_rounded,
                           color: Colors.green,
@@ -98,9 +96,7 @@ class _TopBarState extends ConsumerState<TopBar> with TickerProviderStateMixin {
                       ),
                     )
                   : IconButton(
-                      onPressed: () {
-                        displayCapture();
-                      },
+                      onPressed: displayCapture,
                       icon: const Icon(
                         Icons.wifi_rounded,
                         color: Colors.red,

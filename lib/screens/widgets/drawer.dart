@@ -17,108 +17,6 @@ class TopDrawer extends ConsumerStatefulWidget {
 }
 
 class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
-  // static Route<int> dialogBuilderIasFlap(BuildContext context) {
-  //   TextEditingController userInputIasFlap = TextEditingController();
-  //   return DialogRoute(
-  //     context: context,
-  //     builder: (BuildContext context) => AlertDialog(
-  //       actions: [
-  //         ElevatedButton(
-  //             onPressed: () {
-  //               Navigator.pop(context);
-  //             },
-  //             child: const Text('Cancel')),
-  //         ElevatedButton(
-  //             onPressed: () {
-  //               ScaffoldMessenger.of(context)
-  //                 ..removeCurrentSnackBar()
-  //                 ..showSnackBar(SnackBar(
-  //                     content: Text(
-  //                         'You will be notified if IAS reaches red line speed of ${userInputIasFlap.text} km/h (With flaps open). ')));
-  //               Navigator.of(context).pop(int.parse(userInputIasFlap.text));
-  //             },
-  //             child: const Text('Notify')),
-  //       ],
-  //       title: const Text('Red line notifier (Enter red line flap speed). '),
-  //       content: TextField(
-  //         onChanged: (value) {},
-  //         controller: userInputIasFlap,
-  //         decoration: const InputDecoration(hintText: 'Enter the IAS in km/h'),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  static Route<int> dialogBuilderOverG(BuildContext context) {
-    TextEditingController userInputOverG = TextEditingController();
-    return DialogRoute(
-        context: context,
-        builder: (BuildContext context) => AlertDialog(
-              content: TextField(
-                onChanged: (value) {},
-                controller: userInputOverG,
-                decoration:
-                    const InputDecoration(hintText: 'Enter the G load number'),
-              ),
-              title: const Text(
-                  'Red line notifier (Enter red line G load speed). '),
-              actions: [
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Cancel')),
-                ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context)
-                        ..removeCurrentSnackBar()
-                        ..showSnackBar(SnackBar(
-                            content: Text(
-                                'You will be notified if G load reaches red line load of ${userInputOverG.text}. ')));
-                      Navigator.of(context).pop(int.parse(userInputOverG.text));
-                    },
-                    child: const Text('Notify'))
-              ],
-            ));
-  }
-
-  // static Route<int> dialogBuilderIasGear(BuildContext context) {
-  //   TextEditingController userInputIasGear = TextEditingController();
-  //   return DialogRoute(
-  //       context: context,
-  //       builder: (BuildContext context) => AlertDialog(
-  //             content: TextField(
-  //               onChanged: (value) {},
-  //               controller: userInputIasGear,
-  //               decoration:
-  //                   const InputDecoration(hintText: 'Enter the IAS in km/h'),
-  //             ),
-  //             title:
-  //                 const Text('Red line notifier (Enter red line gear speed). '),
-  //             actions: [
-  //               ElevatedButton(
-  //                   onPressed: () {
-  //                     Navigator.pop(context);
-  //                   },
-  //                   child: const Text('Cancel')),
-  //               ElevatedButton(
-  //                   onPressed: () {
-  //                     ScaffoldMessenger.of(context)
-  //                       ..removeCurrentSnackBar()
-  //                       ..showSnackBar(SnackBar(
-  //                           content: Text(
-  //                               'You will be notified if IAS reaches red line speed of ${userInputIasGear.text} km/h (With gears open). ')));
-  //                     Navigator.of(context)
-  //                         .pop(int.parse(userInputIasGear.text));
-  //                   },
-  //                   child: const Text('Notify'))
-  //             ],
-  //           ));
-  // }
-
-  // Color headerColor = Colors.teal;
-  // IconData drawerIcon = Icons.settings;
-
   @override
   Widget build(BuildContext context) {
     var phoneConnected = ref.read(phoneConnectedProvider.notifier);
@@ -131,7 +29,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
     var pullUpNotif = ref.read(pullUpNotifProvider.notifier);
     var waterNotif = ref.read(waterNotifProvider.notifier);
     var tray = ref.read(trayProvider.notifier);
-    var gLoad = ref.read(gLoadProvider.notifier);
     var transparentFont = ref.read(transparentFontProvider.notifier);
     var headerColor = ref.read(headerColorProvider.notifier);
     var drawerIcon = ref.read(drawerIconProvider.notifier);
@@ -156,17 +53,26 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
               ),
             ),
             phoneConnected.state
-                ? SelectableText(
-                    'PC IP: ${ipAddress.state}',
+                ? Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: SelectableText(
+                      'PC IP: ${ipAddress.state}',
+                    ),
                   )
                 : nonePost.state
-                    ? SelectableText(
-                        'PC IP: ${ipAddress.state}',
+                    ? Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: SelectableText(
+                          'PC IP: ${ipAddress.state}',
+                        ),
                       )
-                    : SelectableText(
-                        'PC IP: ${ipAddress.state}',
-                        style: const TextStyle(
-                            color: Colors.redAccent, fontSize: 20),
+                    : Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: SelectableText(
+                          'PC IP: ${ipAddress.state}',
+                          style: const TextStyle(
+                              color: Colors.redAccent, fontSize: 20),
+                        ),
                       ),
             Container(
               alignment: Alignment.topLeft,
@@ -365,71 +271,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
                 },
               ),
             ),
-            // Container(
-            //   alignment: Alignment.topLeft,
-            //   decoration: const BoxDecoration(color: Colors.black87),
-            //   child: TextButton.icon(
-            //     label: Text(
-            //         'Current red line IAS for flaps: ${flapIas.state}Km/h'),
-            //     icon: const Icon(
-            //       MaterialCommunityIcons.airplane_takeoff,
-            //       color: Colors.red,
-            //     ),
-            //     onPressed: () async {
-            //       final SharedPreferences prefs = await widget.prefs;
-            //       flapIas.state = (await Navigator.of(context)
-            //           .push(dialogBuilderIasFlap(context)))!;
-            //       int textForIasFlap = (prefs.getInt('textForIasFlap') ?? 2000);
-            //       setState(() {
-            //         textForIasFlap = flapIas.state;
-            //       });
-            //       prefs.setInt('textForIasFlap', textForIasFlap);
-            //     },
-            //   ),
-            // ),
-            // Container(
-            //   alignment: Alignment.topLeft,
-            //   decoration: const BoxDecoration(color: Colors.black87),
-            //   child: TextButton.icon(
-            //     label: Text(
-            //         'Current red line IAS for gears: ${gearIas.state}Km/h'),
-            //     onPressed: () async {
-            //       final SharedPreferences prefs = await widget.prefs;
-            //       gearIas.state = (await Navigator.of(context)
-            //           .push(dialogBuilderIasGear(context)))!;
-            //       int textForIasGear = (prefs.getInt('textForIasGear') ?? 2000);
-            //
-            //       setState(() {
-            //         textForIasGear = gearIas.state;
-            //       });
-            //       prefs.setInt('textForIasGear', textForIasGear);
-            //     },
-            //     icon: const Icon(
-            //       EvilIcons.gear,
-            //       color: Colors.deepPurple,
-            //     ),
-            //   ),
-            // ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  label: Text('Current red line G load: ${gLoad.state}G'),
-                  onPressed: () async {
-                    final SharedPreferences prefs = await widget.prefs;
-                    gLoad.state = (await Navigator.of(context)
-                        .push(dialogBuilderOverG(context)))!;
-                    int textForGLoad = (prefs.getInt('textForGLoad') ?? 12);
-                    setState(() {
-                      textForGLoad = gLoad.state;
-                    });
-                    prefs.setInt('textForGLoad', textForGLoad);
-                  },
-                  icon: const Icon(
-                    MaterialCommunityIcons.airplane_landing,
-                    color: Colors.amber,
-                  )),
-            ),
             Container(
               alignment: Alignment.topLeft,
               decoration: const BoxDecoration(color: Colors.black87),
@@ -453,12 +294,7 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
                   onPressed: () async {
                     await Navigator.of(context).pushReplacement(
                       MaterialPageRoute(builder: (context) {
-                        int gearLimit = ref.watch(gearLimitProvider);
-                        int flapLimit = ref.watch(flapLimitProvider);
                         return TransparentPage(
-                          flapLimit: flapLimit,
-                          gearLimit: gearLimit,
-                          gLoad: gLoad.state,
                           fontSize: transparentFont.state,
                         );
                       }),
@@ -469,15 +305,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
                     color: Colors.amber,
                   )),
             ),
-            // Container(
-            //   alignment: Alignment.topCenter,
-            //   decoration: const BoxDecoration(color: Colors.black87),
-            //   child: const Chat(),
-            // ),
-            // Container(
-            //   alignment: Alignment.topCenter,
-            //   decoration: const BoxDecoration(color: Colors.black87),
-            //   child: const Chat(),
           ],
         ),
       ),

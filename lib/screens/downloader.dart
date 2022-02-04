@@ -93,7 +93,7 @@ class _DownloaderState extends State<Downloader>
             runInShell: true);
 
         Future.delayed(const Duration(seconds: 2), () async {
-          await Process.run('taskkill', ['/F', '/IM', 'wtbgassistant.exe']);
+          exit(0);
         });
       }).timeout(const Duration(minutes: 8));
     } catch (e, st) {

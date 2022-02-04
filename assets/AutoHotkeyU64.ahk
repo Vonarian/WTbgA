@@ -33,7 +33,7 @@ WinSet_Click_Through(I, T="254") {
 ID := WinExist("WTbgA")
 
 ;set it to 60% transparent and unclickable
-WinSet_Click_Through(ID, 0 * 255)
+WinSet_Click_Through(ID, 1 * 255)
 ;wait until the user quits, then show window again
 OnExit, AppEnd
 Return
