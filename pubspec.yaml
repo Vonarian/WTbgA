@@ -96,6 +96,7 @@ flutter:
     - assets/AutoHotkeyU64.exe
     - assets/Version/version.txt
     - assets/checker.bat
+    - assets/icons/
 #    - assets/lib/gdi32.dll
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

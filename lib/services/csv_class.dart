@@ -70,12 +70,20 @@ class FmData {
         fmData = FmData(
             name: element.split(';')[0],
             length: double.parse(element.split(';')[1]),
-            wingSpan: double.parse(element.split(';')[2]),
-            wingArea: double.parse(element.split(';')[3]),
+            wingSpan: !element.split(';')[2].contains(',')
+                ? double.parse(element.split(';')[2])
+                : 0,
+            wingArea: !element.split(';')[3].contains(',')
+                ? double.parse(element.split(';')[3])
+                : 0,
             emptyMass: double.parse(element.split(';')[4]),
             maxFuelMass: double.parse(element.split(';')[5]),
-            critAirSpd: int.parse(element.split(';')[6]),
-            airSpdMach: double.parse(element.split(';')[7]),
+            critAirSpd: !element.split(';')[6].contains(',')
+                ? int.parse(element.split(';')[6])
+                : 2000,
+            airSpdMach: !element.split(';')[7].contains(',')
+                ? double.parse(element.split(';')[7])
+                : 2,
             critGearSpd: int.parse(element.split(';')[8]),
             combatFlaps: int.parse(element.split(';')[9]),
             takeOffFlaps: int.parse(element.split(';')[10]),

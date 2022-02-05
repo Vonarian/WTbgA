@@ -15,6 +15,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:wtbgassistant/screens/widgets/game_map.dart';
 import 'package:wtbgassistant/screens/widgets/top_bar.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
 import 'package:wtbgassistant/services/providers.dart';
@@ -190,7 +191,7 @@ class _HomeState extends ConsumerState<Home>
       Toast toast = Toast(
           type: ToastType.imageAndText02,
           title: '😳WARNING!!',
-          subtitle: 'Your vehicle is possibly destroyed / Not repairable😒',
+          subtitle: 'Your icons is possibly destroyed / Not repairable😒',
           image: File(warningLogo));
       service!.show(toast);
       toast.dispose();
@@ -496,6 +497,7 @@ class _HomeState extends ConsumerState<Home>
         windowManager.show();
       }
     });
+
     giveIps();
     startServer();
     receiveDiskValues();
@@ -593,6 +595,10 @@ class _HomeState extends ConsumerState<Home>
       // _csvThing();
     });
     Future.delayed(const Duration(milliseconds: 250), () async {
+      // Navigator.of(context)
+      //     .pushReplacement(MaterialPageRoute(builder: (context) {
+      //   return const MyCanvas();
+      // }));
       await windowManager.setMaximumSize(const Size(2000, 2000));
       csvNames = await File(namesPath).readAsString();
 
@@ -763,7 +769,7 @@ class _HomeState extends ConsumerState<Home>
   //           ? Text("You're flying ${vehicleName}")
   //           : (altitude == 32 && minFuel == 0 && flap == 0)
   //               ? const Text("You're in Hangar...")
-  //               : const Text('No vehicle data available / Not flying.'));
+  //               : const Text('No icons data available / Not flying.'));
   // }
 
   void displayCapture() async {
@@ -868,81 +874,28 @@ class _HomeState extends ConsumerState<Home>
   bool sendScreen = false;
   bool inTray = false;
   bool critAoaBool = false;
-  List<Color> colorList = [
-    Colors.blueGrey.withOpacity(0.3),
-    Colors.black.withOpacity(0.3),
-    Colors.black.withOpacity(0.3),
-    Colors.black.withOpacity(0.3),
-    Colors.black.withOpacity(0.3),
-  ];
-  List<Alignment> alignmentList = [
-    // Alignment.bottomLeft,
-    Alignment.bottomCenter,
-    Alignment.bottomRight,
-    Alignment.centerRight,
-    Alignment.topRight,
-    Alignment.topCenter,
-    Alignment.topLeft,
-    Alignment.centerLeft,
-    Alignment.bottomLeft,
-  ];
+
   int index = 0;
-  Color bottomColor = Colors.grey.withOpacity(0.3);
-  Color topColor = Colors.blueGrey.withOpacity(0.3);
-  Alignment begin = Alignment.bottomLeft;
-  Alignment end = Alignment.bottomLeft;
-  Color borderColor = const Color(0xFF805306);
   Color textColor = Colors.white;
   final windowManager = WindowManager.instance;
   bool inHangar = false;
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
-    Future.delayed(const Duration(milliseconds: 10), () {
-      bottomColor = Colors.black.withOpacity(0.7);
-    });
     listener();
-    return Stack(children: [
-      Container(
-        foregroundDecoration: const BoxDecoration(
-          color: Colors.grey,
-          backgroundBlendMode: BlendMode.saturation,
+    return InteractiveViewer(
+      child: Stack(children: [
+        GameMap(
+          inHangar: inHangar,
         ),
-        child: ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: Image.asset(
-            'assets/bg.jpg',
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            fit: BoxFit.cover,
-          ),
-        ),
-      ),
-      Scaffold(
-          backgroundColor: Colors.transparent,
-          resizeToAvoidBottomInset: true,
-          appBar: PreferredSize(
-            preferredSize: Size(screenSize.width, 1000),
-            child: const TopBar(),
-          ),
-          body: AnimatedContainer(
-            onEnd: () {
-              index = index + 1;
-              bottomColor = colorList[index % colorList.length];
-              topColor = colorList[(index + 1) % colorList.length];
-
-              begin = alignmentList[index % alignmentList.length];
-              end = alignmentList[(index + 2) % alignmentList.length];
-            },
-            duration: const Duration(seconds: 2),
-            decoration: BoxDecoration(
-                // color: Colors.blueGrey.withOpacity(0.3),
-                gradient: LinearGradient(
-              begin: begin,
-              end: end,
-              colors: [topColor, bottomColor],
-            )),
-            child: Flex(
+        Scaffold(
+            backgroundColor: Colors.transparent,
+            resizeToAvoidBottomInset: true,
+            appBar: PreferredSize(
+              preferredSize: Size(screenSize.width, 1000),
+              child: const TopBar(),
+            ),
+            body: Flex(
               direction: Axis.horizontal,
               children: [
                 Expanded(
@@ -1175,6 +1128,7 @@ class _HomeState extends ConsumerState<Home>
                       builder:
                           (context, AsyncSnapshot<ToolDataIndicator?> shot) {
                         if (shot.hasData) {
+                          inHangar = false;
                           WidgetsBinding.instance?.addPostFrameCallback((_) {
                             ref.read(vehicleNameProvider.notifier).state =
                                 shot.data!.type;
@@ -1260,9 +1214,9 @@ class _HomeState extends ConsumerState<Home>
                       }),
                 )
               ],
-            ),
-          ))
-    ]);
+            ))
+      ]),
+    );
   }
 
   @override

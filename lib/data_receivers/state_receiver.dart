@@ -83,7 +83,6 @@ class ToolDataState {
   final int? waterTemp1C;
 
   static Future<ToolDataState> getState() async {
-    // make the request
     try {
       Response? response = await get(Uri.parse('http://localhost:8111/state'));
       Map<String, dynamic> data = jsonDecode(response.body);
