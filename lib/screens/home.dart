@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:blinking_text/blinking_text.dart';
 import 'package:dart_discord_rpc/dart_discord_rpc.dart';
 import 'package:desktoasts/desktoasts.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -303,7 +303,9 @@ class _HomeState extends ConsumerState<Home>
     int check = 0;
     Future.delayed(const Duration(milliseconds: 800), () {
       HttpServer.bind(InternetAddress.anyIPv4, 55200).then((HttpServer server) {
-        print('[+]WebSocket listening at -- ws://${ipAddress.state}:55200');
+        if (kDebugMode) {
+          print('[+]WebSocket listening at -- ws://${ipAddress.state}:55200');
+        }
         server.listen((HttpRequest request) {
           WebSocketTransformer.upgrade(request).then((WebSocket ws) {
             ws.listen(
@@ -361,7 +363,9 @@ class _HomeState extends ConsumerState<Home>
                 });
               },
               onDone: () {
-                print('[+]Done :)');
+                if (kDebugMode) {
+                  print('[+]Done :)');
+                }
                 phoneConnected.state = false;
               },
               onError: (err) => print('[!]Error -- ${err.toString()}'),
@@ -380,7 +384,9 @@ class _HomeState extends ConsumerState<Home>
                     TextStyle(fontWeight: FontWeight.bold, color: Colors.cyan),
                 endColor: Colors.red,
               )));
-            print('[!]Error -- ${err.toString()}');
+            if (kDebugMode) {
+              print('[!]Error -- ${err.toString()}');
+            }
           });
         }, onError: (err) => print('[!]Error -- ${err.toString()}'));
       }, onError: (err) => print('[!]Error -- ${err.toString()}'));
@@ -1236,6 +1242,7 @@ class _HomeState extends ConsumerState<Home>
       await Future.delayed(const Duration(milliseconds: 100));
     }
     _handleClickRestore();
+    _trayUnInit();
   }
 
   @override

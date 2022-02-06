@@ -48,43 +48,47 @@ class _GameMapState extends State<GameMap> {
   );
 
   late Future<ui.Image> myFuture;
-  FutureBuilder imageFuture(MapObj e) {
+  FutureBuilder imageBuilder(MapObj e) {
     return FutureBuilder<ui.Image>(
         future: myFuture,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (e.type == 'aircraft') {
+              List<int>? colors = e.colors;
               return CustomPaint(
                   painter: ObjectPainter(
                 x: e.x!,
                 y: e.y!,
-                colors: e.colors,
                 context: context,
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
+                colors: colors,
               ));
             } else if (e.type == 'ground_model') {
+              List<int>? colors = e.colors;
               return CustomPaint(
                   painter: ObjectPainter(
                 x: e.x!,
                 y: e.y!,
-                colors: e.colors,
                 context: context,
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
+                colors: colors,
               ));
             } else if (e.type == 'airfield') {
+              List<int>? colors = e.colors;
+
               return CustomPaint(
                   painter: ObjectPainter(
                 x: e.sx!,
                 y: e.sy!,
-                colors: e.colors,
                 context: context,
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
+                colors: colors,
               ));
             } else {
               return const Text('NOPE');
@@ -145,15 +149,15 @@ class _GameMapState extends State<GameMap> {
                     if (e.type == 'aircraft') {
                       myFuture = ObjectPainter.getUiImage(
                           'assets/icons/$assetIcon.png');
-                      return imageFuture(e);
+                      return imageBuilder(e);
                     } else if (e.type == 'ground_model') {
                       myFuture = ObjectPainter.getUiImage(
                           'assets/icons/$assetIcon.png');
-                      return imageFuture(e);
+                      return imageBuilder(e);
                     } else if (e.type == 'airfield') {
                       myFuture = ObjectPainter.getUiImage(
                           'assets/icons/$assetIcon.png');
-                      return imageFuture(e);
+                      return imageBuilder(e);
                     } else {
                       return const Text('NOPE');
                     }
@@ -178,20 +182,20 @@ class _GameMapState extends State<GameMap> {
 }
 
 class ObjectPainter extends CustomPainter {
-  double y;
-  double x;
-  double? height;
-  double? width;
-  List<int?>? colors;
-  BuildContext context;
-  ui.Image image;
-
+  final double y;
+  final double x;
+  final double? height;
+  final double? width;
+  final BuildContext context;
+  final ui.Image image;
+  final List<int>? colors;
   @override
   Future<void> paint(Canvas canvas, Size size) async {
-    var paint1 = Paint()
-      ..color =
-          Color.fromARGB(255, colors?[0] ?? 0, colors?[1] ?? 0, colors?[2] ?? 0)
-      ..style = PaintingStyle.fill;
+    var paint1 = Paint()..style = PaintingStyle.fill;
+    paint1.colorFilter = ColorFilter.mode(
+      Color.fromARGB(255, colors![0], colors![1], colors![2]),
+      BlendMode.srcATop,
+    );
 
     if (height != null && width != null) {
       canvas.drawImage(image, Offset((width! * x), height! * y), paint1);
@@ -201,14 +205,14 @@ class ObjectPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
 
-  ObjectPainter(
+  const ObjectPainter(
       {required this.y,
       required this.x,
-      required this.colors,
       required this.context,
       required this.width,
       required this.height,
-      required this.image});
+      required this.image,
+      required this.colors});
   static Future<ui.Image> getUiImage(String imageAssetPath) async {
     final ByteData assetImageByteData = await rootBundle.load(imageAssetPath);
     final codec = await ui.instantiateImageCodec(
