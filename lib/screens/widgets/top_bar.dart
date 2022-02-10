@@ -1,11 +1,15 @@
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wtbgassistant/screens/widgets/drawer.dart';
 import 'package:wtbgassistant/services/providers.dart';
+
+import '../downloader.dart';
 
 class TopBar extends ConsumerStatefulWidget {
   const TopBar({Key? key}) : super(key: key);
@@ -17,8 +21,65 @@ class TopBar extends ConsumerStatefulWidget {
 Future<SharedPreferences> prefs = SharedPreferences.getInstance();
 
 class _TopBarState extends ConsumerState<TopBar> with TickerProviderStateMixin {
-  void displayCapture() async {
-    await Process.run(delPath, [], runInShell: true);
+  Future<void> displayCapture() async {
+    print('run');
+
+    if (await File(ffmpegPath).exists()) {
+      try {
+        bool ffmpegExeBool = await File(ffmpegExePath).exists();
+        if (!ffmpegExeBool) {
+          File(ffmpegPath).readAsBytes().then((value) async {
+            final archive = ZipDecoder().decodeBytes(value);
+
+            for (final file in archive) {
+              final filename = file.name;
+              if (file.isFile) {
+                final data = file.content as List<int>;
+                File(p.dirname(ffmpegPath) + '\\$filename')
+                  ..createSync(recursive: true)
+                  ..writeAsBytesSync(data);
+              } else {
+                Directory(p.dirname(ffmpegPath) + '\\$filename')
+                    .create(recursive: true);
+              }
+            }
+          });
+          await Process.run(delPath, [], runInShell: true);
+          streamRunning = true;
+          setState(() {});
+        } else {
+          await Process.run(delPath, [], runInShell: true);
+          streamRunning = true;
+          setState(() {});
+        }
+      } catch (e, st) {
+        log('ERROR: $e', stackTrace: st);
+      }
+    } else {
+      print('else');
+      streamRunning = false;
+      setState(() {});
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          duration: const Duration(seconds: 10),
+          content: const Text('FFMPEG is missing, proceed to download?'),
+          action: SnackBarAction(
+              label: 'Download',
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (c, a1, a2) =>
+                        const Downloader(isFfmpeg: true),
+                    transitionsBuilder: (c, anim, a2, child) =>
+                        FadeTransition(opacity: anim, child: child),
+                    transitionDuration: const Duration(milliseconds: 2000),
+                  ),
+                );
+              }),
+        ));
+    }
   }
 
   late final AnimationController _controller = AnimationController(
@@ -29,6 +90,23 @@ class _TopBarState extends ConsumerState<TopBar> with TickerProviderStateMixin {
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'del.bat'
+  ]);
+  String ffmpegPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data\\flutter_assets\\assets',
+    'ffmpeg.zip'
+  ]);
+  String ffmpegExePath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data\\flutter_assets\\assets',
+    'ffmpeg.exe'
+  ]);
+
+  bool streamRunning = false;
+  String terminatePath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'terminate.bat'
   ]);
   @override
   Widget build(BuildContext context) {
@@ -86,7 +164,11 @@ class _TopBarState extends ConsumerState<TopBar> with TickerProviderStateMixin {
                   ? RotationTransition(
                       turns: _controller,
                       child: IconButton(
-                        onPressed: displayCapture,
+                        onPressed: () async {
+                          !streamRunning
+                              ? displayCapture()
+                              : await Process.run(terminatePath, []);
+                        },
                         icon: const Icon(
                           Icons.wifi_rounded,
                           color: Colors.green,
@@ -96,7 +178,11 @@ class _TopBarState extends ConsumerState<TopBar> with TickerProviderStateMixin {
                       ),
                     )
                   : IconButton(
-                      onPressed: displayCapture,
+                      onPressed: () async {
+                        !streamRunning
+                            ? displayCapture()
+                            : await Process.run(terminatePath, []);
+                      },
                       icon: const Icon(
                         Icons.wifi_rounded,
                         color: Colors.red,

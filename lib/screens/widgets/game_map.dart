@@ -23,6 +23,16 @@ class _GameMapState extends State<GameMap> {
         image = Image.network(
           'http://localhost:8111/map.img',
           key: key,
+          errorBuilder: (context, e, st) {
+            return ImageFiltered(
+                child: Image.asset(
+                  'assets/bg.jpg',
+                  fit: BoxFit.cover,
+                  height: MediaQuery.of(context).size.height,
+                  width: MediaQuery.of(context).size.width,
+                ),
+                imageFilter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0));
+          },
         );
 
         setState(() {});

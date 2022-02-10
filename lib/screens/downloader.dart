@@ -13,9 +13,11 @@ import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
 import '../data_receivers/github.dart';
+import 'home.dart';
 
 class Downloader extends StatefulWidget {
-  const Downloader({Key? key}) : super(key: key);
+  final bool isFfmpeg;
+  const Downloader({Key? key, required this.isFfmpeg}) : super(key: key);
 
   @override
   _DownloaderState createState() => _DownloaderState();
@@ -26,8 +28,12 @@ class _DownloaderState extends State<Downloader>
   @override
   void initState() {
     super.initState();
-    setupFuture();
-    windowManager.setAsFrameless();
+    if (!widget.isFfmpeg) {
+      downloadUpdate();
+      windowManager.setAsFrameless();
+    } else {
+      downloadFfmpeg();
+    }
     windowManager.addListener(this);
     trayManager.addListener(this);
   }
@@ -48,8 +54,63 @@ class _DownloaderState extends State<Downloader>
       type: ToastType.text02,
       title: 'Downloading WTbgA update',
       subtitle: 'Please do not close the application!');
+  Toast toastFfmpeg = Toast(
+      type: ToastType.text02,
+      title: 'Downloading FFMPEG',
+      subtitle: 'Please do not close the application!');
+  Future<void> downloadFfmpeg() async {
+    service!.show(toastFfmpeg);
+    toast.dispose();
+    try {
+      Dio dio = Dio();
+      await dio.download(
+          'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/ffmpeg.zip',
+          '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/ffmpeg.zip',
+          onReceiveProgress: (downloaded, full) {
+        progress = downloaded / full * 100;
+        setState(() {});
+      }).whenComplete(() {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (c, a1, a2) => const Home(),
+            transitionsBuilder: (c, anim, a2, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 2000),
+          ),
+        );
+      });
+    } catch (e, st) {
+      String path = await AppUtil.createFolderInAppDocDir(errorLogPath);
+      final File fileWrite = File('$path/downloader-ffmpeg.txt');
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+            duration: const Duration(seconds: 10),
+            content: Text(e.toString())));
+      final String finalString = 'Logging:'
+          '\nError:\n'
+          '$e'
+          '\nStackTrace: '
+          '\n$st';
+      await fileWrite.writeAsString(finalString);
+      if (progress != 100) {
+        await Directory(
+                '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/ffmpeg.zip')
+            .delete();
+      }
+      error = true;
+      setState(() {});
+      Toast errorToast = Toast(
+          type: ToastType.text02,
+          title: 'Ffmpeg download failed',
+          subtitle: 'Please make sure your internet connection is stable');
+      service!.show(errorToast);
+      errorToast.dispose();
+    }
+  }
 
-  Future<void> setupFuture() async {
+  Future<void> downloadUpdate() async {
     await windowManager.setMinimumSize(const Size(230, 300));
     await windowManager.setMaximumSize(const Size(600, 600));
     await windowManager.setSize(const Size(230, 300));
@@ -99,7 +160,7 @@ class _DownloaderState extends State<Downloader>
       }).timeout(const Duration(minutes: 8));
     } catch (e, st) {
       String path = await AppUtil.createFolderInAppDocDir(errorLogPath);
-      final File fileWrite = File('$path/downloader.txt');
+      final File fileWrite = File('$path/downloader-update.txt');
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
@@ -123,6 +184,31 @@ class _DownloaderState extends State<Downloader>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        appBar: widget.isFfmpeg
+            ? AppBar(
+                title: const Text('Downloading FFMPEG'),
+                centerTitle: true,
+                leading: IconButton(
+                    onPressed: () {
+                      if (progress != 100) {
+                        Directory(
+                                '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/ffmpeg.zip')
+                            .delete();
+                      }
+                      Navigator.pushReplacement(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (c, a1, a2) => const Home(),
+                          transitionsBuilder: (c, anim, a2, child) =>
+                              FadeTransition(opacity: anim, child: child),
+                          transitionDuration:
+                              const Duration(milliseconds: 2000),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.arrow_back)),
+              )
+            : null,
         backgroundColor: Colors.blueGrey,
         body: Center(
           child: SizedBox(

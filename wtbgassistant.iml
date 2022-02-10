@@ -90,6 +90,12 @@
       <excludeFolder url="file://$MODULE_DIR$/ios" />
       <excludeFolder url="file://$MODULE_DIR$/web" />
       <excludeFolder url="file://$MODULE_DIR$/windows" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/ffmpeg-generator-dart/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/ffmpeg-generator-dart/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/ffmpeg-generator-dart/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ffmpeg-generator-dart/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ffmpeg-generator-dart/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ffmpeg-generator-dart/.pub" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Dart SDK" level="project" />

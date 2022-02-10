@@ -15,7 +15,7 @@ start /IM  %~dp0\mona\MonaTiny.exe
 @timeout 1 /nobreak >NUL
 @echo Starting Stream...
 @timeout 2 /nobreak >NUL
-.\data\flutter_assets\assets\ffmpeg.exe -f dshow -rtbufsize 150M -filter:v fps=fps=30 -i video="screen-capture-recorder":audio="virtual-audio-capturer" -vf "scale=1600:900" -r 30 -preset ultrafast -vcodec libx264 -tune zerolatency -b 2M -b:v 2M -ab 128k -ac 2 -ar 44100 -async 44100 -f flv "rtmp://%NetworkIP%:1935"
+%~dp0/ffmpeg -f gdigrab -framerate 30 -i desktop -c:v libx264 -b:v 2M -maxrate 4M -bufsize 3M -crf 18 -pix_fmt yuv420p -tune zerolatency -preset ultrafast -f flv rtmp://%NetworkIP%:1935
 
 
 @timeout 2 /nobreak >NUL

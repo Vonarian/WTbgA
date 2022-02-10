@@ -25,10 +25,8 @@ HotKeyManager hotKey = HotKeyManager.instance;
 void main() async {
   DiscordRPC.initialize();
   rpc.start(autoRegister: true);
-
   WidgetsFlutterBinding.ensureInitialized();
   await Window.initialize();
-  // captureScreen();
   await windowManager.ensureInitialized();
   await windowManager.setTitle('WTbgA');
   String warningPath = p.joinAll([
@@ -51,22 +49,6 @@ void main() async {
     'data/flutter_assets/assets',
     'sounds/PullUp.mp3'
   ]);
-
-  // FirebaseOptions firebaseOptions = FirebaseOptions(
-  //   appId: fireBaseConfig['appId'] ?? '',
-  //   apiKey: fireBaseConfig['apiKey'] ?? '',
-  //   projectId: fireBaseConfig['projectId'] ?? '',
-  //   messagingSenderId: fireBaseConfig['messagingSenderId'] ?? '',
-  //   authDomain: fireBaseConfig['authDomain'],
-  // );
-
-  // await Firebase.initializeApp(options: firebaseOptions);
-  // await FirebaseAuth.initialize(
-  //     fireBaseConfig['apiKey'] ?? '', await PreferencesStore.create());
-  // var firebaseAuth = FirebaseAuth.initialize(
-  //     fireBaseConfig['apiKey'] ?? '', await PreferencesStore.create());
-  // var fireStore =
-  //     Firestore(fireBaseConfig['projectId'] ?? '', auth: firebaseAuth);
 
   LWM.initialize();
   Player player = Player(id: 0);

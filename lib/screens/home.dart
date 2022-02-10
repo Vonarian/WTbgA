@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
+import 'dart:ui';
 
+import 'package:archive/archive.dart';
 import 'package:blinking_text/blinking_text.dart';
 import 'package:dart_discord_rpc/dart_discord_rpc.dart';
 import 'package:desktoasts/desktoasts.dart';
@@ -15,6 +18,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:wtbgassistant/screens/downloader.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
 import 'package:wtbgassistant/screens/widgets/top_bar.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
@@ -542,8 +546,8 @@ class _HomeState extends ConsumerState<Home>
       // chatSettingsManager();
       // critAoaChecker();
     });
-    const Duration oneSec = Duration(milliseconds: 50);
-    Timer.periodic(oneSec, (Timer t) async {
+    const Duration setStateTimer = Duration(milliseconds: 50);
+    Timer.periodic(setStateTimer, (Timer t) async {
       if (!mounted || isStopped) return;
       stateFuture = updateState();
       setState(() {});
@@ -564,12 +568,6 @@ class _HomeState extends ConsumerState<Home>
       // hostChecker();
     });
     windowManager.addListener(this);
-
-    ref.read(phoneStateProvider.notifier).addListener((state) {
-      if (ref.read(phoneStateProvider.notifier).state == 'home') {
-        sendScreen = false;
-      }
-    });
 
     idData.addListener(() async {
       if (lastId != idData.value) {
@@ -729,59 +727,68 @@ class _HomeState extends ConsumerState<Home>
   Color headerColor = Colors.teal;
   IconData drawerIcon = Icons.settings;
 
-  // PreferredSizeWidget? homeAppBar(BuildContext context) {
-  //   return AppBar(
-  //       actions: [
-  //         phoneConnected.value
-  //             ? RotationTransition(
-  //                 turns: _controller,
-  //                 child: IconButton(
-  //                   onPressed: () async {
-  //                     displayCapture();
-  //                   },
-  //                   icon: const Icon(
-  //                     Icons.wifi_rounded,
-  //                     color: Colors.green,
-  //                   ),
-  //                   tooltip: 'Phone Connected = ${phoneConnected.value}',
-  //                 ),
-  //               )
-  //             : IconButton(
-  //                 onPressed: () {
-  //                   displayCapture();
-  //                 },
-  //                 icon: const Icon(
-  //                   Icons.wifi_rounded,
-  //                   color: Colors.red,
-  //                 ),
-  //                 tooltip: 'Toggle Stream Mode',
-  //               ),
-  //       ],
-  //       leading: Builder(
-  //         builder: (BuildContext context) {
-  //           return IconButton(
-  //             icon: const Icon(Icons.list),
-  //             onPressed: () {
-  //               Scaffold.of(context).openDrawer();
-  //             },
-  //           );
-  //         },
-  //       ),
-  //       automaticallyImplyLeading: false,
-  //       elevation: 0.75,
-  //       backgroundColor: Colors.transparent,
-  //       centerTitle: true,
-  //       title: vehicleName.value != 'NULL' && vehicleName != null
-  //           ? Text("You're flying ${vehicleName}")
-  //           : (altitude == 32 && minFuel == 0 && flap == 0)
-  //               ? const Text("You're in Hangar...")
-  //               : const Text('No icons data available / Not flying.'));
-  // }
-
   void displayCapture() async {
-    await Process.run(delPath, [], runInShell: true);
+    if (await File(ffmpegPath).exists()) {
+      try {
+        bool ffmpegExeBool = await File(ffmpegExePath).exists();
+        if (!ffmpegExeBool) {
+          File(ffmpegPath).readAsBytes().then((value) async {
+            final archive = ZipDecoder().decodeBytes(value);
+
+            for (final file in archive) {
+              final filename = file.name;
+              if (file.isFile) {
+                final data = file.content as List<int>;
+                File(p.dirname(ffmpegPath) + '\\$filename')
+                  ..createSync(recursive: true)
+                  ..writeAsBytesSync(data);
+              } else {
+                Directory(p.dirname(ffmpegPath) + '\\$filename')
+                    .create(recursive: true);
+              }
+            }
+          });
+        } else {
+          await Process.run(delPath, [], runInShell: true);
+        }
+      } catch (e, st) {
+        log('ERROR: $e', stackTrace: st);
+      }
+    } else {
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: const Text(
+            'FFMPEG not found, for the stream to work, you will need it, download?',
+          ),
+          action: SnackBarAction(
+              label: 'Download',
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (c, a1, a2) =>
+                        const Downloader(isFfmpeg: true),
+                    transitionsBuilder: (c, anim, a2, child) =>
+                        FadeTransition(opacity: anim, child: child),
+                    transitionDuration: const Duration(milliseconds: 2000),
+                  ),
+                );
+              }),
+        ));
+    }
   }
 
+  String ffmpegPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data\\flutter_assets\\assets',
+    'ffmpeg.zip'
+  ]);
+  String ffmpegExePath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data\\flutter_assets\\assets',
+    'ffmpeg.exe'
+  ]);
   Player pullUpPlayer = Player(id: 3);
   Player gearUpPlayer = Player(id: 2);
   Player overGPlayer = Player(id: 1);
@@ -887,13 +894,22 @@ class _HomeState extends ConsumerState<Home>
   bool inHangar = false;
   @override
   Widget build(BuildContext context) {
-    var screenSize = MediaQuery.of(context).size;
+    Size screenSize = MediaQuery.of(context).size;
     listener();
     return InteractiveViewer(
       child: Stack(children: [
-        GameMap(
-          inHangar: inHangar,
-        ),
+        !inHangar
+            ? GameMap(
+                inHangar: inHangar,
+              )
+            : ImageFiltered(
+                child: Image.asset(
+                  'assets/bg.jpg',
+                  fit: BoxFit.cover,
+                  height: MediaQuery.of(context).size.height,
+                  width: MediaQuery.of(context).size.width,
+                ),
+                imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0)),
         Scaffold(
             backgroundColor: Colors.transparent,
             resizeToAvoidBottomInset: true,
@@ -958,8 +974,6 @@ class _HomeState extends ConsumerState<Home>
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.only(left: 20),
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   alignment: Alignment.topLeft,
                                   child: RichText(
                                     text: TextSpan(children: [
@@ -976,8 +990,6 @@ class _HomeState extends ConsumerState<Home>
                               ),
                               Expanded(
                                 child: Container(
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   padding: const EdgeInsets.only(left: 20),
                                   alignment: Alignment.topLeft,
                                   child: RichText(
@@ -994,8 +1006,6 @@ class _HomeState extends ConsumerState<Home>
                               ),
                               Expanded(
                                 child: Container(
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   padding: const EdgeInsets.only(left: 20),
                                   alignment: Alignment.topLeft,
                                   child: Text(
@@ -1009,8 +1019,6 @@ class _HomeState extends ConsumerState<Home>
                               ),
                               Expanded(
                                 child: Container(
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   padding: const EdgeInsets.only(left: 20),
                                   alignment: Alignment.topLeft,
                                   child: Text(
@@ -1024,9 +1032,6 @@ class _HomeState extends ConsumerState<Home>
                               ),
                               Expanded(
                                 child: Container(
-                                    // decoration: BoxDecoration(
-                                    //   color: Colors.blueGrey.withOpacity(0.3),
-                                    // ),
                                     padding: const EdgeInsets.only(left: 20),
                                     alignment: Alignment.topLeft,
                                     child: fuel <= 13
@@ -1048,8 +1053,6 @@ class _HomeState extends ConsumerState<Home>
                               ),
                               Expanded(
                                 child: Container(
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   alignment: Alignment.topLeft,
                                   padding: const EdgeInsets.only(left: 20),
                                   child: RichText(
@@ -1067,8 +1070,6 @@ class _HomeState extends ConsumerState<Home>
                               ),
                               Expanded(
                                 child: Container(
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   padding: const EdgeInsets.only(left: 20),
                                   alignment: Alignment.topLeft,
                                   child: RichText(
@@ -1086,8 +1087,6 @@ class _HomeState extends ConsumerState<Home>
                               ),
                               Expanded(
                                 child: Container(
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   padding: const EdgeInsets.only(left: 20),
                                   alignment: Alignment.topLeft,
                                   child: !critAoaBool
@@ -1147,8 +1146,6 @@ class _HomeState extends ConsumerState<Home>
                             children: [
                               Expanded(
                                 child: Container(
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   padding: const EdgeInsets.only(right: 20),
                                   alignment: Alignment.center,
                                   child: RichText(
@@ -1166,8 +1163,6 @@ class _HomeState extends ConsumerState<Home>
                               ),
                               Expanded(
                                 child: Container(
-                                  // decoration: BoxDecoration(
-                                  //     color: Colors.blueGrey.withOpacity(0.3)),
                                   padding: const EdgeInsets.only(right: 20),
                                   alignment: Alignment.center,
                                   child: RichText(
@@ -1193,8 +1188,6 @@ class _HomeState extends ConsumerState<Home>
                           });
                           return Center(
                             child: Container(
-                                // decoration: BoxDecoration(
-                                //     color: Colors.blueGrey.withOpacity(0.3)),
                                 padding: const EdgeInsets.all(8.0),
                                 child: const BlinkText(
                                   'ERROR: NO DATA',

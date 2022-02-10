@@ -39,7 +39,9 @@ class _LoadingState extends State<Loading> {
         Future.delayed(const Duration(seconds: 3), () async {
           Navigator.of(context)
               .pushReplacement(MaterialPageRoute(builder: (context) {
-            return const Downloader();
+            return const Downloader(
+              isFfmpeg: false,
+            );
           }));
         });
       } else {
@@ -68,7 +70,7 @@ class _LoadingState extends State<Loading> {
             content: Text(
                 'Version: $version ___ Status: Error checking for update!')));
       Future.delayed(const Duration(seconds: 4), () async {
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           PageRouteBuilder(
             pageBuilder: (c, a1, a2) => const Home(),
@@ -110,20 +112,6 @@ class _LoadingState extends State<Loading> {
     'assets',
     'checker.bat'
   ]));
-
-  // hostChecker() async {
-  //   if (!await canLaunch('http://localhost:8111/state')) {
-  //     ScaffoldMessenger.of(context)
-  //       ..removeCurrentSnackBar()
-  //       ..showSnackBar(SnackBar(
-  //         content: BlinkText(
-  //           'Unable to connect to game server.',
-  //           endColor: Colors.red,
-  //         ),
-  //         duration: Duration(seconds: 10),
-  //       ));
-  //   }
-  // }
 
   @override
   void initState() {

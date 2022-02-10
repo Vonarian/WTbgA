@@ -132,9 +132,9 @@ class MapObj {
       }
       return mapObjList;
     } catch (e, st) {
-      if (kDebugMode) {
-        log('ERROR: $e', stackTrace: st);
-      }
+      // if (kDebugMode) {
+      //   log('ERROR: $e', stackTrace: st);
+      // }
       rethrow;
     }
   }

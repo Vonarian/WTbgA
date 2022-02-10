@@ -129,7 +129,7 @@ int mainWindowProc(int hWnd, int uMsg, int wParam, int lParam) {
   return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-void main() {
+void run() {
   // Register the window class.
   final className = TEXT('GDI Image Capture');
 
@@ -165,7 +165,7 @@ void main() {
     exit(-1);
   }
 
-  ShowWindow(hWnd, SW_SHOWNORMAL);
+  // ShowWindow(hWnd, SW_SHOWNORMAL);
   UpdateWindow(hWnd);
 
   // Run the message loop
