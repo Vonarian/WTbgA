@@ -405,7 +405,6 @@ class _HomeState extends ConsumerState<Home>
     var waterNotif = ref.read(waterNotifProvider.notifier);
     var tray = ref.read(trayProvider.notifier);
     var stallNotif = ref.read(stallNotifProvider.notifier);
-
     var transparentFont = ref.read(transparentFontProvider.notifier);
     _prefs.then((SharedPreferences prefs) {
       lastId = (prefs.getInt('lastId') ?? 0);

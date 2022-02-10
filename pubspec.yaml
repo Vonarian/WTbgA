@@ -96,6 +96,7 @@ flutter:
     - assets/AutoHotkeyU64.ahk
     - assets/AutoHotkeyU64.exe
     - assets/Version/version.txt
+    - assets/Version/installer.bat
     - assets/checker.bat
     - assets/icons/
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -145,18 +145,15 @@ class _DownloaderState extends State<Downloader>
           }
         }
 
-        String msiXPath = (p.joinAll([
-          ...p.split(p.dirname(filePath.path)),
-          'out',
-          'WTbgA.msix',
+        String installer = (p.joinAll([
+          ...p.split(p.dirname(Platform.resolvedExecutable)),
+          'data'
+              'flutter_assets',
+          'assets',
+          'Version',
+          'installer.bat'
         ]));
-        await Process.run(
-                'powershell.exe', ['Add-AppPackage', '-path', msiXPath],
-                runInShell: true)
-            .whenComplete(
-                () => Future.delayed(const Duration(seconds: 2), () async {
-                      exit(0);
-                    }));
+        await Process.run(installer, [], runInShell: true);
       }).timeout(const Duration(minutes: 8));
     } catch (e, st) {
       String path = await AppUtil.createFolderInAppDocDir(errorLogPath);
