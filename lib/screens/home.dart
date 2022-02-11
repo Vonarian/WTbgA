@@ -727,10 +727,14 @@ class _HomeState extends ConsumerState<Home>
   IconData drawerIcon = Icons.settings;
 
   void displayCapture() async {
-    if (await File(ffmpegPath).exists()) {
+    if (await File(ffmpegPath).exists() || await File(ffmpegExePath).exists()) {
       try {
-        bool ffmpegExeBool = await File(ffmpegExePath).exists();
-        if (!ffmpegExeBool) {
+        if (await File(ffmpegExePath).exists()) {
+          await Process.run(delPath, [], runInShell: true);
+          return;
+        }
+        if (!(await File(ffmpegExePath).exists()) &&
+            await File(ffmpegPath).exists()) {
           File(ffmpegPath).readAsBytes().then((value) async {
             final archive = ZipDecoder().decodeBytes(value);
 

@@ -21,13 +21,15 @@ class TopBar extends ConsumerStatefulWidget {
 Future<SharedPreferences> prefs = SharedPreferences.getInstance();
 
 class _TopBarState extends ConsumerState<TopBar> with TickerProviderStateMixin {
-  Future<void> displayCapture() async {
-    print('run');
-
-    if (await File(ffmpegPath).exists()) {
+  void displayCapture() async {
+    if (await File(ffmpegPath).exists() || await File(ffmpegExePath).exists()) {
       try {
-        bool ffmpegExeBool = await File(ffmpegExePath).exists();
-        if (!ffmpegExeBool) {
+        if (await File(ffmpegExePath).exists()) {
+          await Process.run(delPath, [], runInShell: true);
+          return;
+        }
+        if (!(await File(ffmpegExePath).exists()) &&
+            await File(ffmpegPath).exists()) {
           File(ffmpegPath).readAsBytes().then((value) async {
             final archive = ZipDecoder().decodeBytes(value);
 
@@ -44,26 +46,19 @@ class _TopBarState extends ConsumerState<TopBar> with TickerProviderStateMixin {
               }
             }
           });
-          await Process.run(delPath, [], runInShell: true);
-          streamRunning = true;
-          setState(() {});
         } else {
           await Process.run(delPath, [], runInShell: true);
-          streamRunning = true;
-          setState(() {});
         }
       } catch (e, st) {
         log('ERROR: $e', stackTrace: st);
       }
     } else {
-      print('else');
-      streamRunning = false;
-      setState(() {});
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
-          duration: const Duration(seconds: 10),
-          content: const Text('FFMPEG is missing, proceed to download?'),
+          content: const Text(
+            'FFMPEG not found, for the stream to work, you will need it, download?',
+          ),
           action: SnackBarAction(
               label: 'Download',
               onPressed: () {
