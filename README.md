@@ -7,7 +7,7 @@
 ## Usage
 
 ```shs
-Install the latest version of the application from releases
+Download the latest version of the application from releases And run installer.bat as administrator
 ```
 
 ## Author
