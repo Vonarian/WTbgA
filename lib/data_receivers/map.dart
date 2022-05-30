@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
 
 class MapObj {
@@ -131,7 +129,7 @@ class MapObj {
         mapObjList.add(MapObj.fromMap((element)));
       }
       return mapObjList;
-    } catch (e, st) {
+    } catch (e) {
       // if (kDebugMode) {
       //   log('ERROR: $e', stackTrace: st);
       // }

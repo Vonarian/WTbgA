@@ -42,7 +42,7 @@ class _GameMapState extends State<GameMap> {
   }
 
   _getSizes() {
-    imageCache!.clear();
+    imageCache.clear();
     if (key.currentContext != null) {
       widgetHeight = key.currentContext!.size!.height;
       widgetWidth = key.currentContext!.size!.width;

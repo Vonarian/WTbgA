@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:wtbgassistant/screens/widgets/slider.dart';
 import 'package:wtbgassistant/services/providers.dart';
 
-import '../transparent.dart';
+import '../../main.dart';
 
 class TopDrawer extends ConsumerStatefulWidget {
-  final Future<SharedPreferences> prefs;
-  const TopDrawer({Key? key, required this.prefs}) : super(key: key);
+  const TopDrawer({Key? key}) : super(key: key);
 
   @override
   _DrawerBuilderHomeState createState() => _DrawerBuilderHomeState();
@@ -79,7 +76,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
-                    final SharedPreferences prefs = await widget.prefs;
                     bool isFullNotifOn =
                         (prefs.getBool('isFullNotifOn') ?? true);
                     isFullNotifOn = !isFullNotifOn;
@@ -106,7 +102,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
-                    final SharedPreferences prefs = await widget.prefs;
                     bool _playStallWarning =
                         (prefs.getBool('playStallWarning') ?? true);
                     _playStallWarning = !_playStallWarning;
@@ -131,7 +126,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
-                    final SharedPreferences prefs = await widget.prefs;
                     bool _isPullUpEnabled =
                         (prefs.getBool('isPullUpEnabled') ?? true);
                     _isPullUpEnabled = !_isPullUpEnabled;
@@ -156,7 +150,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
-                    final SharedPreferences prefs = await widget.prefs;
                     bool isEngineDeathNotifOn =
                         (prefs.getBool('isEngineDeathNotifOn') ?? true);
                     isEngineDeathNotifOn = !isEngineDeathNotifOn;
@@ -183,7 +176,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
-                    final SharedPreferences prefs = await widget.prefs;
                     bool isOilNotifOn = (prefs.getBool('isOilNotifOn') ?? true);
                     isOilNotifOn = !isOilNotifOn;
                     setState(() {
@@ -209,7 +201,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
-                    final SharedPreferences prefs = await widget.prefs;
                     bool isWaterNotifOn =
                         (prefs.getBool('isWaterNotifOn') ?? true);
                     isWaterNotifOn = !isWaterNotifOn;
@@ -236,7 +227,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
               decoration: const BoxDecoration(color: Colors.black87),
               child: TextButton.icon(
                   onPressed: () async {
-                    final SharedPreferences prefs = await widget.prefs;
                     bool isTrayEnabled =
                         (prefs.getBool('isTrayEnabled') ?? true);
                     isTrayEnabled = !isTrayEnabled;
@@ -270,40 +260,6 @@ class _DrawerBuilderHomeState extends ConsumerState<TopDrawer> {
                       'https://forum.warthunder.com/index.php?/topic/533554-war-thunder-background-assistant-wtbga/');
                 },
               ),
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              decoration: const BoxDecoration(color: Colors.black87),
-              child: TextButton.icon(
-                  label: const Text(
-                    'In-game Overlay (Hold for font size)',
-                  ),
-                  onLongPress: () async {
-                    showGeneralDialog(
-                        context: context,
-                        pageBuilder: (context, an, an2) {
-                          return SliderClass(
-                              defaultText: transparentFont.state,
-                              callback: (double value) {
-                                setState(() {
-                                  transparentFont.state = value;
-                                });
-                              });
-                        });
-                  },
-                  onPressed: () async {
-                    await Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) {
-                        return TransparentPage(
-                          fontSize: transparentFont.state,
-                        );
-                      }),
-                    );
-                  },
-                  icon: const Icon(
-                    MaterialCommunityIcons.window_open,
-                    color: Colors.amber,
-                  )),
             ),
           ],
         ),

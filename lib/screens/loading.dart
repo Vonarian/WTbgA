@@ -1,42 +1,65 @@
-import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:blinking_text/blinking_text.dart';
-import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
+import 'package:win_toast/win_toast.dart';
 import 'package:wtbgassistant/data_receivers/github.dart';
+import 'package:wtbgassistant/screens/widgets/titlebar.dart';
 
-import '../main.dart';
 import 'downloader.dart';
 import 'home.dart';
 
 class Loading extends StatefulWidget {
-  const Loading({Key? key}) : super(key: key);
+  final List<String> window;
+  const Loading({Key? key, required this.window}) : super(key: key);
 
   @override
   _LoadingState createState() => _LoadingState();
 }
 
 class _LoadingState extends State<Loading> {
-  Future<void> checkVersion() async {
-    final File file = File(
-        '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/Version/version.txt');
-    final String version = await file.readAsString();
+  Future<String> checkVersion() async {
+    try {
+      final File file = File(
+          '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\Version\\version.txt');
+      final String version = await file.readAsString();
+      return version;
+    } catch (e, st) {
+      log(e.toString(), stackTrace: st);
+      rethrow;
+    }
+  }
 
+  Future<void> checkGitVersion(String version) async {
     try {
       Data data = await Data.getData();
-
       if (int.parse(data.tagName.replaceAll('.', '')) >
           int.parse(version.replaceAll('.', ''))) {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context)
           ..removeCurrentSnackBar()
           ..showSnackBar(SnackBar(
-              content: Text(
-                  'Version: $version. Status: Proceeding to update in 3 seconds!')));
+            content: Text(
+                'Version: $version. Status: Proceeding to update in 4 seconds!'),
+            action: SnackBarAction(
+                label: 'Cancel update',
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (c, a1, a2) => const Home(),
+                      transitionsBuilder: (c, anim, a2, child) =>
+                          FadeTransition(opacity: anim, child: child),
+                      transitionDuration: const Duration(milliseconds: 1000),
+                    ),
+                  );
+                }),
+          ));
 
-        Future.delayed(const Duration(seconds: 3), () async {
+        Future.delayed(const Duration(seconds: 4), () async {
           Navigator.of(context)
               .pushReplacement(MaterialPageRoute(builder: (context) {
             return const Downloader(
@@ -45,38 +68,41 @@ class _LoadingState extends State<Loading> {
           }));
         });
       } else {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context)
           ..removeCurrentSnackBar()
           ..showSnackBar(SnackBar(
               duration: const Duration(seconds: 10),
               content: Text('Version: $version ___ Status: Up-to-date!')));
-        Future.delayed(const Duration(seconds: 4), () async {
-          Navigator.push(
+        Future.delayed(const Duration(microseconds: 500), () async {
+          Navigator.pushReplacement(
             context,
             PageRouteBuilder(
               pageBuilder: (c, a1, a2) => const Home(),
               transitionsBuilder: (c, anim, a2, child) =>
                   FadeTransition(opacity: anim, child: child),
-              transitionDuration: const Duration(milliseconds: 2000),
+              transitionDuration: const Duration(milliseconds: 1000),
             ),
           );
         });
       }
-    } catch (e) {
+    } catch (e, st) {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
             duration: const Duration(seconds: 10),
             content: Text(
                 'Version: $version ___ Status: Error checking for update!')));
-      Future.delayed(const Duration(seconds: 4), () async {
+      log(e.toString(), stackTrace: st);
+      Future.delayed(const Duration(seconds: 2), () async {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
             pageBuilder: (c, a1, a2) => const Home(),
             transitionsBuilder: (c, anim, a2, child) =>
                 FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 2000),
+            transitionDuration: const Duration(milliseconds: 1000),
           ),
         );
       });
@@ -84,27 +110,20 @@ class _LoadingState extends State<Loading> {
   }
 
   Future<void> checker() async {
-    Process process = await Process.start(pathToChecker, []);
-    process.stdout.transform(utf8.decoder).forEach((event) {
-      if (event.contains('omg')) {
-        service!.show(toast);
-        toast.dispose();
-      }
-      if (event.contains('aces.exe')) {
-        service!.show(toastDetect);
-        toast.dispose();
-      }
-    });
+    if (!widget.window.contains('War Thunder')) {
+      WinToast.instance().showToast(
+          type: ToastType.text04,
+          title: 'Warning',
+          subtitle: 'Please open War Thunder before using this app!');
+    }
+    if (widget.window.contains('War Thunder')) {
+      WinToast.instance().showToast(
+          type: ToastType.text04,
+          title: 'Nice!',
+          subtitle: 'War Thunder is open :)');
+    }
   }
 
-  Toast toast = Toast(
-      type: ToastType.text02,
-      title: 'War Thunder is not running!',
-      subtitle: "For the application's features to work, WT must be open.");
-  Toast toastDetect = Toast(
-      type: ToastType.text02,
-      title: 'War Thunder detected!',
-      subtitle: 'Awesome! War Thunder is running.');
   String pathToChecker = (p.joinAll([
     ...p.split(p.dirname(Platform.resolvedExecutable)),
     'data',
@@ -116,34 +135,21 @@ class _LoadingState extends State<Loading> {
   @override
   void initState() {
     super.initState();
-    checkVersion();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await checkGitVersion(await checkVersion());
+    });
     checker();
   }
 
+  /// List the window handle and text for all top-level desktop windows
+  /// in the current session.
+
+  List<String> windows = [];
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
-      ImageFiltered(
-          child: Image.asset(
-            'assets/bg.jpg',
-            fit: BoxFit.cover,
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-          ),
-          imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0)),
       Scaffold(
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            centerTitle: true,
-            backgroundColor: Colors.transparent,
-            title: const Text(
-              'Loading WTbgA',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: Colors.cyanAccent),
-            ),
-          ),
           body: Center(
             child: Stack(children: const [
               Center(
@@ -167,6 +173,7 @@ class _LoadingState extends State<Loading> {
               ),
             ]),
           )),
+      const WindowTitleBar(settings: false)
     ]);
   }
 }

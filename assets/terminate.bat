@@ -4,5 +4,4 @@ taskkill /f /im MonaTiny.exe  >NUL
 taskkill /f /im del.bat  >NUL
 taskkill /f /im ffmpeg.exe  >NUL
 @timeout 1 /nobreak >NUL
-taskkill /f /im cmd.exe  >NUL
 exit /f

@@ -6,10 +6,8 @@ import 'dart:ui';
 
 import 'package:archive/archive.dart';
 import 'package:blinking_text/blinking_text.dart';
-import 'package:dart_discord_rpc/dart_discord_rpc.dart';
-import 'package:desktoasts/desktoasts.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide MenuItem;
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:libwinmedia/libwinmedia.dart';
@@ -17,10 +15,10 @@ import 'package:network_info_plus/network_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/screens/downloader.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
-import 'package:wtbgassistant/screens/widgets/top_bar.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
 import 'package:wtbgassistant/services/providers.dart';
 
@@ -103,14 +101,6 @@ class _HomeState extends ConsumerState<Home>
         isDamageIDNew &&
         msgData == 'Engine died: no fuel' &&
         isDamageMsgNew) {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳Engine WARNING!',
-          subtitle: 'Engine ran out of fuel and died!',
-          image: File(warningLogo));
-      service!.show(toast);
-      toast.dispose();
-
       isDamageIDNew = false;
       player.play();
     }
@@ -118,14 +108,6 @@ class _HomeState extends ConsumerState<Home>
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Oil overheated') {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳OIL WARNING!',
-          subtitle: 'Oil is overheating!',
-          image: File(warningLogo));
-      service!.show(toast);
-      toast.dispose();
-
       isDamageIDNew = false;
       player.play();
     }
@@ -133,14 +115,6 @@ class _HomeState extends ConsumerState<Home>
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳ENGINE WARNING!',
-          subtitle: 'Engine is overheating!',
-          image: File(warningLogo));
-      service!.show(toast);
-      toast.dispose();
-
       isDamageIDNew = false;
       player.play();
     }
@@ -148,14 +122,6 @@ class _HomeState extends ConsumerState<Home>
         water != 15 &&
         isDamageIDNew &&
         msgData == 'Water overheated') {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳ENGINE WARNING!',
-          subtitle: 'Engine is overheating!',
-          image: File(warningLogo));
-      service!.show(toast);
-
-      toast.dispose();
       isDamageIDNew = false;
       player.play();
     }
@@ -163,14 +129,6 @@ class _HomeState extends ConsumerState<Home>
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine died: overheating') {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳ENGINE WARNING!',
-          subtitle: 'Engine died!! ',
-          image: File(warningLogo));
-      service!.show(toast);
-      toast.dispose();
-
       isDamageIDNew = false;
       player.play();
     }
@@ -178,28 +136,12 @@ class _HomeState extends ConsumerState<Home>
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine died: propeller broken') {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳ENGINE WARNING!',
-          subtitle: 'Engine died!! ',
-          image: File(warningLogo));
-      service!.show(toast);
-      toast.dispose();
-
       isDamageIDNew = false;
       player.play();
     }
     if (oil != 15 &&
         isDamageIDNew &&
         msgData == 'You are out of ammunition. Reloading is not possible.') {
-      Toast toast = Toast(
-          type: ToastType.imageAndText02,
-          title: '😳WARNING!!',
-          subtitle: 'Your icons is possibly destroyed / Not repairable😒',
-          image: File(warningLogo));
-      service!.show(toast);
-      toast.dispose();
-
       isDamageIDNew = false;
       player.play();
     }
@@ -289,11 +231,6 @@ class _HomeState extends ConsumerState<Home>
     } else {
       critAoaBool = false;
     }
-  }
-
-  Future<void> _handleClickRestore() async {
-    windowManager.restore();
-    windowManager.show();
   }
 
   Future<void> startServer() async {
@@ -418,9 +355,7 @@ class _HomeState extends ConsumerState<Home>
     _prefs.then((SharedPreferences prefs) {
       oilNotif.state = (prefs.getBool('isOilNotifOn') ?? true);
     });
-    _prefs.then((SharedPreferences prefs) {
-      stallNotif.state = (prefs.getBool('playStallWarning') ?? true);
-    });
+    stallNotif.state = (prefs.getBool('playStallWarning') ?? true);
     _prefs.then((SharedPreferences prefs) {
       tray.state = (prefs.getBool('isTrayEnabled') ?? true);
     });
@@ -447,13 +382,6 @@ class _HomeState extends ConsumerState<Home>
                 style: TextStyle(color: Colors.blue),
                 endColor: Colors.red,
               )));
-        Toast toast = Toast(
-          type: ToastType.text02,
-          title: '✅Connection Detected!',
-          subtitle: 'WTbgA Mobile connected',
-        );
-        service!.show(toast);
-        toast.dispose();
       } else {
         ScaffoldMessenger.of(context)
           ..removeCurrentSnackBar()
@@ -464,13 +392,11 @@ class _HomeState extends ConsumerState<Home>
                 style: TextStyle(color: Colors.blue),
                 endColor: Colors.red,
               )));
-        Toast toast = Toast(
+        WinToast.instance().showToast(
           type: ToastType.text02,
           title: '✅Connection ended!',
-          subtitle: 'WTbgA Mobile disconnected',
+          subtitle: 'WTbgA Mobile connected',
         );
-        service!.show(toast);
-        toast.dispose();
       }
     });
   }
@@ -489,23 +415,6 @@ class _HomeState extends ConsumerState<Home>
   void initState() {
     super.initState();
     var vehicleName = ref.read(vehicleNameProvider.notifier);
-    var dateTimeNow = DateTime.now().millisecondsSinceEpoch;
-    rpc.updatePresence(
-      DiscordPresence(
-        state: 'War Thunder Background Assistance',
-        details: 'Enjoying WTbgA',
-        startTimeStamp: dateTimeNow,
-        largeImageKey: 'largelogo',
-        largeImageText: 'War Thunder Background Assistance',
-        // smallImageKey: 'small_image',
-        // smallImageText: 'This text describes the small image.',
-      ),
-    );
-    service?.stream.listen((event) {
-      if (event is ToastActivated) {
-        windowManager.show();
-      }
-    });
 
     giveIps();
     startServer();
@@ -520,24 +429,7 @@ class _HomeState extends ConsumerState<Home>
 
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) async {
-      var phoneConnected = ref.watch(phoneConnectedProvider);
       if (!mounted || isStopped) t.cancel();
-      rpc.updatePresence(
-        DiscordPresence(
-          state: phoneConnected ? 'Using WTbgA - Mobile!' : 'Using WTbgA',
-          details: phoneConnected
-              ? 'Enjoying both desktop and mobile WTbgA!'
-              : phoneConnected &&
-                      ref.read(phoneStateProvider.notifier).state == 'image'
-                  ? 'Streaming using WTbgA'
-                  : 'Enjoying WTbgA!',
-          startTimeStamp: dateTimeNow,
-          largeImageKey: 'largelogo',
-          largeImageText: 'War Thunder Background Assistance',
-          // smallImageKey: 'small',
-          // smallImageText: 'WTbgA',
-        ),
-      );
       giveIps();
       updateMsgId();
       flapChecker();
@@ -620,7 +512,6 @@ class _HomeState extends ConsumerState<Home>
   @override
   Future<void> dispose() async {
     super.dispose();
-    rpc.clearPresence();
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
@@ -658,20 +549,6 @@ class _HomeState extends ConsumerState<Home>
     }
 
     return map;
-  }
-
-  Future<void> _trayInit() async {
-    await TrayManager.instance.setIcon(
-      'assets/app_icon.ico',
-    );
-    List<MenuItem> menuItems = [MenuItem(key: 'show-app', title: 'Show')];
-    await TrayManager.instance.setContextMenu(menuItems);
-    inTray = true;
-  }
-
-  void _trayUnInit() async {
-    await TrayManager.instance.destroy();
-    inTray = false;
   }
 
   Future<void> exitFS() async {
@@ -877,8 +754,6 @@ class _HomeState extends ConsumerState<Home>
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
 
   bool isStopped = false;
-  final bool _removeIconAfterRestored = true;
-  final bool _showWindowBelowTrayIcon = false;
   bool? valid;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
@@ -888,7 +763,6 @@ class _HomeState extends ConsumerState<Home>
   bool run = true;
   int fuelMass = 500;
   bool sendScreen = false;
-  bool inTray = false;
   bool critAoaBool = false;
 
   int index = 0;
@@ -897,389 +771,311 @@ class _HomeState extends ConsumerState<Home>
   bool inHangar = false;
   @override
   Widget build(BuildContext context) {
-    Size screenSize = MediaQuery.of(context).size;
     listener();
-    return InteractiveViewer(
-      child: Stack(children: [
-        !inHangar
-            ? GameMap(
-                inHangar: inHangar,
-              )
-            : ImageFiltered(
-                child: Image.asset(
-                  'assets/bg.jpg',
-                  fit: BoxFit.cover,
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                ),
-                imageFilter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0)),
-        Scaffold(
-            backgroundColor: Colors.transparent,
-            resizeToAvoidBottomInset: true,
-            appBar: PreferredSize(
-              preferredSize: Size(screenSize.width, 1000),
-              child: const TopBar(),
-            ),
-            body: Flex(
-              direction: Axis.horizontal,
-              children: [
-                Expanded(
-                  child: FutureBuilder<ToolDataState>(
-                      future: stateFuture,
-                      builder: (context, AsyncSnapshot<ToolDataState> shot) {
-                        if (shot.hasData) {
-                          ias = shot.data!.ias;
-                          gear = shot.data!.gear;
-                          flap = shot.data!.flaps;
-                          altitude = shot.data!.altitude;
-                          oil = shot.data!.oilTemp1C;
-                          water = shot.data!.waterTemp1C;
-                          aoa = shot.data!.aoa;
-                          load = shot.data!.load;
-                          fuelMass = shot.data!.fuel;
-                          if ((shot.data!.altitude == 32 ||
-                                  shot.data!.altitude == 31) &&
-                              shot.data!.gear == 100 &&
-                              shot.data!.ias == 0) {
-                            inHangar = true;
-                          } else {
-                            inHangar = false;
-                          }
-                          double fuel =
-                              shot.data!.fuel / shot.data!.maxFuel * 100;
-                          if (inHangar) {
-                            return Flex(
-                              direction: Axis.vertical,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    // decoration: BoxDecoration(
-                                    //     color:
-                                    //         Colors.blueGrey.withOpacity(0.3)),
-                                    alignment: Alignment.center,
-                                    child: RichText(
-                                      text: const TextSpan(
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                          text: 'In Hangar'),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                          return Flex(
-                            direction: Axis.vertical,
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  alignment: Alignment.topLeft,
-                                  child: RichText(
-                                    text: TextSpan(children: [
-                                      TextSpan(
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                          text:
-                                              'Throttle= ${shot.data!.throttle1} %')
-                                    ]),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  alignment: Alignment.topLeft,
-                                  child: RichText(
-                                    text: TextSpan(children: [
-                                      TextSpan(
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                          text: 'IAS= ${shot.data!.ias} km/h')
-                                    ]),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  alignment: Alignment.topLeft,
-                                  child: Text(
-                                    'Altitude= ${shot.data!.altitude} m',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 40),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  alignment: Alignment.topLeft,
-                                  child: Text(
-                                    'Climb= ${shot.data!.climb} m/s',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 40),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: fuel <= 13
-                                        ? BlinkText(
-                                            'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 40),
-                                            endColor: Colors.red,
-                                          )
-                                        : Text(
-                                            'Fuel= ${fuel.toStringAsFixed(1)} %',
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 40),
-                                          )),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  alignment: Alignment.topLeft,
-                                  padding: const EdgeInsets.only(left: 20),
-                                  child: RichText(
-                                    text: TextSpan(children: [
-                                      TextSpan(
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                          text:
-                                              'Oil Temp= ${shot.data!.oilTemp1C}°c')
-                                    ]),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  alignment: Alignment.topLeft,
-                                  child: RichText(
-                                    text: TextSpan(children: [
-                                      TextSpan(
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                          text:
-                                              'Water Temp= ${shot.data!.waterTemp1C}°c')
-                                    ]),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  alignment: Alignment.topLeft,
-                                  child: !critAoaBool
-                                      ? Text(
-                                          'AoA= ${shot.data!.aoa}°',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                        )
-                                      : BlinkText(
-                                          'AoA= ${shot.data!.aoa}°',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                        ),
-                                ),
-                              ),
-                            ],
-                          );
-                        } else if (shot.hasError) {
-                          return const Center(
-                              child: BlinkText(
-                            'ERROR: NO DATA',
-                            endColor: Colors.red,
-                            style: TextStyle(color: Colors.white, fontSize: 40),
-                          ));
+    return Stack(children: [
+      !inHangar
+          ? GameMap(
+              inHangar: inHangar,
+            )
+          : const SizedBox(),
+      Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Flex(
+            direction: Axis.horizontal,
+            children: [
+              Expanded(
+                child: FutureBuilder<ToolDataState>(
+                    future: stateFuture,
+                    builder: (context, AsyncSnapshot<ToolDataState> shot) {
+                      if (shot.hasData) {
+                        ias = shot.data!.ias;
+                        gear = shot.data!.gear;
+                        flap = shot.data!.flaps;
+                        altitude = shot.data!.altitude;
+                        oil = shot.data!.oilTemp1C;
+                        water = shot.data!.waterTemp1C;
+                        aoa = shot.data!.aoa;
+                        load = shot.data!.load;
+                        fuelMass = shot.data!.fuel;
+                        if ((shot.data!.altitude == 32 ||
+                                shot.data!.altitude == 31) &&
+                            shot.data!.gear == 100 &&
+                            shot.data!.ias == 0) {
+                          inHangar = true;
                         } else {
-                          return const Center(
-                              child: SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: CircularProgressIndicator(
-                              color: Colors.red,
-                            ),
-                          ));
-                        }
-                      }),
-                ),
-                Expanded(
-                  child: FutureBuilder<ToolDataIndicator?>(
-                      future: ToolDataIndicator.getIndicator(),
-                      builder:
-                          (context, AsyncSnapshot<ToolDataIndicator?> shot) {
-                        if (shot.hasData) {
                           inHangar = false;
-                          WidgetsBinding.instance?.addPostFrameCallback((_) {
-                            ref.read(vehicleNameProvider.notifier).state =
-                                shot.data!.type;
-                            vertical = shot.data!.vertical;
-                          });
-
-                          if (shot.data!.mach == null) shot.data!.mach = -0;
+                        }
+                        double fuel =
+                            shot.data!.fuel / shot.data!.maxFuel * 100;
+                        if (inHangar) {
                           return Flex(
                             direction: Axis.vertical,
                             children: [
                               Expanded(
                                 child: Container(
-                                  padding: const EdgeInsets.only(right: 20),
+                                  padding: const EdgeInsets.only(left: 20),
+                                  // decoration: BoxDecoration(
+                                  //     color:
+                                  //         Colors.blueGrey.withOpacity(0.3)),
                                   alignment: Alignment.center,
                                   child: RichText(
-                                    text: TextSpan(children: [
-                                      TextSpan(
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                          text:
-                                              'Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
-                                    ]),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(right: 20),
-                                  alignment: Alignment.center,
-                                  child: RichText(
-                                    text: TextSpan(children: [
-                                      TextSpan(
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                          text:
-                                              'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
-                                    ]),
+                                    text: const TextSpan(
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text: 'In Hangar'),
                                   ),
                                 ),
                               ),
                             ],
                           );
                         }
-                        if (shot.hasError) {
-                          WidgetsBinding.instance?.addPostFrameCallback((_) {
-                            ref.read(vehicleNameProvider.notifier).state =
-                                'Vehicle Name not available';
-                          });
-                          return Center(
-                            child: Container(
-                                padding: const EdgeInsets.all(8.0),
-                                child: const BlinkText(
-                                  'ERROR: NO DATA',
-                                  endColor: Colors.red,
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 40),
-                                )),
-                          );
-                        } else {
-                          WidgetsBinding.instance?.addPostFrameCallback((_) {
-                            ref.read(vehicleNameProvider.notifier).state =
-                                'Vehicle Name not available';
-                          });
-                          return const Center(
-                              child: SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: CircularProgressIndicator(
-                              color: Colors.red,
+                        return Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Throttle= ${shot.data!.throttle1} %')
+                                  ]),
+                                ),
+                              ),
                             ),
-                          ));
-                        }
-                      }),
-                )
-              ],
-            ))
-      ]),
-    );
-  }
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text: 'IAS= ${shot.data!.ias} km/h')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: Text(
+                                  'Altitude= ${shot.data!.altitude} m',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: Text(
+                                  'Climb= ${shot.data!.climb} m/s',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: fuel <= 13
+                                      ? BlinkText(
+                                          'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          endColor: Colors.red,
+                                        )
+                                      : Text(
+                                          'Fuel= ${fuel.toStringAsFixed(1)} %',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                        )),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.topLeft,
+                                padding: const EdgeInsets.only(left: 20),
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Oil Temp= ${shot.data!.oilTemp1C}°c')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Water Temp= ${shot.data!.waterTemp1C}°c')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: !critAoaBool
+                                    ? Text(
+                                        'AoA= ${shot.data!.aoa}°',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                      )
+                                    : BlinkText(
+                                        'AoA= ${shot.data!.aoa}°',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        );
+                      } else if (shot.hasError) {
+                        return const Center(
+                            child: BlinkText(
+                          'ERROR: NO DATA',
+                          endColor: Colors.red,
+                          style: TextStyle(color: Colors.white, fontSize: 40),
+                        ));
+                      } else {
+                        return const Center(
+                            child: SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: CircularProgressIndicator(
+                            color: Colors.red,
+                          ),
+                        ));
+                      }
+                    }),
+              ),
+              Expanded(
+                child: FutureBuilder<ToolDataIndicator?>(
+                    future: ToolDataIndicator.getIndicator(),
+                    builder: (context, AsyncSnapshot<ToolDataIndicator?> shot) {
+                      if (shot.hasData) {
+                        inHangar = false;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          ref.read(vehicleNameProvider.notifier).state =
+                              shot.data!.type;
+                          vertical = shot.data!.vertical;
+                        });
 
-  @override
-  void onTrayIconMouseDown() async {
-    if (_showWindowBelowTrayIcon) {
-      Size windowSize = await windowManager.getSize();
-      Rect trayIconBounds = await TrayManager.instance.getBounds();
-      Size trayIconSize = trayIconBounds.size;
-      Offset trayIconNewPosition = trayIconBounds.topLeft;
-
-      Offset newPosition = Offset(
-        trayIconNewPosition.dx - ((windowSize.width - trayIconSize.width) / 2),
-        trayIconNewPosition.dy,
-      );
-
-      windowManager.setPosition(newPosition);
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-    _handleClickRestore();
-    _trayUnInit();
-  }
-
-  @override
-  void onTrayIconRightMouseDown() {
-    TrayManager.instance.popUpContextMenu();
-  }
-
-  @override
-  void onTrayMenuItemClick(MenuItem menuItem) async {
-    switch (menuItem.key) {
-      case 'show-app':
-        windowManager.show();
-        break;
-    }
-  }
-
-  @override
-  void onWindowMinimize() {
-    var tray = ref.read(trayProvider.notifier);
-
-    if (tray.state) {
-      windowManager.hide();
-      _trayInit();
-    }
-  }
-
-  @override
-  void onWindowRestore() {
-    if (_removeIconAfterRestored) {
-      windowManager.show();
-      _trayUnInit();
-    }
-  }
-
-  @override
-  void onWindowFocus() {
-    inTray = false;
-  }
-
-  @override
-  void onWindowBlur() {
-    inTray = true;
+                        if (shot.data!.mach == null) shot.data!.mach = -0;
+                        return Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(right: 20),
+                                alignment: Alignment.center,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(right: 20),
+                                alignment: Alignment.center,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      if (shot.hasError) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          ref.read(vehicleNameProvider.notifier).state =
+                              'Vehicle Name not available';
+                        });
+                        return Center(
+                          child: Container(
+                              padding: const EdgeInsets.all(8.0),
+                              child: const BlinkText(
+                                'ERROR: NO DATA',
+                                endColor: Colors.red,
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 40),
+                              )),
+                        );
+                      } else {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          ref.read(vehicleNameProvider.notifier).state =
+                              'Vehicle Name not available';
+                        });
+                        return const Center(
+                            child: SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: CircularProgressIndicator(
+                            color: Colors.red,
+                          ),
+                        ));
+                      }
+                    }),
+              )
+            ],
+          )),
+    ]);
   }
 }

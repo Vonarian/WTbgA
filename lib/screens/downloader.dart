@@ -1,255 +1,261 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:desktoasts/desktoasts.dart';
+import 'package:blinking_text/blinking_text.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:tray_manager/tray_manager.dart';
+import 'package:tray_manager/tray_manager.dart' as tray;
+import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/main.dart';
-import 'package:wtbgassistant/services/utility.dart';
+import 'package:wtbgassistant/screens/widgets/custom_loading.dart';
 
 import '../data_receivers/github.dart';
-import 'home.dart';
 
 class Downloader extends StatefulWidget {
   final bool isFfmpeg;
   const Downloader({Key? key, required this.isFfmpeg}) : super(key: key);
 
   @override
-  _DownloaderState createState() => _DownloaderState();
+  DownloaderState createState() => DownloaderState();
 }
 
-class _DownloaderState extends State<Downloader>
-    with WindowListener, TrayListener {
+class DownloaderState extends State<Downloader>
+    with WindowListener, tray.TrayListener {
   @override
   void initState() {
     super.initState();
-    if (!widget.isFfmpeg) {
-      downloadUpdate();
-      windowManager.setAsFrameless();
-    } else {
-      downloadFfmpeg();
-    }
     windowManager.addListener(this);
-    trayManager.addListener(this);
+    tray.trayManager.addListener(this);
+    downloadUpdate();
   }
 
   @override
   void dispose() {
     super.dispose();
     windowManager.removeListener(this);
-    trayManager.removeListener(this);
-  }
-
-  String errorLogPath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/logs/errors'
-  ]);
-
-  Toast toast = Toast(
-      type: ToastType.text02,
-      title: 'Downloading WTbgA update',
-      subtitle: 'Please do not close the application!');
-  Toast toastFfmpeg = Toast(
-      type: ToastType.text02,
-      title: 'Downloading FFMPEG',
-      subtitle: 'Please do not close the application!');
-  Future<void> downloadFfmpeg() async {
-    service!.show(toastFfmpeg);
-    toast.dispose();
-    try {
-      Dio dio = Dio();
-      await dio.download(
-          'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/ffmpeg.zip',
-          '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/ffmpeg.zip',
-          onReceiveProgress: (downloaded, full) {
-        progress = downloaded / full * 100;
-        setState(() {});
-      }).whenComplete(() {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (c, a1, a2) => const Home(),
-            transitionsBuilder: (c, anim, a2, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 2000),
-          ),
-        );
-      });
-    } catch (e, st) {
-      String path = await AppUtil.createFolderInAppDocDir(errorLogPath);
-      final File fileWrite = File('$path/downloader-ffmpeg.txt');
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-            duration: const Duration(seconds: 10),
-            content: Text(e.toString())));
-      final String finalString = 'Logging:'
-          '\nError:\n'
-          '$e'
-          '\nStackTrace: '
-          '\n$st';
-      await fileWrite.writeAsString(finalString);
-      if (progress != 100) {
-        await Directory(
-                '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/ffmpeg.zip')
-            .delete();
-      }
-      error = true;
-      setState(() {});
-      Toast errorToast = Toast(
-          type: ToastType.text02,
-          title: 'Ffmpeg download failed',
-          subtitle: 'Please make sure your internet connection is stable');
-      service!.show(errorToast);
-      errorToast.dispose();
-    }
+    tray.trayManager.removeListener(this);
   }
 
   Future<void> downloadUpdate() async {
+    await WinToast.instance().showToast(
+        type: ToastType.text04,
+        title: 'Updating WTNews...',
+        subtitle:
+            'WTNews is downloading update, please do not close the application');
     await windowManager.setMinimumSize(const Size(230, 300));
     await windowManager.setMaximumSize(const Size(600, 600));
     await windowManager.setSize(const Size(230, 300));
-    service!.show(toast);
-    toast.dispose();
+    await windowManager.center();
     try {
       Data data = await Data.getData();
-
+      Directory tempDir = await getTemporaryDirectory();
+      String tempPath = tempDir.path;
+      Directory tempWtnews =
+          await Directory('$tempPath\\WTNews').create(recursive: true);
+      final deleteFolder = Directory(p.joinAll([tempWtnews.path, 'out']));
+      if (await deleteFolder.exists()) {
+        await deleteFolder.delete(recursive: true);
+      }
       Dio dio = Dio();
-      await dio.download(data.assets.last.browserDownloadUrl,
-          '${p.dirname(Platform.resolvedExecutable)}/data/update.zip',
-          onReceiveProgress: (downloaded, full) {
+      await dio.download(
+          data.assets.last.browserDownloadUrl, '${tempWtnews.path}\\update.zip',
+          onReceiveProgress: (downloaded, full) async {
         progress = downloaded / full * 100;
         setState(() {});
-      }).whenComplete(() async {
-        final File filePath =
-            File('${p.dirname(Platform.resolvedExecutable)}/data/update.zip');
-        final Uint8List bytes = await File(
-                '${p.dirname(Platform.resolvedExecutable)}/data/update.zip')
-            .readAsBytes();
+      }, deleteOnError: true).whenComplete(() async {
+        final File filePath = File('${tempWtnews.path}\\update.zip');
+        final Uint8List bytes =
+            await File('${tempWtnews.path}\\update.zip').readAsBytes();
         final archive = ZipDecoder().decodeBytes(bytes);
         for (final file in archive) {
           final filename = file.name;
           if (file.isFile) {
             final data = file.content as List<int>;
-            File(p.dirname(filePath.path) + '/out/$filename')
+            File('${p.dirname(filePath.path)}\\out\\$filename')
               ..createSync(recursive: true)
               ..writeAsBytesSync(data);
           } else {
-            Directory(p.dirname(filePath.path) + '/out/$filename')
+            Directory('${p.dirname(filePath.path)}\\out\\$filename')
                 .create(recursive: true);
           }
         }
 
         String installer = (p.joinAll([
           ...p.split(p.dirname(Platform.resolvedExecutable)),
-          'data'
-              'flutter_assets',
+          'data',
+          'flutter_assets',
           'assets',
-          'Version',
+          'install',
           'installer.bat'
         ]));
-        await Process.run(installer, [], runInShell: true);
+
+        await WinToast.instance().showToast(
+            type: ToastType.text04,
+            title: 'Update process starting in a moment',
+            subtitle:
+                'Do not close the application until the update process is finished');
+        text = 'Installing';
+        setState(() {});
+        await Process.run(installer, [tempWtnews.path]);
       }).timeout(const Duration(minutes: 8));
     } catch (e, st) {
-      String path = await AppUtil.createFolderInAppDocDir(errorLogPath);
-      final File fileWrite = File('$path/downloader-update.txt');
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
-            duration: const Duration(seconds: 10),
-            content: Text(e.toString())));
-      final String finalString = 'Logging:'
-          '\nError:\n'
-          '$e'
-          '\nStackTrace: '
-          '\n$st';
-      await fileWrite.writeAsString(finalString);
-
+          duration: const Duration(seconds: 10),
+          content: BlinkText(
+            e.toString(),
+            endColor: Colors.red,
+            duration: const Duration(milliseconds: 300),
+          ),
+          action: SnackBarAction(
+            onPressed: () {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const Downloader(
+                            isFfmpeg: false,
+                          )));
+            },
+            label: 'Retry',
+          ),
+        ));
+      windowManager.setSize(const Size(600, 600));
+      log(e.toString(), stackTrace: st);
       error = true;
+      text = 'ERROR!';
       setState(() {});
-      rethrow;
     }
   }
 
+  String text = 'Downloading';
   bool error = false;
   double progress = 0;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: widget.isFfmpeg
-            ? AppBar(
-                title: const Text('Downloading FFMPEG'),
-                centerTitle: true,
-                leading: IconButton(
-                    onPressed: () {
-                      if (progress != 100) {
-                        Directory(
-                                '${p.dirname(Platform.resolvedExecutable)}/data/flutter_assets/assets/ffmpeg.zip')
-                            .delete();
-                      }
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (c, a1, a2) => const Home(),
-                          transitionsBuilder: (c, anim, a2, child) =>
-                              FadeTransition(opacity: anim, child: child),
-                          transitionDuration:
-                              const Duration(milliseconds: 2000),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.arrow_back)),
-              )
-            : null,
-        backgroundColor: Colors.blueGrey,
-        body: Center(
-          child: SizedBox(
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onPanStart: (details) {
+        windowManager.startDragging();
+      },
+      child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
+            child: SizedBox(
               height: 200,
               width: 200,
-              child: CircularPercentIndicator(
-                center: !error
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+              child: text == 'Downloading'
+                  ? CircularPercentIndicator(
+                      center: !error
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  text,
+                                  style: const TextStyle(
+                                      fontSize: 15, color: Colors.white),
+                                ),
+                                Text(
+                                  '${progress.toStringAsFixed(1)} %',
+                                  style: const TextStyle(
+                                      fontSize: 15, color: Colors.white),
+                                ),
+                              ],
+                            )
+                          : const Center(
+                              child: Text(
+                                'ERROR',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                            ),
+                      backgroundColor: Colors.blue,
+                      percent: double.parse(progress.toStringAsFixed(0)) / 100,
+                      radius: 100,
+                    )
+                  : Center(
+                      child: Stack(
                         children: [
-                          const Text(
-                            'Downloading',
-                            style: TextStyle(fontSize: 15),
+                          Center(
+                            child: CustomLoadingAnimationWidget.inkDrop(
+                                color: Color.lerp(
+                                        Colors.red, Colors.amber, 0.77) ??
+                                    Colors.red,
+                                size: 150,
+                                strokeWidth: 10,
+                                colors: [
+                                  Colors.red,
+                                  Colors.blue,
+                                  Colors.green,
+                                  Colors.amber,
+                                  Colors.pink
+                                ]),
                           ),
-                          Text(
-                            '${progress.toStringAsFixed(1)} %',
-                            style: const TextStyle(fontSize: 15),
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  text,
+                                  style: const TextStyle(
+                                      fontSize: 15, color: Colors.white),
+                                ),
+                                Text(
+                                  '${progress.toStringAsFixed(1)} %',
+                                  style: const TextStyle(
+                                      fontSize: 15, color: Colors.white),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
-                      )
-                    : const Center(
-                        child: Text(
-                          'ERROR',
-                          style: TextStyle(fontSize: 15),
-                        ),
                       ),
-                backgroundColor: Colors.blue,
-                percent: double.parse(progress.toStringAsFixed(0)) / 100,
-                radius: 100,
-              )),
-        ));
+                    ),
+            ),
+          )),
+    );
   }
 
   final bool _showWindowBelowTrayIcon = false;
   Future<void> _handleClickRestore() async {
+    await windowManager.setIcon('assets/app_icon.ico');
     windowManager.restore();
     windowManager.show();
+  }
+
+  Future<void> _trayInit() async {
+    await tray.trayManager.setIcon(
+      'assets/app_icon.ico',
+    );
+    tray.Menu menu = tray.Menu(items: [
+      tray.MenuItem(key: 'show-app', label: 'Show'),
+      tray.MenuItem.separator(),
+      tray.MenuItem(key: 'close-app', label: 'Exit'),
+    ]);
+    await tray.trayManager.setContextMenu(menu);
+  }
+
+  @override
+  void onWindowMinimize() {
+    windowManager.hide();
+    _trayInit();
+  }
+
+  void _trayUnInit() async {
+    await tray.trayManager.destroy();
   }
 
   @override
   void onTrayIconMouseDown() async {
     if (_showWindowBelowTrayIcon) {
       Size windowSize = await windowManager.getSize();
-      Rect trayIconBounds = await TrayManager.instance.getBounds();
+      Rect trayIconBounds = await tray.TrayManager.instance.getBounds();
       Size trayIconSize = trayIconBounds.size;
       Offset trayIconNewPosition = trayIconBounds.topLeft;
 
@@ -262,5 +268,28 @@ class _DownloaderState extends State<Downloader>
       await Future.delayed(const Duration(milliseconds: 100));
     }
     _handleClickRestore();
+    _trayUnInit();
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    tray.trayManager.popUpContextMenu();
+  }
+
+  @override
+  void onWindowRestore() {
+    setState(() {});
+  }
+
+  @override
+  void onTrayMenuItemClick(tray.MenuItem menuItem) async {
+    switch (menuItem.key) {
+      case 'show-app':
+        windowManager.show();
+        break;
+      case 'close-app':
+        windowManager.close();
+        break;
+    }
   }
 }

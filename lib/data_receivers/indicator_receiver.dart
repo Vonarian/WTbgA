@@ -38,6 +38,7 @@ class ToolDataIndicator {
     } catch (e) {
       rethrow;
     }
+    return null;
   }
 
   Map<String, dynamic> toMap() {
