@@ -22,9 +22,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.4
   settings_ui: ^2.0.2
-
   win_toast: ^0.0.2
   blinking_text: ^1.0.1+2
   json_annotation: 4.5.0
@@ -45,6 +43,7 @@ dependencies:
   flutter_riverpod: ^1.0.4
   csv: ^5.0.1
   archive: ^3.3.0
+  fluent_ui: ^3.12.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -54,10 +53,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  msix:  2.8.2
-  build_runner: ^2.0.0
-  json_serializable:
-  flutter_lints: ^1.0.4
+  flutter_lints: ^2.0.1
 
 
 # For information on the generic Dart part of this file, see the
@@ -73,20 +69,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/WARNING.png
-    - assets/warning_female.mp3
-    - assets/logoWTbgA.jpg
-    - assets/sounds/OverG.mp3
-    - assets/sounds/GearUp.wav
-    - assets/sounds/PullUp.mp3
-    - assets/app_icon.ico
-    - assets/fm_data_db.csv
-    - assets/fm_names_db.csv
-    - assets/del.bat
-    - assets/mona/
-    - assets/terminate.bat
+    - assets/
     - assets/Version/
-    - assets/checker.bat
     - assets/icons/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
@@ -113,15 +97,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
-msix_config:
-  display_name: WTbgA
-  publisher_display_name: Vonarian
-  identity_name: Vonarian
-  msix_version: 2.1.0.0
-  publisher: CN = Vonarian
-  logo_path: C:\src\wtbgassistant\assets\logoWTbgA.jpg
-  architecture: x64
-
 ffigen:
   output: 'lib/generated/bindings.dart'
   dart-bool: true

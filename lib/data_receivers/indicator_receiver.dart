@@ -1,19 +1,21 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:developer';
 
-import 'package:http/http.dart';
+import 'package:dio/dio.dart';
 
-class ToolDataIndicator {
-  String type;
-  double throttle;
+import '../main.dart';
+
+class IndicatorData {
+  String? type;
+  double? throttle;
   double? mach;
-  double compass;
+  double? compass;
   double? engine;
   double? flap1;
   double? flap2;
   double? vertical;
   bool valid;
-  ToolDataIndicator(
+  IndicatorData(
       {required this.type,
       required this.throttle,
       required this.mach,
@@ -24,21 +26,23 @@ class ToolDataIndicator {
       required this.vertical,
       required this.valid});
 
-  static Future<ToolDataIndicator?> getIndicator() async {
-    // make the request
-    try {
-      Response? response =
-          await get(Uri.parse('http://localhost:8111/indicators'));
-      Map<String, dynamic> indicatorData = jsonDecode(response.body);
-      if (response.body.contains('{"valid": true')) {
-        ToolDataIndicator toolDataIndicator =
-            ToolDataIndicator.fromMap(indicatorData);
-        return toolDataIndicator;
+  static Stream<IndicatorData?> getIndicator() async* {
+    final stream =
+        Stream.periodic(const Duration(milliseconds: 200), (_) async {
+      try {
+        Response? response = await dio
+            .get('http://localhost:8111/indicators')
+            .timeout(const Duration(seconds: 2));
+        IndicatorData toolDataState = IndicatorData.fromMap(response.data);
+        return toolDataState;
+      } catch (e, st) {
+        log(e.toString(), stackTrace: st);
+        return null;
       }
-    } catch (e) {
-      rethrow;
+    });
+    await for (var value in stream) {
+      yield await value;
     }
-    return null;
   }
 
   Map<String, dynamic> toMap() {
@@ -55,19 +59,17 @@ class ToolDataIndicator {
     };
   }
 
-  factory ToolDataIndicator.fromMap(Map<String, dynamic> map) {
-    return ToolDataIndicator(
-      type: map['type'] as String,
-      throttle: map['throttle'] as double,
-      mach: map.containsKey('mach') ? map['mach'] as double : null,
-      compass: map['compass'] as double,
-      engine: map.containsKey('engine') ? map['engine'] as double : null,
-      flap1: map.containsKey('flap1') ? map['flap1'] as double : null,
-      flap2: map.containsKey('flap2') ? map['flap2'] as double : null,
-      vertical: map.containsKey('aviahorizon_pitch')
-          ? -map['aviahorizon_pitch'] as double
-          : null,
-      valid: map['valid'] as bool,
+  factory IndicatorData.fromMap(Map<String, dynamic> map) {
+    return IndicatorData(
+      type: map['type'],
+      throttle: map['throttle'],
+      mach: map['mach'],
+      compass: map['compass'],
+      engine: map['engine'],
+      flap1: map['flap1'],
+      flap2: map['flap2'],
+      vertical: map['aviahorizon_pitch'],
+      valid: map['valid'],
     );
   }
 }

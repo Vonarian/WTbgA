@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:wtbgassistant/main.dart';
 
 class ChatEvents {
   int? id;
@@ -11,9 +9,9 @@ class ChatEvents {
 
   static Future<List<ChatEvents>> getChat() async {
     try {
-      final response = await http.get(
-          Uri.parse('http://localhost:8111/gamechat?lastId=%27+lastChatRecId'));
-      final chatEvents = jsonDecode(response.body)
+      final response = await dio
+          .get('http://localhost:8111/gamechat?lastId=%27+lastChatRecId');
+      final chatEvents = response.data
           .map<ChatEvents>((model) => ChatEvents.fromMap(model))
           .toList();
       return chatEvents;

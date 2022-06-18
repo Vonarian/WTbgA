@@ -2,18 +2,15 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:blinking_text/blinking_text.dart';
-import 'package:flutter/material.dart';
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:path/path.dart' as p;
-import 'package:win_toast/win_toast.dart';
 import 'package:wtbgassistant/data_receivers/github.dart';
-import 'package:wtbgassistant/screens/widgets/titlebar.dart';
 
 import 'downloader.dart';
 import 'home.dart';
 
 class Loading extends StatefulWidget {
-  final List<String> window;
-  const Loading({Key? key, required this.window}) : super(key: key);
+  const Loading({Key? key}) : super(key: key);
 
   @override
   _LoadingState createState() => _LoadingState();
@@ -38,89 +35,61 @@ class _LoadingState extends State<Loading> {
       if (int.parse(data.tagName.replaceAll('.', '')) >
           int.parse(version.replaceAll('.', ''))) {
         if (!mounted) return;
-
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            content: Text(
-                'Version: $version. Status: Proceeding to update in 4 seconds!'),
-            action: SnackBarAction(
-                label: 'Cancel update',
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (c, a1, a2) => const Home(),
-                      transitionsBuilder: (c, anim, a2, child) =>
-                          FadeTransition(opacity: anim, child: child),
-                      transitionDuration: const Duration(milliseconds: 1000),
-                    ),
-                  );
-                }),
-          ));
+        showSnackbar(
+            context,
+            Snackbar(
+              content: Text(
+                  'Version: $version. Status: Proceeding to update in 4 seconds!'),
+              action: TextButton(
+                  child: const Text('Cancel update'),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (c, a1, a2) => const Home(),
+                        transitionsBuilder: (c, anim, a2, child) =>
+                            FadeTransition(opacity: anim, child: child),
+                        transitionDuration: const Duration(milliseconds: 1000),
+                      ),
+                    );
+                  }),
+            ));
 
         Future.delayed(const Duration(seconds: 4), () async {
           Navigator.of(context)
-              .pushReplacement(MaterialPageRoute(builder: (context) {
+              .pushReplacement(FluentPageRoute(builder: (context) {
             return const Downloader(
-              isFfmpeg: false,
+              isRGB: false,
             );
           }));
         });
       } else {
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-              duration: const Duration(seconds: 10),
-              content: Text('Version: $version ___ Status: Up-to-date!')));
+        showSnackbar(
+            context,
+            Snackbar(
+                content: Text('Version: $version ___ Status: Up-to-date!')));
         Future.delayed(const Duration(microseconds: 500), () async {
           Navigator.pushReplacement(
             context,
-            PageRouteBuilder(
-              pageBuilder: (c, a1, a2) => const Home(),
-              transitionsBuilder: (c, anim, a2, child) =>
-                  FadeTransition(opacity: anim, child: child),
-              transitionDuration: const Duration(milliseconds: 1000),
-            ),
+            FluentPageRoute(builder: (context) => const Home()),
           );
         });
       }
     } catch (e, st) {
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-            duration: const Duration(seconds: 10),
-            content: Text(
-                'Version: $version ___ Status: Error checking for update!')));
+      showSnackbar(
+          context,
+          Snackbar(
+              content: Text(
+                  'Version: $version ___ Status: Error checking for update!')));
       log(e.toString(), stackTrace: st);
       Future.delayed(const Duration(seconds: 2), () async {
         Navigator.pushReplacement(
           context,
-          PageRouteBuilder(
-            pageBuilder: (c, a1, a2) => const Home(),
-            transitionsBuilder: (c, anim, a2, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 1000),
-          ),
+          FluentPageRoute(builder: (context) => const Home()),
         );
       });
-    }
-  }
-
-  Future<void> checker() async {
-    if (!widget.window.contains('War Thunder')) {
-      WinToast.instance().showToast(
-          type: ToastType.text04,
-          title: 'Warning',
-          subtitle: 'Please open War Thunder before using this app!');
-    }
-    if (widget.window.contains('War Thunder')) {
-      WinToast.instance().showToast(
-          type: ToastType.text04,
-          title: 'Nice!',
-          subtitle: 'War Thunder is open :)');
     }
   }
 
@@ -138,42 +107,33 @@ class _LoadingState extends State<Loading> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await checkGitVersion(await checkVersion());
     });
-    checker();
   }
 
-  /// List the window handle and text for all top-level desktop windows
-  /// in the current session.
-
-  List<String> windows = [];
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
-      Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Center(
-            child: Stack(children: const [
-              Center(
-                child: BlinkText(
-                  '..: Loading :..',
-                  style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
-                  endColor: Colors.purple,
-                ),
+      ScaffoldPage(
+          content: Center(
+        child: Stack(children: [
+          Center(
+            child: BlinkText(
+              '..: Loading :..',
+              style: TextStyle(
+                  color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+              endColor: Colors.purple,
+            ),
+          ),
+          Center(
+            child: SizedBox(
+              height: 400,
+              width: 400,
+              child: ProgressRing(
+                backgroundColor: Colors.red,
               ),
-              Center(
-                child: SizedBox(
-                  height: 400,
-                  width: 400,
-                  child: CircularProgressIndicator(
-                    backgroundColor: Colors.red,
-                  ),
-                ),
-              ),
-            ]),
-          )),
-      const WindowTitleBar(settings: false)
+            ),
+          ),
+        ]),
+      )),
     ]);
   }
 }

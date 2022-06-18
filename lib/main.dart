@@ -1,65 +1,27 @@
-import 'dart:ffi';
 import 'dart:io' show Platform;
 
-import 'package:ffi/ffi.dart';
-import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:win32/win32.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/screens/loading.dart';
-import 'package:wtbgassistant/services/theme.dart';
-
-import 'screens/home.dart';
-
-HotKeyManager hotKey = HotKeyManager.instance;
-List<String> windows = [];
-
-int enumWindowsProc(int hWnd, int lParam) {
-  // Don't enumerate windows unless they are marked as WS_VISIBLE
-  if (IsWindowVisible(hWnd) == FALSE) return TRUE;
-
-  final length = GetWindowTextLength(hWnd);
-  if (length == 0) {
-    return TRUE;
-  }
-
-  final buffer = wsalloc(length + 1);
-  GetWindowText(hWnd, buffer, length + 1);
-  free(buffer);
-  windows.add(buffer.toDartString());
-  return TRUE;
-}
-
-List<String> enumerateWindows() {
-  final wndProc = Pointer.fromFunction<EnumWindowsProc>(enumWindowsProc, 0);
-
-  EnumWindows(wndProc, 0);
-  print(windows);
-  return windows;
-}
+import 'package:wtbgassistant/screens/widgets/top_widget.dart';
 
 late SharedPreferences prefs;
-
+final dio = Dio();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Window.initialize();
   await windowManager.ensureInitialized();
   prefs = await SharedPreferences.getInstance();
   windowManager.waitUntilReadyToShow().then((_) async {
-    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     await windowManager.setResizable(true);
-    await windowManager.setTitle('WTNews');
+    await windowManager.setTitle('WTbgA');
     await windowManager.setIcon('assets/app_icon.ico');
-    await Window.hideWindowControls();
-    await Window.setEffect(
-      effect: WindowEffect.aero,
-      color: Colors.black.withOpacity(0.55),
-    );
     await windowManager.show();
   });
 
@@ -96,19 +58,13 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      child: MaterialApp(
-        theme: lightThemeData,
-        darkTheme: darkThemeData,
-        debugShowCheckedModeBanner: false,
-        title: 'WarThunderbgAssistant',
-        initialRoute: '/',
-        routes: {
-          '/': (context) => Loading(
-                window: enumerateWindows(),
-              ),
-          '/home': (context) => const Home(),
-          // '/info': (context) => const InfoPage(),
-        },
+      child: App(
+        child: FluentApp(
+          theme: ThemeData.dark(),
+          debugShowCheckedModeBanner: false,
+          title: 'WTbgA',
+          home: const Loading(),
+        ),
       ),
     ),
   );

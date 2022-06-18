@@ -2,40 +2,35 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui';
 
-import 'package:archive/archive.dart';
 import 'package:blinking_text/blinking_text.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' hide MenuItem;
-import 'package:flutter_acrylic/flutter_acrylic.dart';
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:libwinmedia/libwinmedia.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:path/path.dart' as p;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
-import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/screens/downloader.dart';
+import 'package:wtbgassistant/providers.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
-import 'package:wtbgassistant/services/providers.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
 import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
 import '../data_receivers/indicator_receiver.dart';
 import '../data_receivers/state_receiver.dart';
 import '../main.dart';
+import '../services/extensions.dart';
+import 'downloader.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({Key? key}) : super(key: key);
 
   @override
-  _HomeState createState() => _HomeState();
+  HomeState createState() => HomeState();
 }
 
-class _HomeState extends ConsumerState<Home>
+class HomeState extends ConsumerState<Home>
     with WindowListener, TrayListener, TickerProviderStateMixin {
   void userRedLineFlap() {
     var flapIas = ref.read(flapLimitProvider.notifier);
@@ -153,16 +148,6 @@ class _HomeState extends ConsumerState<Home>
   String? emptyString = 'No Data';
   bool? emptyBool;
   ValueNotifier<int?> idData = ValueNotifier<int?>(null);
-  late Future<ToolDataState> stateFuture = updateState();
-  Future<ToolDataState> updateState() async {
-    try {
-      ToolDataState state = await ToolDataState.getState();
-      return state;
-    } catch (e) {
-      // log(e.toString(), stackTrace: st);
-      rethrow;
-    }
-  }
 
   Future<void> updateMsgId() async {
     List<Damage> dataForId = await Damage.getDamage();
@@ -207,131 +192,22 @@ class _HomeState extends ConsumerState<Home>
     }
   }
 
-  Future<void> critAoaChecker() async {
-    var stallNotif = ref.read(stallNotifProvider.notifier);
-    if (aoa == null || critAoa == 10000) return;
-    if (!stallNotif.state) return;
+  bool critAoaChecker() {
+    if (aoa == null) return false;
     if (gear! > 0) {
-      critAoaBool = false;
-      return;
+      return false;
     }
     if (vertical! >= 10 && flap! <= 10 && aoa! >= critAoa) {
-      // pullUpPlayer.play();
-      critAoaBool = true;
+      return true;
     } else if (vertical! <= -10 && flap! <= 10 && aoa! <= critAoa) {
-      // pullUpPlayer.play();
-      critAoaBool = true;
+      return true;
     } else if (vertical! <= -10 && flap! >= 10 && aoa! <= critAoa) {
-      critAoa = fmData!.critAoa4;
-      // pullUpPlayer.play();
-      critAoaBool = true;
+      return true;
     } else if (vertical! >= 10 && flap! >= 10 && aoa! >= critAoa) {
-      // pullUpPlayer.play();
-      critAoaBool = true;
+      return true;
     } else {
-      critAoaBool = false;
+      return false;
     }
-  }
-
-  Future<void> startServer() async {
-    var nonePost = ref.read(nonePostProvider.notifier);
-    var phoneConnected = ref.read(phoneConnectedProvider.notifier);
-    var vehicleName = ref.read(vehicleNameProvider.notifier);
-    var ipAddress = ref.read(ipAddressProvider.notifier);
-    var streamState = ref.read(streamStateProvider.notifier);
-    var phoneState = ref.read(phoneStateProvider.notifier);
-
-    int check = 0;
-    Future.delayed(const Duration(milliseconds: 800), () {
-      HttpServer.bind(InternetAddress.anyIPv4, 55200).then((HttpServer server) {
-        if (kDebugMode) {
-          print('[+]WebSocket listening at -- ws://${ipAddress.state}:55200');
-        }
-        server.listen((HttpRequest request) {
-          WebSocketTransformer.upgrade(request).then((WebSocket ws) {
-            ws.listen(
-              (data) {
-                phoneConnected.state = true;
-                nonePost.state = false;
-                headerColor = Colors.deepPurple;
-                drawerIcon = Icons.settings;
-                Map<String, dynamic> serverData = {
-                  'vehicleName': vehicleName.state,
-                  'ias': ias,
-                  'climb': climb,
-                  'damageId': idData.value,
-                  'damageMsg': msgData,
-                  'critAoa': critAoa,
-                  'aoa': aoa,
-                  'throttle': throttle,
-                  'engineTemp': engine,
-                  'oil': oil,
-                  'water': water,
-                  'altitude': altitude,
-                  'minFuel': minFuel,
-                  'maxFuel': fuelMass,
-                  'gear': gear,
-                  // 'chat1': chatMsgFirst,
-                  'chatId1': chatIdFirst.value,
-                  // 'chat2': chatMsgSecond,
-                  'chatId2': chatIdSecond.value,
-                  // 'chatMode1': chatModeFirst,
-                  // 'chatMode2': chatModeSecond,
-                  // 'chatSender1': chatSenderFirst,
-                  // 'chatSender2': chatSenderSecond,
-                  // 'chatEnemy1': chatEnemyFirst,
-                  // 'chatEnemy2': chatEnemySecond,
-                  'check': check++
-                };
-                var internalData = jsonDecode(data);
-                if (internalData == null) {
-                  nonePost.state = true;
-                  headerColor = Colors.red;
-                  drawerIcon = Icons.warning;
-                  ws.close();
-                  ScaffoldMessenger.of(context)
-                    ..removeCurrentSnackBar
-                    ..showSnackBar(const SnackBar(
-                        content: Text('Abnormal connection request detected')));
-                }
-                phoneConnected.state = (internalData['WTbgA']);
-                phoneState.state = (internalData['state']);
-                streamState.state = internalData['startStream'];
-                Timer(const Duration(milliseconds: 300), () {
-                  if (ws.readyState == WebSocket.open) {
-                    ws.add(json.encode(serverData));
-                  }
-                });
-              },
-              onDone: () {
-                if (kDebugMode) {
-                  print('[+]Done :)');
-                }
-                phoneConnected.state = false;
-              },
-              onError: (err) => print('[!]Error -- ${err.toString()}'),
-              cancelOnError: false,
-            );
-          }, onError: (err) {
-            nonePost.state = true;
-            headerColor = Colors.red;
-            drawerIcon = Icons.warning;
-            ScaffoldMessenger.of(context)
-              ..removeCurrentSnackBar
-              ..showSnackBar(const SnackBar(
-                  content: BlinkText(
-                'Abnormal connection request detected',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.cyan),
-                endColor: Colors.red,
-              )));
-            if (kDebugMode) {
-              print('[!]Error -- ${err.toString()}');
-            }
-          });
-        }, onError: (err) => print('[!]Error -- ${err.toString()}'));
-      }, onError: (err) => print('[!]Error -- ${err.toString()}'));
-    });
   }
 
   void receiveDiskValues() {
@@ -342,119 +218,36 @@ class _HomeState extends ConsumerState<Home>
     var waterNotif = ref.read(waterNotifProvider.notifier);
     var tray = ref.read(trayProvider.notifier);
     var stallNotif = ref.read(stallNotifProvider.notifier);
-    var transparentFont = ref.read(transparentFontProvider.notifier);
-    _prefs.then((SharedPreferences prefs) {
-      lastId = (prefs.getInt('lastId') ?? 0);
-    });
-    _prefs.then((SharedPreferences prefs) {
-      transparentFont.state = (prefs.getDouble('fontSize') ?? 40);
-    });
-    _prefs.then((SharedPreferences prefs) {
-      pullUpNotif.state = (prefs.getBool('isPullUpEnabled') ?? true);
-    });
-    _prefs.then((SharedPreferences prefs) {
-      oilNotif.state = (prefs.getBool('isOilNotifOn') ?? true);
-    });
+    lastId = (prefs.getInt('lastId') ?? 0);
+    pullUpNotif.state = (prefs.getBool('isPullUpEnabled') ?? true);
+    oilNotif.state = (prefs.getBool('isOilNotifOn') ?? true);
     stallNotif.state = (prefs.getBool('playStallWarning') ?? true);
-    _prefs.then((SharedPreferences prefs) {
-      tray.state = (prefs.getBool('isTrayEnabled') ?? true);
-    });
-    _prefs.then((SharedPreferences prefs) {
-      waterNotif.state = (prefs.getBool('isWaterNotifOn') ?? true);
-    });
-    _prefs.then((SharedPreferences prefs) {
-      engineDeath.state = (prefs.getBool('isEngineDeathNotifOn') ?? true);
-    });
-    _prefs.then((SharedPreferences prefs) {
-      fullNotif.state = (prefs.getBool('isFullNotifOn') ?? true);
-    });
-  }
-
-  void listener() {
-    ref.listen(phoneConnectedProvider, (previous, next) {
-      if (next as bool) {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(const SnackBar(
-              duration: Duration(seconds: 3),
-              content: BlinkText(
-                'Phone connected!',
-                style: TextStyle(color: Colors.blue),
-                endColor: Colors.red,
-              )));
-      } else {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(const SnackBar(
-              duration: Duration(seconds: 3),
-              content: BlinkText(
-                'Phone disconnected!',
-                style: TextStyle(color: Colors.blue),
-                endColor: Colors.red,
-              )));
-        WinToast.instance().showToast(
-          type: ToastType.text02,
-          title: '✅Connection ended!',
-          subtitle: 'WTbgA Mobile connected',
-        );
-      }
-    });
-  }
-
-  Future<void> giveIps() async {
-    var ipAddress = ref.read(ipAddressProvider.notifier);
-    final info = NetworkInfo();
-
-    var wifiIP = await info.getWifiIP();
-    if (wifiIP != null) {
-      ipAddress.state = wifiIP;
-    }
+    tray.state = (prefs.getBool('isTrayEnabled') ?? true);
+    waterNotif.state = (prefs.getBool('isWaterNotifOn') ?? true);
+    engineDeath.state = (prefs.getBool('isEngineDeathNotifOn') ?? true);
+    fullNotif.state = (prefs.getBool('isFullNotifOn') ?? true);
   }
 
   @override
   void initState() {
     super.initState();
-    var vehicleName = ref.read(vehicleNameProvider.notifier);
-
-    giveIps();
-    startServer();
     receiveDiskValues();
-    // updatePhone();
-    exitFS();
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
     updateMsgId();
     updateChat();
-    // chatSettingsManager();
 
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
-      giveIps();
       updateMsgId();
       flapChecker();
       updateChat();
-      // chatSettingsManager();
-      // critAoaChecker();
     });
-    const Duration setStateTimer = Duration(milliseconds: 50);
-    Timer.periodic(setStateTimer, (Timer t) async {
-      if (!mounted || isStopped) return;
-      stateFuture = updateState();
-      setState(() {});
-    });
-    // Timer.periodic(const Duration(seconds: 5), (timer) {
-    //   if (!mounted || isStopped) return;
-    //
-    //   if (inTray) {
-    //     setState(() {});
-    //   }
-    // });
     const Duration averageTimer = Duration(milliseconds: 1200);
     Timer.periodic(averageTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       averageIasForStall();
-      critAoaChecker();
 
       // hostChecker();
     });
@@ -464,7 +257,6 @@ class _HomeState extends ConsumerState<Home>
       if (lastId != idData.value) {
         isDamageIDNew = true;
       }
-      SharedPreferences prefs = await _prefs;
       lastId = (prefs.getInt('lastId') ?? 0);
       lastId = idData.value;
       prefs.setInt('lastId', lastId!);
@@ -472,11 +264,6 @@ class _HomeState extends ConsumerState<Home>
 
       run = true;
     });
-    ref.read(streamStateProvider.notifier).addListener((state) async {
-      if (state == true) displayCapture();
-      if (state == false) await Process.run(terminatePath, []);
-    });
-
     var fullNotif = ref.read(fullNotifProvider.notifier);
     const redLineTimer = Duration(milliseconds: 350);
     Timer.periodic(redLineTimer, (Timer t) async {
@@ -487,25 +274,22 @@ class _HomeState extends ConsumerState<Home>
       loadChecker();
       pullUpChecker();
       checkCritAoa();
+      if (critAoaChecker()) {
+        ref.read(rgbProvider.notifier).state = HexColor(Colors.purple).toHex();
+      }
       // _csvThing();
     });
-    Future.delayed(const Duration(milliseconds: 250), () async {
+    Future.delayed(Duration.zero, () async {
       // Navigator.of(context)
       //     .pushReplacement(MaterialPageRoute(builder: (context) {
       //   return const MyCanvas();
       // }));
-      await windowManager.setMaximumSize(const Size(2000, 2000));
       csvNames = await File(namesPath).readAsString();
 
       Map<String, String> namesMap = convertNamesToMap(csvNames);
-      fmData = await FmData.setObject(namesMap[vehicleName.state] ?? '');
-    });
-    vehicleName.addListener((state) async {
-      Map<String, String> namesMap = convertNamesToMap(csvNames);
-      fmData = await FmData.setObject(namesMap[state] ?? '');
-      if (fmData != null) {
-        ref.read(gearLimitProvider.notifier).state = fmData!.critGearSpd;
-      }
+
+      fmData = await FmData.setObject(
+          namesMap[ref.read(vehicleNameProvider.state).state] ?? '');
     });
   }
 
@@ -515,26 +299,62 @@ class _HomeState extends ConsumerState<Home>
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
-
     chatIdFirst.removeListener(() {});
     chatIdSecond.removeListener(() {});
 
     isStopped = true;
   }
 
+  startListeners() {
+    ref.listen<String>(rgbProvider, (previous, next) async {
+      if (previous != next && next != Colors.white.toHex() && openRGB != null) {
+        Process.run(openRGB!.path, ['--mode', 'static', '--color', next],
+            runInShell: true);
+        await Future.delayed(const Duration(milliseconds: 200));
+        Process.run(openRGB!.path, ['--mode', 'static', '--color', previous!],
+            runInShell: true);
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        Process.run(openRGB!.path, ['--mode', 'static', '--color', next],
+            runInShell: true);
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        Process.run(openRGB!.path, ['--mode', 'static', '--color', previous],
+            runInShell: true);
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        Process.run(openRGB!.path, ['--mode', 'static', '--color', next],
+            runInShell: true);
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        Process.run(openRGB!.path, ['--mode', 'static', '--color', previous],
+            runInShell: true);
+        ref.read(rgbProvider.notifier).state = Colors.white.toHex();
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+    });
+    ref.listen<String?>(vehicleNameProvider, (previous, next) async {
+      Map<String, String> namesMap = convertNamesToMap(csvNames);
+      fmData = await FmData.setObject(namesMap[next] ?? '');
+      if (fmData != null) {
+        ref.read(gearLimitProvider.notifier).state = fmData!.critGearSpd;
+      }
+    });
+  }
+
   Future<void> checkCritAoa() async {
-    if (fmData != null) {
-      if (vertical! >= 10 && flap! <= 10) {
+    if (fmData != null && vertical.notNull) {
+      if (flap! <= 10 && !vertical!.isNegative) {
         critAoa = fmData!.critAoa1;
       }
-      if (vertical! <= -10 && flap! <= 10) {
-        critAoa = fmData!.critAoa2;
+      if (flap! > 10 && !vertical!.isNegative) {
+        critAoa = fmData!.critAoa1;
       }
-      if (vertical! <= -10 && flap! >= 10) {
-        critAoa = fmData!.critAoa4;
+      if (flap! > 10 && vertical!.isNegative) {
+        critAoa = fmData!.critAoa1;
       }
-      if (vertical! >= 10 && flap! >= 10) {
-        critAoa = fmData!.critAoa3;
+      if (flap! <= 10 && vertical!.isNegative) {
+        critAoa = fmData!.critAoa1;
       }
     }
   }
@@ -551,113 +371,8 @@ class _HomeState extends ConsumerState<Home>
     return map;
   }
 
-  Future<void> exitFS() async {
-    await Window.exitFullscreen();
-    await hotKey.unregisterAll();
-  }
-
-  // chatSettingsManager() {
-  //   if (!mounted) return;
-  //   if (chatModeFirst == 'All') {
-  //     chatPrefixFirst = '[ALL]';
-  //   }
-  //   if (chatModeFirst == 'Team') {
-  //     chatPrefixFirst = '[Team]';
-  //   }
-  //   if (chatModeFirst == 'Squad') {
-  //     chatPrefixFirst = '[Squad]';
-  //   }
-  //   if (chatModeFirst == null) {
-  //     chatPrefixFirst = null;
-  //   }
-  //   if (chatSenderFirst == null) {
-  //     chatSenderFirst == emptyString;
-  //   }
-  //   // if (chatEnemyFirst == true) {
-  //   //   chatColorFirst = Colors.red;
-  //   // } else {
-  //   //   chatColorFirst = Colors.lightBlueAccent;
-  //   // }
-  //   if (chatModeSecond == 'All') {
-  //     chatPrefixSecond = '[ALL]';
-  //   }
-  //   if (chatModeSecond == 'Team') {
-  //     chatPrefixSecond = '[Team]';
-  //   }
-  //   if (chatModeSecond == 'Squad') {
-  //     chatPrefixSecond = '[Squad]';
-  //   }
-  //   if (chatModeSecond == null) {
-  //     chatPrefixSecond = null;
-  //   }
-  //   if (chatSenderSecond == null) {
-  //     chatSenderSecond == emptyString;
-  //   }
-  //   // if (chatEnemyFirst == true) {
-  //   //   chatColorSecond = Colors.red;
-  //   // } else {
-  //   //   chatColorSecond = Colors.lightBlueAccent;
-  //   // }
-  // }
-
   Color headerColor = Colors.teal;
-  IconData drawerIcon = Icons.settings;
-
-  void displayCapture() async {
-    if (await File(ffmpegPath).exists() || await File(ffmpegExePath).exists()) {
-      try {
-        if (await File(ffmpegExePath).exists()) {
-          await Process.run(delPath, [], runInShell: true);
-          return;
-        }
-        if (!(await File(ffmpegExePath).exists()) &&
-            await File(ffmpegPath).exists()) {
-          File(ffmpegPath).readAsBytes().then((value) async {
-            final archive = ZipDecoder().decodeBytes(value);
-
-            for (final file in archive) {
-              final filename = file.name;
-              if (file.isFile) {
-                final data = file.content as List<int>;
-                File(p.dirname(ffmpegPath) + '\\$filename')
-                  ..createSync(recursive: true)
-                  ..writeAsBytesSync(data);
-              } else {
-                Directory(p.dirname(ffmpegPath) + '\\$filename')
-                    .create(recursive: true);
-              }
-            }
-          });
-        } else {
-          await Process.run(delPath, [], runInShell: true);
-        }
-      } catch (e, st) {
-        log('ERROR: $e', stackTrace: st);
-      }
-    } else {
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: const Text(
-            'FFMPEG not found, for the stream to work, you will need it, download?',
-          ),
-          action: SnackBarAction(
-              label: 'Download',
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (c, a1, a2) =>
-                        const Downloader(isFfmpeg: true),
-                    transitionsBuilder: (c, anim, a2, child) =>
-                        FadeTransition(opacity: anim, child: child),
-                    transitionDuration: const Duration(milliseconds: 2000),
-                  ),
-                );
-              }),
-        ));
-    }
-  }
+  IconData drawerIcon = FluentIcons.settings;
 
   String ffmpegPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
@@ -748,334 +463,382 @@ class _HomeState extends ConsumerState<Home>
     'fm_names_db.csv'
   ]);
 
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
 
   bool isStopped = false;
-  bool? valid;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
-  bool isUserGLoadNew = false;
   bool isDamageIDNew = false;
   bool isDamageMsgNew = false;
   bool run = true;
   int fuelMass = 500;
-  bool sendScreen = false;
-  bool critAoaBool = false;
 
   int index = 0;
   Color textColor = Colors.white;
   final windowManager = WindowManager.instance;
   bool inHangar = false;
+  late final stateStream = StateData.getState().asBroadcastStream();
+  late Stream<IndicatorData?> indicatorStream =
+      IndicatorData.getIndicator().asBroadcastStream();
+  OpenRGB? openRGB;
   @override
   Widget build(BuildContext context) {
-    listener();
+    startListeners();
     return Stack(children: [
-      !inHangar
-          ? GameMap(
-              inHangar: inHangar,
-            )
-          : const SizedBox(),
-      Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Flex(
-            direction: Axis.horizontal,
-            children: [
-              Expanded(
-                child: FutureBuilder<ToolDataState>(
-                    future: stateFuture,
-                    builder: (context, AsyncSnapshot<ToolDataState> shot) {
-                      if (shot.hasData) {
-                        ias = shot.data!.ias;
-                        gear = shot.data!.gear;
-                        flap = shot.data!.flaps;
-                        altitude = shot.data!.altitude;
-                        oil = shot.data!.oilTemp1C;
-                        water = shot.data!.waterTemp1C;
-                        aoa = shot.data!.aoa;
-                        load = shot.data!.load;
-                        fuelMass = shot.data!.fuel;
-                        if ((shot.data!.altitude == 32 ||
-                                shot.data!.altitude == 31) &&
-                            shot.data!.gear == 100 &&
-                            shot.data!.ias == 0) {
-                          inHangar = true;
-                        } else {
-                          inHangar = false;
-                        }
-                        double fuel =
-                            shot.data!.fuel / shot.data!.maxFuel * 100;
-                        if (inHangar) {
+      NavigationView(
+        appBar: NavigationAppBar(
+          title: const Text(
+            'War Thunder Background Assistant',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          automaticallyImplyLeading: false,
+          actions: IconButton(
+            icon: Image.asset('assets/OpenRGB.png'),
+            onPressed: () async {
+              final innerOpenRGB = await AppUtil.checkOpenRGb();
+              setState(() {
+                openRGB = innerOpenRGB;
+              });
+              if (innerOpenRGB.exists) {
+                await Process.start(
+                    innerOpenRGB.path, ['--server', '--server-port', '1200']);
+                dio.get('http://localhost:1200');
+              } else {
+                if (!mounted) return;
+                Navigator.pushReplacement(
+                    context,
+                    FluentPageRoute(
+                        builder: (c) => const Downloader(isRGB: true)));
+              }
+            },
+          ),
+        ),
+        pane: NavigationPane(
+            selected: index,
+            displayMode: PaneDisplayMode.auto,
+            onChanged: (newIndex) {
+              setState(() {
+                index = newIndex;
+              });
+            },
+            items: [
+              PaneItem(
+                  icon: const Icon(FluentIcons.home),
+                  title: const Text('Home')),
+              PaneItem(
+                  icon: const Icon(FluentIcons.nav2_d_map_view),
+                  title: const Text('Game Map')),
+            ]),
+        content: NavigationBody(
+          index: index,
+          children: [
+            ScaffoldPage(
+                content: Flex(
+              direction: Axis.horizontal,
+              children: [
+                Expanded(
+                  child: StreamBuilder<StateData?>(
+                      stream: stateStream,
+                      builder: (context, AsyncSnapshot<StateData?> shot) {
+                        if (shot.hasData) {
+                          ias = shot.data!.ias;
+                          gear = shot.data!.gear;
+                          flap = shot.data!.flaps;
+                          altitude = shot.data!.altitude;
+                          oil = shot.data!.oilTemp1C;
+                          water = shot.data!.waterTemp1C;
+                          aoa = shot.data!.aoa;
+                          load = shot.data!.load;
+                          fuelMass = shot.data!.fuel;
+                          if ((shot.data!.altitude == 32 ||
+                                  shot.data!.altitude == 31) &&
+                              shot.data!.gear == 100 &&
+                              shot.data!.ias == 0) {
+                            inHangar = true;
+                          } else {
+                            inHangar = false;
+                          }
+                          double fuel =
+                              shot.data!.fuel / shot.data!.maxFuel * 100;
+                          if (inHangar) {
+                            return Flex(
+                              direction: Axis.vertical,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.only(left: 20),
+                                    // decoration: BoxDecoration(
+                                    //     color:
+                                    //         Colors.blueGrey.withOpacity(0.3)),
+                                    alignment: Alignment.center,
+                                    child: RichText(
+                                      text: const TextSpan(
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text: 'In Hangar'),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
                           return Flex(
                             direction: Axis.vertical,
                             children: [
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.only(left: 20),
-                                  // decoration: BoxDecoration(
-                                  //     color:
-                                  //         Colors.blueGrey.withOpacity(0.3)),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Throttle= ${shot.data!.throttle1} %')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text: 'IAS= ${shot.data!.ias} km/h')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    'Altitude= ${shot.data!.altitude} m',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    'Climb= ${shot.data!.climb} m/s',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                    padding: const EdgeInsets.only(left: 20),
+                                    alignment: Alignment.topLeft,
+                                    child: fuel <= 13
+                                        ? BlinkText(
+                                            'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 40),
+                                            endColor: Colors.red,
+                                          )
+                                        : Text(
+                                            'Fuel= ${fuel.toStringAsFixed(1)} %',
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 40),
+                                          )),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  alignment: Alignment.topLeft,
+                                  padding: const EdgeInsets.only(left: 20),
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Oil Temp= ${shot.data!.oilTemp1C}°c')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Water Temp= ${shot.data!.waterTemp1C}°c')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: !critAoaChecker()
+                                      ? Text(
+                                          'AoA= ${shot.data!.aoa}°',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                        )
+                                      : BlinkText(
+                                          'AoA= ${shot.data!.aoa}°',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                        ),
+                                ),
+                              ),
+                            ],
+                          );
+                        } else if (shot.hasError) {
+                          return Center(
+                              child: BlinkText(
+                            'ERROR: NO DATA',
+                            endColor: Colors.red,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 40),
+                          ));
+                        } else {
+                          return Center(
+                              child: SizedBox(
+                            height: 100,
+                            width: 100,
+                            child: ProgressRing(
+                              backgroundColor: Colors.red,
+                            ),
+                          ));
+                        }
+                      }),
+                ),
+                Expanded(
+                  child: StreamBuilder<IndicatorData?>(
+                      stream: indicatorStream,
+                      builder: (context, AsyncSnapshot<IndicatorData?> shot) {
+                        if (shot.hasData) {
+                          inHangar = false;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            ref.read(vehicleNameProvider.notifier).state =
+                                shot.data!.type;
+                            vertical = shot.data!.vertical;
+                          });
+
+                          if (shot.data!.mach == null) shot.data!.mach = -0;
+                          return Flex(
+                            direction: Axis.vertical,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(right: 20),
                                   alignment: Alignment.center,
                                   child: RichText(
-                                    text: const TextSpan(
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text: 'In Hangar'),
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Compass= ${shot.data!.compass?.toStringAsFixed(0) ?? ''}°')
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(right: 20),
+                                  alignment: Alignment.center,
+                                  child: RichText(
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
+                                          text:
+                                              'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
+                                    ]),
                                   ),
                                 ),
                               ),
                             ],
                           );
                         }
-                        return Flex(
-                          direction: Axis.vertical,
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Throttle= ${shot.data!.throttle1} %')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text: 'IAS= ${shot.data!.ias} km/h')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: Text(
-                                  'Altitude= ${shot.data!.altitude} m',
+                        if (shot.hasError) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            ref.read(vehicleNameProvider.notifier).state = '';
+                          });
+                          log('Error: ${shot.error}');
+                          return Center(
+                            child: Container(
+                                padding: const EdgeInsets.all(8.0),
+                                child: BlinkText(
+                                  'ERROR: NO DATA',
+                                  endColor: Colors.red,
                                   style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                ),
-                              ),
+                                      color: Colors.white, fontSize: 40),
+                                )),
+                          );
+                        } else {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            ref.read(vehicleNameProvider.notifier).state =
+                                'Vehicle Name not available';
+                          });
+                          return Center(
+                              child: SizedBox(
+                            height: 100,
+                            width: 100,
+                            child: ProgressRing(
+                              backgroundColor: Colors.red,
                             ),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: Text(
-                                  'Climb= ${shot.data!.climb} m/s',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  alignment: Alignment.topLeft,
-                                  child: fuel <= 13
-                                      ? BlinkText(
-                                          'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                          endColor: Colors.red,
-                                        )
-                                      : Text(
-                                          'Fuel= ${fuel.toStringAsFixed(1)} %',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 40),
-                                        )),
-                            ),
-                            Expanded(
-                              child: Container(
-                                alignment: Alignment.topLeft,
-                                padding: const EdgeInsets.only(left: 20),
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Oil Temp= ${shot.data!.oilTemp1C}°c')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Water Temp= ${shot.data!.waterTemp1C}°c')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 20),
-                                alignment: Alignment.topLeft,
-                                child: !critAoaBool
-                                    ? Text(
-                                        'AoA= ${shot.data!.aoa}°',
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                      )
-                                    : BlinkText(
-                                        'AoA= ${shot.data!.aoa}°',
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                      ),
-                              ),
-                            ),
-                          ],
-                        );
-                      } else if (shot.hasError) {
-                        return const Center(
-                            child: BlinkText(
-                          'ERROR: NO DATA',
-                          endColor: Colors.red,
-                          style: TextStyle(color: Colors.white, fontSize: 40),
-                        ));
-                      } else {
-                        return const Center(
-                            child: SizedBox(
-                          height: 100,
-                          width: 100,
-                          child: CircularProgressIndicator(
-                            color: Colors.red,
-                          ),
-                        ));
-                      }
-                    }),
+                          ));
+                        }
+                      }),
+                )
+              ],
+            )),
+            InteractiveViewer(
+              child: GameMap(
+                inHangar: inHangar,
               ),
-              Expanded(
-                child: FutureBuilder<ToolDataIndicator?>(
-                    future: ToolDataIndicator.getIndicator(),
-                    builder: (context, AsyncSnapshot<ToolDataIndicator?> shot) {
-                      if (shot.hasData) {
-                        inHangar = false;
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          ref.read(vehicleNameProvider.notifier).state =
-                              shot.data!.type;
-                          vertical = shot.data!.vertical;
-                        });
-
-                        if (shot.data!.mach == null) shot.data!.mach = -0;
-                        return Flex(
-                          direction: Axis.vertical,
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(right: 20),
-                                alignment: Alignment.center,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Compass= ${shot.data!.compass.toStringAsFixed(0)}°')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(right: 20),
-                                alignment: Alignment.center,
-                                child: RichText(
-                                  text: TextSpan(children: [
-                                    TextSpan(
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                        text:
-                                            'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
-                                  ]),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                      if (shot.hasError) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          ref.read(vehicleNameProvider.notifier).state =
-                              'Vehicle Name not available';
-                        });
-                        return Center(
-                          child: Container(
-                              padding: const EdgeInsets.all(8.0),
-                              child: const BlinkText(
-                                'ERROR: NO DATA',
-                                endColor: Colors.red,
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 40),
-                              )),
-                        );
-                      } else {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          ref.read(vehicleNameProvider.notifier).state =
-                              'Vehicle Name not available';
-                        });
-                        return const Center(
-                            child: SizedBox(
-                          height: 100,
-                          width: 100,
-                          child: CircularProgressIndicator(
-                            color: Colors.red,
-                          ),
-                        ));
-                      }
-                    }),
-              )
-            ],
-          )),
+            )
+          ],
+        ),
+      ),
     ]);
   }
 }

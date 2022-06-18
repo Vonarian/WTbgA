@@ -1,6 +1,5 @@
-import 'dart:convert';
-
-import 'package:http/http.dart';
+import 'package:dio/dio.dart';
+import 'package:wtbgassistant/main.dart';
 
 class MapObj {
   const MapObj({
@@ -120,12 +119,10 @@ class MapObj {
 
   static Future<List<MapObj>> mapObj() async {
     try {
-      Response response =
-          await get(Uri.parse('http://localhost:8111/map_obj.json'));
+      Response response = await dio.get('http://localhost:8111/map_obj.json');
 
-      List<dynamic> list = jsonDecode(response.body);
       List<MapObj> mapObjList = [];
-      for (final Map<String, dynamic> element in list) {
+      for (final Map<String, dynamic> element in response.data) {
         mapObjList.add(MapObj.fromMap((element)));
       }
       return mapObjList;

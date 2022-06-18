@@ -1,18 +1,9 @@
-// To parse this JSON data, do
-//
-//     final network = networkFromJson(jsonString);
+import 'package:dio/dio.dart';
 
-import 'dart:convert';
+import '../main.dart';
 
-import 'package:http/http.dart';
-
-ToolDataState networkFromJson(String str) =>
-    ToolDataState.fromJson(json.decode(str));
-
-String networkToJson(ToolDataState data) => json.encode(data.toJson());
-
-class ToolDataState {
-  ToolDataState({
+class StateData {
+  StateData({
     required this.valid,
     required this.aileron,
     required this.elevator,
@@ -72,7 +63,7 @@ class ToolDataState {
   final double manifoldPressure1Atm;
   final int oilTemp1C;
   final int thrust1Kgs;
-  final int efficiency1;
+  final int? efficiency1;
   final int? throttle2;
   final double? power2Hp;
   final int? rpm2;
@@ -82,18 +73,25 @@ class ToolDataState {
   final int? efficiency2;
   final int? waterTemp1C;
 
-  static Future<ToolDataState> getState() async {
-    try {
-      Response? response = await get(Uri.parse('http://localhost:8111/state'));
-      Map<String, dynamic> data = jsonDecode(response.body);
-      ToolDataState toolDataState = ToolDataState.fromJson(data);
-      return toolDataState;
-    } catch (e) {
-      rethrow;
+  static Stream<StateData?> getState() async* {
+    final stream =
+        Stream.periodic(const Duration(milliseconds: 200), (count) async {
+      try {
+        Response? response = await dio
+            .get('http://localhost:8111/state')
+            .timeout(const Duration(seconds: 2));
+        StateData toolDataState = StateData.fromJson(response.data);
+        return toolDataState;
+      } catch (e) {
+        return null;
+      }
+    });
+    await for (var value in stream) {
+      yield await value;
     }
   }
 
-  factory ToolDataState.fromJson(Map<String, dynamic> json) => ToolDataState(
+  factory StateData.fromJson(Map<String, dynamic> json) => StateData(
         valid: json['valid'],
         aileron: json['aileron, %'],
         elevator: json['elevator, %'],
@@ -164,4 +162,9 @@ class ToolDataState {
         'efficiency 2, %': efficiency2,
         'water temp 1, C': waterTemp1C,
       };
+
+  @override
+  String toString() {
+    return 'StateData{valid: $valid, aileron: $aileron, elevator: $elevator, rudder: $rudder, flaps: $flaps, gear: $gear, airbrake: $airbrake, altitude: $altitude, tas: $tas, ias: $ias, mach: $mach, aoa: $aoa, aos: $aos, load: $load, climb: $climb, wxDegS: $wxDegS, fuel: $fuel, maxFuel: $maxFuel, throttle1: $throttle1, power1Hp: $power1Hp, rpm1: $rpm1, manifoldPressure1Atm: $manifoldPressure1Atm, oilTemp1C: $oilTemp1C, thrust1Kgs: $thrust1Kgs, efficiency1: $efficiency1, throttle2: $throttle2, power2Hp: $power2Hp, rpm2: $rpm2, manifoldPressure2Atm: $manifoldPressure2Atm, oilTemp2C: $oilTemp2C, thrust2Kgs: $thrust2Kgs, efficiency2: $efficiency2, waterTemp1C: $waterTemp1C}';
+  }
 }

@@ -103,8 +103,7 @@ class WindowTitleBarState extends ConsumerState<WindowTitleBar>
                 Navigator.pushReplacement(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (c, a1, a2) =>
-                        const Downloader(isFfmpeg: true),
+                    pageBuilder: (c, a1, a2) => const Downloader(isRGB: true),
                     transitionsBuilder: (c, anim, a2, child) =>
                         FadeTransition(opacity: anim, child: child),
                     transitionDuration: const Duration(milliseconds: 2000),

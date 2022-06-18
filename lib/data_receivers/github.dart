@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:http/http.dart';
+import 'package:dio/dio.dart';
+import 'package:wtbgassistant/main.dart';
 
 Data networkFromJson(String str) => Data.fromJson(json.decode(str));
 
@@ -90,10 +91,9 @@ class Data {
 
   static Future<Data> getData() async {
     try {
-      Response response = await get(Uri.parse(
-          'https://api.github.com/repos/Vonarian/WTbgA/releases/latest'));
-      Data data = Data.fromJson(jsonDecode(response.body));
-      return data;
+      Response response = await dio
+          .get('https://api.github.com/repos/Vonarian/WTbgA/releases/latest');
+      return Data.fromJson(response.data);
     } catch (e) {
       rethrow;
     }

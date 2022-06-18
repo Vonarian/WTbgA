@@ -1,18 +1,7 @@
-import 'dart:convert';
+import '../main.dart';
 
-import 'package:http/http.dart' as http;
-import 'package:json_annotation/json_annotation.dart';
-
-part 'damage_event.g.dart';
-
-@JsonSerializable(includeIfNull: false, createToJson: false)
 class DamageEvents {
   List<Damage> damage;
-
-  factory DamageEvents.fromJson(Map<String, dynamic> json) =>
-      _$DamageEventsFromJson(json);
-
-//<editor-fold desc="Data Methods">
 
   DamageEvents({
     required this.damage,
@@ -30,7 +19,7 @@ class DamageEvents {
 
   @override
   String toString() {
-    return 'DamageEvents{' ' damage: $damage,' '}';
+    return 'DamageEvents{damage: $damage}';
   }
 
   DamageEvents copyWith({
@@ -52,20 +41,17 @@ class DamageEvents {
       damage: map['damage'] as List<Damage>,
     );
   }
-
-//</editor-fold>
 }
 
-@JsonSerializable(includeIfNull: false, createToJson: false)
 class Damage {
   int? id;
   String? msg;
 
   static Future<List<Damage>> getDamage() async {
     try {
-      final response = await http
-          .get(Uri.parse('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=0'));
-      final damageEvents = jsonDecode(response.body)['damage']
+      final response =
+          await dio.get('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=0');
+      final damageEvents = response.data['damage']
           .map<Damage>((model) => Damage.fromMap(model))
           .toList();
       return damageEvents;
@@ -74,8 +60,6 @@ class Damage {
       rethrow;
     }
   }
-
-  factory Damage.fromJson(Map<String, dynamic> json) => _$DamageFromJson(json);
 
 //<editor-fold desc="Data Methods">
 
@@ -97,7 +81,7 @@ class Damage {
 
   @override
   String toString() {
-    return 'Damage{' ' id: $id,' ' msg: $msg,' '}';
+    return 'Damage{id: $id, msg: $msg}';
   }
 
   Damage copyWith({
@@ -119,10 +103,8 @@ class Damage {
 
   factory Damage.fromMap(Map<String, dynamic> map) {
     return Damage(
-      id: map['id'] as int,
-      msg: map['msg'] as String,
+      id: map['id'],
+      msg: map['msg'].toString(),
     );
   }
-
-//</editor-fold>
 }

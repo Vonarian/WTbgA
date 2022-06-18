@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wtbgassistant/services/extensions.dart';
 
 final StateProvider<bool> phoneConnectedProvider =
     StateProvider((ref) => false);
@@ -16,7 +17,6 @@ final StateProvider<bool> stallNotifProvider = StateProvider((ref) => true);
 final StateProvider<bool> pullUpNotifProvider = StateProvider((ref) => true);
 
 final StateProvider<bool> trayProvider = StateProvider((ref) => true);
-final StateProvider<String> ipAddressProvider = StateProvider((ref) => '');
 final StateProvider<String> chatMsgProvider = StateProvider((ref) => '');
 final StateProvider<String?> vehicleNameProvider = StateProvider((ref) => null);
 
@@ -33,7 +33,5 @@ final StateProvider<int> gearLimitProvider = StateProvider((ref) => 1000);
 
 final StateProvider<int> flapLimitProvider = StateProvider((ref) => 800);
 
-final StateProvider<double> transparentFontProvider =
-    StateProvider((ref) => 40);
-final StateProvider<bool> streamStateProvider = StateProvider((ref) => false);
-final StateProvider<String> phoneStateProvider = StateProvider((ref) => '');
+final StateProvider<String> rgbProvider =
+    StateProvider((ref) => Colors.white.toHex());

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wtbgassistant/data_receivers/map.dart';
 
@@ -11,10 +11,10 @@ class GameMap extends StatefulWidget {
   const GameMap({Key? key, required this.inHangar}) : super(key: key);
 
   @override
-  _GameMapState createState() => _GameMapState();
+  GameMapState createState() => GameMapState();
 }
 
-class _GameMapState extends State<GameMap> {
+class GameMapState extends State<GameMap> {
   @override
   void initState() {
     super.initState();
@@ -24,19 +24,11 @@ class _GameMapState extends State<GameMap> {
           'http://localhost:8111/map.img',
           key: key,
           errorBuilder: (context, e, st) {
-            return ImageFiltered(
-                child: Image.asset(
-                  'assets/bg.jpg',
-                  fit: BoxFit.cover,
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                ),
-                imageFilter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0));
+            return const Text('Error loading map');
           },
         );
-
-        setState(() {});
         _getSizes();
+        setState(() {});
       }
     });
   }
@@ -115,79 +107,73 @@ class _GameMapState extends State<GameMap> {
   String assetIcon = '';
   @override
   Widget build(BuildContext context) {
-    if (kDebugMode) {}
-    return Stack(children: <Widget>[
-      !widget.inHangar
-          ? image
-          : ImageFiltered(
-              child: Image.asset(
-                'assets/bg.jpg',
-                fit: BoxFit.cover,
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-              ),
-              imageFilter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0)),
-      !widget.inHangar
-          ? FutureBuilder<List<MapObj>>(
-              future: MapObj.mapObj(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<Widget> columnChildren = snapshot.data!.map((e) {
-                    switch (e.icon.toLowerCase()) {
-                      case 'airdefence':
-                        assetIcon = 'airdefence';
-                        break;
-                      case 'lighttank':
-                        assetIcon = 'light';
-                        break;
-                      case 'mediumtank':
-                        assetIcon = 'medium';
-                        break;
-                      case 'spaa':
-                        assetIcon = 'spaa';
-                        break;
-                      case 'player':
-                        assetIcon = 'player';
-                        break;
-                      case 'heavytank':
-                        assetIcon = 'heavytank';
-                        break;
-                      case 'fighter':
-                        assetIcon = 'fighter';
-                        break;
-                    }
-                    if (e.type == 'aircraft') {
-                      myFuture = ObjectPainter.getUiImage(
-                          'assets/icons/$assetIcon.png');
-                      return imageBuilder(e);
-                    } else if (e.type == 'ground_model') {
-                      myFuture = ObjectPainter.getUiImage(
-                          'assets/icons/$assetIcon.png');
-                      return imageBuilder(e);
-                    } else if (e.type == 'airfield') {
-                      myFuture = ObjectPainter.getUiImage(
-                          'assets/icons/$assetIcon.png');
-                      return imageBuilder(e);
-                    } else {
-                      return const Text('NOPE');
-                    }
-                  }).toList();
+    return !widget.inHangar
+        ? Stack(
+            children: [
+              image,
+              FutureBuilder<List<MapObj>>(
+                  future: MapObj.mapObj(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      List<Widget> columnChildren = snapshot.data!.map((e) {
+                        switch (e.icon.toLowerCase()) {
+                          case 'airdefence':
+                            assetIcon = 'airdefence';
+                            break;
+                          case 'lighttank':
+                            assetIcon = 'light';
+                            break;
+                          case 'mediumtank':
+                            assetIcon = 'medium';
+                            break;
+                          case 'spaa':
+                            assetIcon = 'spaa';
+                            break;
+                          case 'player':
+                            assetIcon = 'player';
+                            break;
+                          case 'heavytank':
+                            assetIcon = 'heavytank';
+                            break;
+                          case 'fighter':
+                            assetIcon = 'fighter';
+                            break;
+                        }
+                        if (e.type == 'aircraft') {
+                          myFuture = ObjectPainter.getUiImage(
+                              'assets/icons/$assetIcon.png');
+                          return imageBuilder(e);
+                        } else if (e.type == 'ground_model') {
+                          myFuture = ObjectPainter.getUiImage(
+                              'assets/icons/$assetIcon.png');
+                          return imageBuilder(e);
+                        } else if (e.type == 'airfield') {
+                          myFuture = ObjectPainter.getUiImage(
+                              'assets/icons/$assetIcon.png');
+                          return imageBuilder(e);
+                        } else {
+                          return const Text('NOPE');
+                        }
+                      }).toList();
 
-                  return Stack(
-                    children: columnChildren,
-                  );
-                }
-                if (snapshot.hasError) {
-                  if (kDebugMode) {
-                    print(snapshot.error);
-                  }
-                  return const SizedBox();
-                } else {
-                  return const SizedBox();
-                }
-              })
-          : Container(),
-    ]);
+                      return Stack(
+                        children: columnChildren,
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      if (kDebugMode) {
+                        print(snapshot.error);
+                      }
+                      return const SizedBox();
+                    } else {
+                      return const SizedBox();
+                    }
+                  }),
+            ],
+          )
+        : const Center(
+            child: Text('In Hangar'),
+          );
   }
 }
 
