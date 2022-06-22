@@ -2,23 +2,19 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:win32/win32.dart';
 
 class AppUtil {
   static Future<String> createFolderInAppDocDir(String path) async {
-    //Get this App Document Directory
-
-    //App Document Directory + folder name
-    final Directory _appDocDirFolder = Directory(path);
+    final Directory appDocDirFolder = Directory(path);
 
     try {
-      if (await _appDocDirFolder.exists()) {
-        //if folder already exists return path
-        return _appDocDirFolder.path;
+      if (await appDocDirFolder.exists()) {
+        return appDocDirFolder.path;
       } else {
-        //if folder not exists create folder and then return its path
-        final Directory _appDocDirNewFolder =
-            await _appDocDirFolder.create(recursive: true);
-        return _appDocDirNewFolder.path;
+        final Directory appDocDirNewFolder =
+            await appDocDirFolder.create(recursive: true);
+        return appDocDirNewFolder.path;
       }
     } catch (e) {
       log(e.toString());
@@ -34,6 +30,22 @@ class AppUtil {
     OpenRGB openRGB =
         OpenRGB(exists: await openRGBFile.exists(), path: openRGBFile.path);
     return openRGB;
+  }
+
+  static void playSound(String path) {
+    final file = File(path).existsSync();
+
+    if (!file) {
+      print('WAV file missing.');
+    } else {
+      final sound = TEXT(path);
+      final result = PlaySound(sound, NULL, SND_FILENAME | SND_SYNC);
+
+      if (result != TRUE) {
+        print('Sound playback failed.');
+      }
+      free(sound);
+    }
   }
 }
 

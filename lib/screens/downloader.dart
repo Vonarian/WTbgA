@@ -13,7 +13,6 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/screens/home.dart';
 import 'package:wtbgassistant/screens/widgets/custom_loading.dart';
 
 import '../data_receivers/github.dart';
@@ -35,9 +34,7 @@ class DownloaderState extends State<Downloader>
     trayManager.addListener(this);
     if (!widget.isRGB) {
       downloadUpdate();
-    } else {
-      downloadRGB();
-    }
+    } else {}
   }
 
   @override
@@ -126,79 +123,6 @@ class DownloaderState extends State<Downloader>
                     FluentPageRoute(
                         builder: (context) => const Downloader(
                               isRGB: false,
-                            )));
-              },
-              label: 'Retry',
-            ),
-          ));
-      windowManager.setSize(const Size(600, 600));
-      log(e.toString(), stackTrace: st);
-      error = true;
-      text = 'ERROR!';
-      setState(() {});
-    }
-  }
-
-  Future<void> downloadRGB() async {
-    await WinToast.instance().showToast(
-        type: ToastType.text04,
-        title: 'Downloading OpenRGB',
-        subtitle:
-            'WTbgA is downloading OpenRGB, please do not close the application');
-    await windowManager.center();
-    try {
-      Directory docDir = await getApplicationDocumentsDirectory();
-      String docPath = docDir.path;
-      Directory docWTbgA =
-          await Directory('$docPath\\WTbgA').create(recursive: true);
-      Dio dio = Dio();
-      await dio.download(
-          'https://github.com/Vonarian/WTbgA/releases/download/2.6.2.0/OpenRGB.zip',
-          '${docWTbgA.path}\\OpenRGB.zip',
-          onReceiveProgress: (downloaded, full) async {
-        progress = downloaded / full * 100;
-        setState(() {});
-      }, deleteOnError: true).whenComplete(() async {
-        final File filePath = File('${docWTbgA.path}\\OpenRGB.zip');
-        final Uint8List bytes =
-            await File('${docWTbgA.path}\\OpenRGB.zip').readAsBytes();
-        final archive = ZipDecoder().decodeBytes(bytes);
-        for (final file in archive) {
-          final filename = file.name;
-          if (file.isFile) {
-            final data = file.content as List<int>;
-            File('${p.dirname(filePath.path)}\\out\\$filename')
-              ..createSync(recursive: true)
-              ..writeAsBytesSync(data);
-          } else {
-            Directory('${p.dirname(filePath.path)}\\out\\$filename')
-                .create(recursive: true);
-          }
-        }
-
-        text = 'Done';
-        if (!mounted) return;
-        setState(() {});
-        Navigator.pushReplacement(
-            context, FluentPageRoute(builder: (ctx) => const Home()));
-      }).timeout(const Duration(minutes: 8));
-    } catch (e, st) {
-      if (!mounted) return;
-      showSnackbar(
-          context,
-          Snackbar(
-            content: BlinkText(
-              e.toString(),
-              endColor: Colors.red,
-              duration: const Duration(milliseconds: 300),
-            ),
-            action: SnackBarAction(
-              onPressed: () {
-                Navigator.pushReplacement(
-                    context,
-                    FluentPageRoute(
-                        builder: (context) => const Downloader(
-                              isRGB: true,
                             )));
               },
               label: 'Retry',

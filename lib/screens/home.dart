@@ -3,25 +3,22 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:blinking_text/blinking_text.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:libwinmedia/libwinmedia.dart';
 import 'package:path/path.dart' as p;
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/providers.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
+import 'package:wtbgassistant/screens/widgets/settings.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
-import 'package:wtbgassistant/services/utility.dart';
 
-import '../data_receivers/chat.dart';
 import '../data_receivers/damage_event.dart';
 import '../data_receivers/indicator_receiver.dart';
 import '../data_receivers/state_receiver.dart';
 import '../main.dart';
 import '../services/extensions.dart';
-import 'downloader.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -32,63 +29,50 @@ class Home extends ConsumerStatefulWidget {
 
 class HomeState extends ConsumerState<Home>
     with WindowListener, TrayListener, TickerProviderStateMixin {
-  void userRedLineFlap() {
-    var flapIas = ref.read(flapLimitProvider.notifier);
-    if (flap == null) return;
-    if (ias != null) {
-      if (ias! >= flapIas.state && flap! >= 10) {
-        player.play();
-      }
-    }
-  }
-
-  void userRedLineGear() {
+  Future<void> userRedLineGear() async {
     if (!mounted) return;
     if (ias != null) {
-      if (ias! >= ref.read(gearLimitProvider.notifier).state && gear! > 0) {
-        gearUpPlayer.play();
+      if (ias! >= ref.read(provider.gearLimitProvider.notifier).state &&
+          gear! > 0) {
+        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
       }
-      if (ias! >= ref.read(gearLimitProvider.notifier).state && gear! > 0) {
-        gearUpPlayer.play();
-      }
-      if (ias! < ref.read(gearLimitProvider.notifier).state) {
-        isUserIasGearNew = true;
+      if (ias! >= ref.read(provider.gearLimitProvider.notifier).state &&
+          gear! > 0) {
+        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
       }
     }
   }
 
   Future<void> pullUpChecker() async {
-    var pullUpNotif = ref.read(pullUpNotifProvider.notifier);
-
-    if (!mounted || !pullUpNotif.state) return;
-    if (vertical != null && ias != null) {
+    if (!mounted) return;
+    if (vertical.notNull && ias.notNull) {
       if (vertical! <= -65 && ias! >= 600) {
-        pullUpPlayer.play();
+        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
       }
     }
   }
 
-  void loadChecker() {
-    var fullNotif = ref.read(fullNotifProvider.notifier);
-    if (!mounted) return;
-    if (!fullNotif.state) return;
+  bool loadChecker() {
+    if (!mounted) return false;
     if (fmData != null) {
-      double maxLoad = (fmData!.critWingOverload2 /
+      double? maxLoad = (fmData!.critWingOverload2 /
           ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
-
-      if ((load!) >= (maxLoad - 0.4)) {
-        overGPlayer.play();
+      if ((load)! >= (maxLoad - (0.15 * maxLoad))) {
+        return true;
+      } else {
+        return false;
       }
+    } else {
+      return false;
     }
   }
 
   Future<void> vehicleStateCheck() async {
-    var fullNotif = ref.read(fullNotifProvider.notifier);
-    var engineDeath = ref.read(engineDeathNotifProvider.notifier);
-
-    var oilNotif = ref.read(oilNotifProvider.notifier);
-    var waterNotif = ref.read(waterNotifProvider.notifier);
-    var engineOh = ref.read(engineOhNotifProvider.notifier);
+    var fullNotif = ref.read(provider.fullNotifProvider.notifier);
+    var engineDeath = ref.read(provider.engineDeathNotifProvider.notifier);
+    var oilNotif = ref.read(provider.oilNotifProvider.notifier);
+    var waterNotif = ref.read(provider.waterNotifProvider.notifier);
+    var engineOh = ref.read(provider.engineOHNotifProvider.notifier);
     if (!fullNotif.state) return;
     if (!run) return;
     if (engineDeath.state &&
@@ -97,48 +81,48 @@ class HomeState extends ConsumerState<Home>
         msgData == 'Engine died: no fuel' &&
         isDamageMsgNew) {
       isDamageIDNew = false;
-      player.play();
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
     }
     if (oilNotif.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Oil overheated') {
       isDamageIDNew = false;
-      player.play();
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
     }
     if (engineOh.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine overheated') {
       isDamageIDNew = false;
-      player.play();
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
     }
     if (waterNotif.state &&
         water != 15 &&
         isDamageIDNew &&
         msgData == 'Water overheated') {
       isDamageIDNew = false;
-      player.play();
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
     }
     if (engineDeath.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine died: overheating') {
       isDamageIDNew = false;
-      player.play();
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
     }
     if (engineDeath.state &&
         oil != 15 &&
         isDamageIDNew &&
         msgData == 'Engine died: propeller broken') {
       isDamageIDNew = false;
-      player.play();
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
     }
     if (oil != 15 &&
         isDamageIDNew &&
         msgData == 'You are out of ammunition. Reloading is not possible.') {
       isDamageIDNew = false;
-      player.play();
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
     }
 
     run = false;
@@ -160,24 +144,11 @@ class HomeState extends ConsumerState<Home>
         : emptyString;
   }
 
-  Future<void> updateChat() async {
-    List<ChatEvents> dataForChatId = await ChatEvents.getChat();
-
-    if (!mounted) return;
-    chatIdFirst.value = dataForChatId.isNotEmpty
-        ? dataForChatId[dataForChatId.length - 1].id
-        : emptyInt;
-
-    chatIdSecond.value = dataForChatId.isNotEmpty
-        ? dataForChatId[dataForChatId.length - 2].id
-        : emptyInt;
-  }
-
-  void flapChecker() {
+  Future<void> flapChecker() async {
     if (!run) return;
     if (msgData == 'Asymmetric flap extension' && isDamageIDNew) {
       isDamageIDNew = false;
-      player.play();
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
     }
   }
 
@@ -193,7 +164,9 @@ class HomeState extends ConsumerState<Home>
   }
 
   bool critAoaChecker() {
-    if (aoa == null) return false;
+    if (aoa == null || gear == null || vertical == null || flap == null) {
+      return false;
+    }
     if (gear! > 0) {
       return false;
     }
@@ -211,17 +184,13 @@ class HomeState extends ConsumerState<Home>
   }
 
   void receiveDiskValues() {
-    var fullNotif = ref.read(fullNotifProvider.notifier);
-    var oilNotif = ref.read(oilNotifProvider.notifier);
-    var engineDeath = ref.read(engineDeathNotifProvider.notifier);
-    var pullUpNotif = ref.read(pullUpNotifProvider.notifier);
-    var waterNotif = ref.read(waterNotifProvider.notifier);
-    var tray = ref.read(trayProvider.notifier);
-    var stallNotif = ref.read(stallNotifProvider.notifier);
+    var fullNotif = ref.read(provider.fullNotifProvider.notifier);
+    var oilNotif = ref.read(provider.oilNotifProvider.notifier);
+    var engineDeath = ref.read(provider.engineDeathNotifProvider.notifier);
+    var waterNotif = ref.read(provider.waterNotifProvider.notifier);
+    var tray = ref.read(provider.trayProvider.notifier);
     lastId = (prefs.getInt('lastId') ?? 0);
-    pullUpNotif.state = (prefs.getBool('isPullUpEnabled') ?? true);
     oilNotif.state = (prefs.getBool('isOilNotifOn') ?? true);
-    stallNotif.state = (prefs.getBool('playStallWarning') ?? true);
     tray.state = (prefs.getBool('isTrayEnabled') ?? true);
     waterNotif.state = (prefs.getBool('isWaterNotifOn') ?? true);
     engineDeath.state = (prefs.getBool('isEngineDeathNotifOn') ?? true);
@@ -235,14 +204,12 @@ class HomeState extends ConsumerState<Home>
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
     updateMsgId();
-    updateChat();
 
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       updateMsgId();
       flapChecker();
-      updateChat();
     });
     const Duration averageTimer = Duration(milliseconds: 1200);
     Timer.periodic(averageTimer, (Timer t) async {
@@ -264,32 +231,26 @@ class HomeState extends ConsumerState<Home>
 
       run = true;
     });
-    var fullNotif = ref.read(fullNotifProvider.notifier);
-    const redLineTimer = Duration(milliseconds: 350);
+    var fullNotif = ref.read(provider.fullNotifProvider.notifier);
+    const redLineTimer = Duration(milliseconds: 120);
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       if (!fullNotif.state) return;
-      userRedLineFlap();
       userRedLineGear();
-      loadChecker();
       pullUpChecker();
       checkCritAoa();
-      if (critAoaChecker()) {
-        ref.read(rgbProvider.notifier).state = HexColor(Colors.purple).toHex();
+      if (loadChecker()) {
+        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.35);
       }
       // _csvThing();
     });
     Future.delayed(Duration.zero, () async {
-      // Navigator.of(context)
-      //     .pushReplacement(MaterialPageRoute(builder: (context) {
-      //   return const MyCanvas();
-      // }));
       csvNames = await File(namesPath).readAsString();
 
       Map<String, String> namesMap = convertNamesToMap(csvNames);
 
       fmData = await FmData.setObject(
-          namesMap[ref.read(vehicleNameProvider.state).state] ?? '');
+          namesMap[ref.read(provider.vehicleNameProvider.state).state] ?? '');
     });
   }
 
@@ -299,45 +260,21 @@ class HomeState extends ConsumerState<Home>
     TrayManager.instance.removeListener(this);
     windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
-    chatIdFirst.removeListener(() {});
-    chatIdSecond.removeListener(() {});
-
     isStopped = true;
+    audio.release();
+    audio.dispose();
   }
 
-  startListeners() {
-    ref.listen<String>(rgbProvider, (previous, next) async {
-      if (previous != next && next != Colors.white.toHex() && openRGB != null) {
-        Process.run(openRGB!.path, ['--mode', 'static', '--color', next],
-            runInShell: true);
-        await Future.delayed(const Duration(milliseconds: 200));
-        Process.run(openRGB!.path, ['--mode', 'static', '--color', previous!],
-            runInShell: true);
-        await Future.delayed(const Duration(milliseconds: 200));
-
-        Process.run(openRGB!.path, ['--mode', 'static', '--color', next],
-            runInShell: true);
-        await Future.delayed(const Duration(milliseconds: 200));
-
-        Process.run(openRGB!.path, ['--mode', 'static', '--color', previous],
-            runInShell: true);
-        await Future.delayed(const Duration(milliseconds: 200));
-
-        Process.run(openRGB!.path, ['--mode', 'static', '--color', next],
-            runInShell: true);
-        await Future.delayed(const Duration(milliseconds: 200));
-
-        Process.run(openRGB!.path, ['--mode', 'static', '--color', previous],
-            runInShell: true);
-        ref.read(rgbProvider.notifier).state = Colors.white.toHex();
-        await Future.delayed(const Duration(milliseconds: 200));
-      }
-    });
-    ref.listen<String?>(vehicleNameProvider, (previous, next) async {
-      Map<String, String> namesMap = convertNamesToMap(csvNames);
-      fmData = await FmData.setObject(namesMap[next] ?? '');
-      if (fmData != null) {
-        ref.read(gearLimitProvider.notifier).state = fmData!.critGearSpd;
+  int number = 0;
+  Future<void> startListeners() async {
+    ref.listen<String?>(provider.vehicleNameProvider, (previous, next) async {
+      if (next.notNull && next != '') {
+        Map<String, String> namesMap = convertNamesToMap(csvNames);
+        fmData = await FmData.setObject(namesMap[next] ?? '');
+        if (fmData != null) {
+          ref.read(provider.gearLimitProvider.notifier).state =
+              fmData!.critGearSpd;
+        }
       }
     });
   }
@@ -371,40 +308,10 @@ class HomeState extends ConsumerState<Home>
     return map;
   }
 
-  Color headerColor = Colors.teal;
-  IconData drawerIcon = FluentIcons.settings;
-
-  String ffmpegPath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data\\flutter_assets\\assets',
-    'ffmpeg.zip'
-  ]);
-  String ffmpegExePath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data\\flutter_assets\\assets',
-    'ffmpeg.exe'
-  ]);
-  Player pullUpPlayer = Player(id: 3);
-  Player gearUpPlayer = Player(id: 2);
-  Player overGPlayer = Player(id: 1);
-  Player player = Player(id: 0);
-  int? minFuel;
   int? gear;
   double? aoa;
-  double? climb;
-  double? engine;
-  double? fuelPercent;
-  double? avgTAS;
   double critAoa = 10000;
-  double boxShadowOpacity = 0.07;
-  double widget1Opacity = 0.0;
-  double normalHeight = 60;
-  double smallHeight = 45;
-  double normalFont = 20;
-  double smallFont = 17;
-  double? compass;
-  double? load, throttle;
-  double? mach;
+  double? load;
   double? vertical;
   int counter = 0;
   int? lastId;
@@ -418,33 +325,7 @@ class HomeState extends ConsumerState<Home>
   FmData? fmData;
   String? msgData;
   String csvNames = '';
-  // String? chatMsgFirst;
-  // String? chatModeFirst;
-  // String? chatSenderFirst;
-  // String? chatSenderSecond;
-  // String? chatMsgSecond;
-  // String? chatModeSecond;
-  // String? chatPrefixFirst;
-  // String? chatPrefixSecond;
-  String pathScript = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/assets/AutoHotkeyU64.ahk'
-  ]);
-  String pathAHK = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/assets/AutoHotkeyU64.exe'
-  ]);
   String path = p.dirname(Platform.resolvedExecutable);
-  String delPath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/assets',
-    'del.bat'
-  ]);
-  String terminatePath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data/flutter_assets/assets',
-    'terminate.bat'
-  ]);
   String somePath = p.joinAll(
       [p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets']);
   String warningLogo = p.joinAll([
@@ -481,38 +362,17 @@ class HomeState extends ConsumerState<Home>
   late final stateStream = StateData.getState().asBroadcastStream();
   late Stream<IndicatorData?> indicatorStream =
       IndicatorData.getIndicator().asBroadcastStream();
-  OpenRGB? openRGB;
   @override
   Widget build(BuildContext context) {
     startListeners();
     return Stack(children: [
       NavigationView(
-        appBar: NavigationAppBar(
-          title: const Text(
+        appBar: const NavigationAppBar(
+          title: Text(
             'War Thunder Background Assistant',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           automaticallyImplyLeading: false,
-          actions: IconButton(
-            icon: Image.asset('assets/OpenRGB.png'),
-            onPressed: () async {
-              final innerOpenRGB = await AppUtil.checkOpenRGb();
-              setState(() {
-                openRGB = innerOpenRGB;
-              });
-              if (innerOpenRGB.exists) {
-                await Process.start(
-                    innerOpenRGB.path, ['--server', '--server-port', '1200']);
-                dio.get('http://localhost:1200');
-              } else {
-                if (!mounted) return;
-                Navigator.pushReplacement(
-                    context,
-                    FluentPageRoute(
-                        builder: (c) => const Downloader(isRGB: true)));
-              }
-            },
-          ),
         ),
         pane: NavigationPane(
             selected: index,
@@ -529,6 +389,9 @@ class HomeState extends ConsumerState<Home>
               PaneItem(
                   icon: const Icon(FluentIcons.nav2_d_map_view),
                   title: const Text('Game Map')),
+              PaneItem(
+                  icon: const Icon(FluentIcons.settings),
+                  title: const Text('Settings')),
             ]),
         content: NavigationBody(
           index: index,
@@ -706,7 +569,7 @@ class HomeState extends ConsumerState<Home>
                                 child: Container(
                                   padding: const EdgeInsets.only(left: 20),
                                   alignment: Alignment.topLeft,
-                                  child: !critAoaChecker()
+                                  child: critAoaChecker()
                                       ? Text(
                                           'AoA= ${shot.data!.aoa}°',
                                           style: const TextStyle(
@@ -752,8 +615,9 @@ class HomeState extends ConsumerState<Home>
                         if (shot.hasData) {
                           inHangar = false;
                           WidgetsBinding.instance.addPostFrameCallback((_) {
-                            ref.read(vehicleNameProvider.notifier).state =
-                                shot.data!.type;
+                            ref
+                                .read(provider.vehicleNameProvider.notifier)
+                                .state = shot.data!.type;
                             vertical = shot.data!.vertical;
                           });
 
@@ -800,7 +664,9 @@ class HomeState extends ConsumerState<Home>
                         }
                         if (shot.hasError) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
-                            ref.read(vehicleNameProvider.notifier).state = '';
+                            ref
+                                .read(provider.vehicleNameProvider.notifier)
+                                .state = '';
                           });
                           log('Error: ${shot.error}');
                           return Center(
@@ -815,8 +681,9 @@ class HomeState extends ConsumerState<Home>
                           );
                         } else {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
-                            ref.read(vehicleNameProvider.notifier).state =
-                                'Vehicle Name not available';
+                            ref
+                                .read(provider.vehicleNameProvider.notifier)
+                                .state = '';
                           });
                           return Center(
                               child: SizedBox(
@@ -835,7 +702,8 @@ class HomeState extends ConsumerState<Home>
               child: GameMap(
                 inHangar: inHangar,
               ),
-            )
+            ),
+            const Settings(),
           ],
         ),
       ),

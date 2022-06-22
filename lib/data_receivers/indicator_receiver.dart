@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:dio/dio.dart';
 
@@ -35,8 +34,7 @@ class IndicatorData {
             .timeout(const Duration(seconds: 2));
         IndicatorData toolDataState = IndicatorData.fromMap(response.data);
         return toolDataState;
-      } catch (e, st) {
-        log(e.toString(), stackTrace: st);
+      } catch (e) {
         return null;
       }
     });
