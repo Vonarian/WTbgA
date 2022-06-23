@@ -172,7 +172,13 @@ class GameMapState extends State<GameMap> {
             ],
           )
         : const Center(
-            child: Text('In Hangar'),
+            child: Text(
+              'In Hangar',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           );
   }
 }

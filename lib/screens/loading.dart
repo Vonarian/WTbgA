@@ -13,10 +13,10 @@ class Loading extends StatefulWidget {
   const Loading({Key? key}) : super(key: key);
 
   @override
-  _LoadingState createState() => _LoadingState();
+  LoadingState createState() => LoadingState();
 }
 
-class _LoadingState extends State<Loading> {
+class LoadingState extends State<Loading> {
   Future<String> checkVersion() async {
     try {
       final File file = File(
@@ -58,9 +58,7 @@ class _LoadingState extends State<Loading> {
         Future.delayed(const Duration(seconds: 4), () async {
           Navigator.of(context)
               .pushReplacement(FluentPageRoute(builder: (context) {
-            return const Downloader(
-              isRGB: false,
-            );
+            return const Downloader();
           }));
         });
       } else {
@@ -92,14 +90,6 @@ class _LoadingState extends State<Loading> {
       });
     }
   }
-
-  String pathToChecker = (p.joinAll([
-    ...p.split(p.dirname(Platform.resolvedExecutable)),
-    'data',
-    'flutter_assets',
-    'assets',
-    'checker.bat'
-  ]));
 
   @override
   void initState() {

@@ -621,7 +621,7 @@ class HomeState extends ConsumerState<Home>
                             vertical = shot.data!.vertical;
                           });
 
-                          if (shot.data!.mach == null) shot.data!.mach = -0;
+                          if (shot.data!.mach == null) shot.data!.mach = 0;
                           return Flex(
                             direction: Axis.vertical,
                             children: [
@@ -663,6 +663,8 @@ class HomeState extends ConsumerState<Home>
                           );
                         }
                         if (shot.hasError) {
+                          inHangar = true;
+
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             ref
                                 .read(provider.vehicleNameProvider.notifier)
@@ -680,6 +682,7 @@ class HomeState extends ConsumerState<Home>
                                 )),
                           );
                         } else {
+                          inHangar = true;
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             ref
                                 .read(provider.vehicleNameProvider.notifier)

@@ -18,8 +18,9 @@ import 'package:wtbgassistant/screens/widgets/custom_loading.dart';
 import '../data_receivers/github.dart';
 
 class Downloader extends StatefulWidget {
-  final bool isRGB;
-  const Downloader({Key? key, required this.isRGB}) : super(key: key);
+  const Downloader({
+    Key? key,
+  }) : super(key: key);
 
   @override
   DownloaderState createState() => DownloaderState();
@@ -32,9 +33,7 @@ class DownloaderState extends State<Downloader>
     super.initState();
     windowManager.addListener(this);
     trayManager.addListener(this);
-    if (!widget.isRGB) {
-      downloadUpdate();
-    } else {}
+    downloadUpdate();
   }
 
   @override
@@ -56,24 +55,24 @@ class DownloaderState extends State<Downloader>
     await windowManager.center();
     try {
       Data data = await Data.getData();
-      Directory tempDir = await getTemporaryDirectory();
-      String tempPath = tempDir.path;
-      Directory tempWtnews =
-          await Directory('$tempPath\\WTbgA').create(recursive: true);
-      final deleteFolder = Directory(p.joinAll([tempWtnews.path, 'out']));
+      Directory docDir = await getApplicationDocumentsDirectory();
+      String docPath = docDir.path;
+      Directory docWTbgA =
+          await Directory('$docPath\\WTbgA').create(recursive: true);
+      final deleteFolder = Directory(p.joinAll([docWTbgA.path, 'out']));
       if (await deleteFolder.exists()) {
         await deleteFolder.delete(recursive: true);
       }
       Dio dio = Dio();
       await dio.download(
-          data.assets.last.browserDownloadUrl, '${tempWtnews.path}\\update.zip',
+          data.assets.last.browserDownloadUrl, '${docWTbgA.path}\\update.zip',
           onReceiveProgress: (downloaded, full) async {
         progress = downloaded / full * 100;
         setState(() {});
       }, deleteOnError: true).whenComplete(() async {
-        final File filePath = File('${tempWtnews.path}\\update.zip');
+        final File filePath = File('${docWTbgA.path}\\update.zip');
         final Uint8List bytes =
-            await File('${tempWtnews.path}\\update.zip').readAsBytes();
+            await File('${docWTbgA.path}\\update.zip').readAsBytes();
         final archive = ZipDecoder().decodeBytes(bytes);
         for (final file in archive) {
           final filename = file.name;
@@ -104,7 +103,7 @@ class DownloaderState extends State<Downloader>
                 'Do not close the application until the update process is finished');
         text = 'Installing';
         setState(() {});
-        await Process.run(installer, [tempWtnews.path]);
+        await Process.run(installer, [docWTbgA.path]);
       }).timeout(const Duration(minutes: 8));
     } catch (e, st) {
       if (!mounted) return;
@@ -118,12 +117,8 @@ class DownloaderState extends State<Downloader>
             ),
             action: SnackBarAction(
               onPressed: () {
-                Navigator.pushReplacement(
-                    context,
-                    FluentPageRoute(
-                        builder: (context) => const Downloader(
-                              isRGB: false,
-                            )));
+                Navigator.pushReplacement(context,
+                    FluentPageRoute(builder: (context) => const Downloader()));
               },
               label: 'Retry',
             ),

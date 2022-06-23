@@ -1,7 +1,7 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
 import 'package:win32/win32.dart';
 
 class AppUtil {
@@ -22,16 +22,6 @@ class AppUtil {
     }
   }
 
-  static Future<OpenRGB> checkOpenRGb() async {
-    Directory docDir = await getApplicationDocumentsDirectory();
-    String docPath = docDir.path;
-    File openRGBFile =
-        File('$docPath\\WTbgA\\out\\OpenRGB Windows 64-bit\\OpenRGB.exe');
-    OpenRGB openRGB =
-        OpenRGB(exists: await openRGBFile.exists(), path: openRGBFile.path);
-    return openRGB;
-  }
-
   static void playSound(String path) {
     final file = File(path).existsSync();
 
@@ -47,19 +37,17 @@ class AppUtil {
       free(sound);
     }
   }
-}
 
-class OpenRGB {
-  final String path;
-  final bool exists;
+  static Future<String> runPowerShellScript(
+      String scriptPath, List<String> argumentsToScript) async {
+    var process = await Process.start(
+        'Powershell.exe', ['-File', scriptPath, ...argumentsToScript]);
+    String finalString = '';
 
-  const OpenRGB({
-    required this.path,
-    required this.exists,
-  });
-
-  @override
-  String toString() {
-    return 'OpenRGB ==> (path: $path, exists: $exists)';
+    await for (var line in process.stdout.transform(utf8.decoder)) {
+      finalString += line;
+    }
+    process.kill();
+    return finalString;
   }
 }

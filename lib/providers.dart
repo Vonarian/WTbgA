@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wtbgassistant/main.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
 class MyProvider {
   final StateProvider<bool> fullNotifProvider = StateProvider((ref) => true);
@@ -16,4 +18,12 @@ class MyProvider {
   final StateProvider<int> gearLimitProvider = StateProvider((ref) => 1000);
 
   final StateProvider<int> flapLimitProvider = StateProvider((ref) => 800);
+  final StateProvider<bool> downloadCompleteProvider =
+      StateProvider((ref) => false);
+  final deviceIPProvider = FutureProvider.autoDispose<String>(
+    (ref) async {
+      String ip = await AppUtil.runPowerShellScript(deviceIPPath, []);
+      return ip;
+    },
+  );
 }
