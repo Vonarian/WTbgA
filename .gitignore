@@ -619,3 +619,4 @@ wtbgassistant.iml
 /lib/screens/vars.dart
 /lib/index.xml
 /assets/ffmpeg.zip
+/lib/data/firebase.dart

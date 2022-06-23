@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:blinking_text/blinking_text.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:path/path.dart' as p;
 import 'package:wtbgassistant/data_receivers/github.dart';
 
+import '../main.dart';
 import 'downloader.dart';
 import 'home.dart';
 
@@ -19,8 +19,7 @@ class Loading extends StatefulWidget {
 class LoadingState extends State<Loading> {
   Future<String> checkVersion() async {
     try {
-      final File file = File(
-          '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\Version\\version.txt');
+      final File file = File(versionPath);
       final String version = await file.readAsString();
       return version;
     } catch (e, st) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
@@ -14,6 +16,7 @@ class _AppState extends State<App> with TrayListener, WindowListener {
   @override
   void initState() {
     super.initState();
+
     trayManager.addListener(this);
     windowManager.addListener(this);
   }
@@ -22,13 +25,19 @@ class _AppState extends State<App> with TrayListener, WindowListener {
   void dispose() {
     trayManager.removeListener(this);
     windowManager.removeListener(this);
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.child;
+    return FluentApp(
+        theme: ThemeData.dark(),
+        debugShowCheckedModeBanner: false,
+        title: 'WTbgA',
+        home: widget.child);
   }
+
   final bool _showWindowBelowTrayIcon = false;
   Future<void> _handleClickRestore() async {
     await windowManager.setIcon('assets/app_icon.ico');

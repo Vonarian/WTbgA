@@ -173,7 +173,7 @@ class GameMapState extends State<GameMap> {
           )
         : const Center(
             child: Text(
-              'In Hangar',
+              'No Data',
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.bold,

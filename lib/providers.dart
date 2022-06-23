@@ -1,5 +1,7 @@
+import 'package:firebase_dart/firebase_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wtbgassistant/main.dart';
+import 'package:wtbgassistant/services/presence.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
 class MyProvider {
@@ -24,6 +26,13 @@ class MyProvider {
     (ref) async {
       String ip = await AppUtil.runPowerShellScript(deviceIPPath, []);
       return ip;
+    },
+  );
+  final versionFBProvider = StreamProvider<String>(
+    (ref) async* {
+      await for (Event e in PresenceService().getVersion()) {
+        yield e.snapshot.value.toString();
+      }
     },
   );
 }

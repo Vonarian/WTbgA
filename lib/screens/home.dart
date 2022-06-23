@@ -5,20 +5,26 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:blinking_text/blinking_text.dart';
+import 'package:firebase_dart/database.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:tray_manager/tray_manager.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
 import 'package:wtbgassistant/screens/widgets/settings.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
 
+import '../data/data_class.dart';
+import '../data/firebase.dart';
 import '../data_receivers/damage_event.dart';
 import '../data_receivers/indicator_receiver.dart';
 import '../data_receivers/state_receiver.dart';
 import '../main.dart';
 import '../services/extensions.dart';
+import '../services/presence.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -28,7 +34,13 @@ class Home extends ConsumerStatefulWidget {
 }
 
 class HomeState extends ConsumerState<Home>
-    with WindowListener, TrayListener, TickerProviderStateMixin {
+    with
+        WindowListener,
+        TrayListener,
+        TickerProviderStateMixin,
+        WidgetsBindingObserver {
+  StreamSubscription? subscription;
+  StreamSubscription? subscriptionForPresence;
   Future<void> userRedLineGear() async {
     if (!mounted) return;
     if (ias != null) {
@@ -204,7 +216,15 @@ class HomeState extends ConsumerState<Home>
     TrayManager.instance.addListener(this);
     windowManager.addListener(this);
     updateMsgId();
+    WidgetsBinding.instance.addObserver(this);
 
+    Future.delayed(Duration.zero, () async {
+      await PresenceService().configureUserPresence(
+          (await deviceInfo.windowsInfo).computerName,
+          File(versionPath).readAsStringSync());
+      await Future.delayed(const Duration(seconds: 3));
+      subscriptionForPresence = startListening();
+    });
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
@@ -261,8 +281,73 @@ class HomeState extends ConsumerState<Home>
     windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
     isStopped = true;
+    WidgetsBinding.instance.removeObserver(this);
+    subscription!.cancel();
     audio.release();
     audio.dispose();
+  }
+
+  StreamSubscription? startListening() {
+    FirebaseDatabase db = FirebaseDatabase(app: app, databaseURL: dataBaseUrl);
+    db.goOnline();
+    return db.reference().onValue.listen((event) async {
+      final data = event.snapshot.value;
+      if (data != null &&
+          data['title'] != null &&
+          data['subtitle'] != null &&
+          data['id'] != null &&
+          data['title'] != '' &&
+          data['subtitle'] != '') {
+        Message message = Message.fromMap(data);
+        if (prefs.getInt('id') != message.id) {
+          if (message.device == (await deviceInfo.windowsInfo).computerName ||
+              message.device == null) {
+            var toast = await WinToast.instance().showToast(
+                type: ToastType.text04,
+                title: message.title,
+                subtitle: message.subtitle);
+            toast?.eventStream.listen((event) async {
+              if (event is ActivatedEvent) {
+                if (message.url != null) {
+                  await launchUrl(Uri.parse(message.url!));
+                }
+              }
+            });
+            if (message.operation != null) {
+              switch (message.operation) {
+                case 'getUserName':
+                  if (!mounted) return;
+                  await Message.getUserName(context, data);
+                  break;
+              }
+            }
+            await prefs.setInt('id', message.id);
+          }
+        }
+      } else if (data != null &&
+          data['operation'] != null &&
+          data['id'] != null &&
+          data['title'] == null) {
+        switch (data['operation']) {
+          case 'getUserName':
+            await Message.getUserName(context, data);
+            break;
+        }
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused) {
+      PresenceService().disconnect();
+      subscriptionForPresence?.cancel();
+    }
+    if (state == AppLifecycleState.resumed) {
+      PresenceService().connect();
+      subscriptionForPresence?.resume();
+    }
   }
 
   int number = 0;
