@@ -92,7 +92,7 @@ class DownloaderState extends State<Downloader>
           'data',
           'flutter_assets',
           'assets',
-          'install',
+          'Version',
           'installer.bat'
         ]));
 
