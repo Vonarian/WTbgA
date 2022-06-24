@@ -545,7 +545,6 @@ ios/Runner/Base.lproj/Main.storyboard
 ios/Runner/Info.plist
 ios/Runner/Runner-Bridging-Header.h
 pubspec.lock
-README.md
 web/favicon.png
 web/icons/Icon-192.png
 web/icons/Icon-512.png
