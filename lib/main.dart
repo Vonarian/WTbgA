@@ -15,6 +15,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/providers.dart';
 import 'package:wtbgassistant/screens/loading.dart';
 import 'package:wtbgassistant/screens/widgets/top_widget.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
 import 'data/firebase.dart';
 
@@ -43,7 +44,7 @@ String versionPath =
 final audio = AudioPlayer();
 final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
-
+late String appDocPath;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
@@ -65,6 +66,7 @@ Future<void> main() async {
           dark: true);
     }    await windowManager.show();
   });
+  appDocPath = await AppUtil.getAppDocsPath();
   await FirebaseDartFlutter.setup();
   app = await Firebase.initializeApp(
       options: FirebaseOptions.fromMap(firebaseConfig), name: 'wtbga-815e4');

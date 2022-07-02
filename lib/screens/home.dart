@@ -462,14 +462,51 @@ class HomeState extends ConsumerState<Home>
   Widget build(BuildContext context) {
     startListeners();
     final theme = FluentTheme.of(context);
+    final fireBaseVersion = ref.watch(provider.versionFBProvider);
     return NavigationView(
       appBar: NavigationAppBar(
-        title: Text(
-          'War Thunder background Assistant',
-          style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: theme.accentColor.lighter),
+        title: Row(
+          children: [
+            Text(
+              'War Thunder background Assistant',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: theme.accentColor.lighter),
+            ),
+            const SizedBox(
+              width: 5,
+            ),
+            fireBaseVersion.when(data: (data){
+              bool isNew = false;
+              if (int.parse(data.replaceAll('.', '')) > int.parse(File(versionPath).readAsStringSync().replaceAll('.', ''))) {
+                isNew = true;
+              }
+              if(isNew){
+                return Text(
+                  'New version available',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: theme.accentColor.lighter),
+                );
+              }
+              else{
+                return Text(
+                  'v$data',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: theme.accentColor.lighter),
+                );
+              }
+            }, error: (e,st){
+              return const SizedBox();
+            }, loading: (){
+              return const SizedBox();
+
+            }),
+          ],
         ),
         automaticallyImplyLeading: false,
       ),
@@ -692,12 +729,11 @@ class HomeState extends ConsumerState<Home>
                               color: Colors.white, fontSize: 40),
                         ));
                       } else {
-                        return Center(
+                        return const Center(
                             child: SizedBox(
                           height: 100,
                           width: 100,
                           child: ProgressRing(
-                            backgroundColor: Colors.red,
                           ),
                         ));
                       }
@@ -783,12 +819,11 @@ class HomeState extends ConsumerState<Home>
                               .read(provider.vehicleNameProvider.notifier)
                               .state = '';
                         });
-                        return Center(
+                        return const Center(
                             child: SizedBox(
                           height: 100,
                           width: 100,
                           child: ProgressRing(
-                            backgroundColor: Colors.red,
                           ),
                         ));
                       }

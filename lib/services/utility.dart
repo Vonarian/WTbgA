@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:path_provider/path_provider.dart';
 import 'package:win32/win32.dart';
 
 class AppUtil {
@@ -48,5 +49,15 @@ class AppUtil {
       finalString += line;
     }
     return finalString;
+  }
+
+  static Future<String> getAppDocsPath()async{
+    Directory docDir = await getApplicationDocumentsDirectory();
+    String docPath = docDir.path;
+    Directory docWTbgA =
+        await Directory('$docPath\\WTbgA')
+        .create(recursive: true);
+    String docWTbgAPath = docWTbgA.path;
+    return docWTbgAPath;
   }
 }

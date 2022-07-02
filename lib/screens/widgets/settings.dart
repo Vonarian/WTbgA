@@ -172,20 +172,16 @@ class SettingsState extends ConsumerState<Settings> {
                 title: const Text('Start Streaming Mode'),
                 onPressed: (ctx) async {
                   if (!isStreaming) {
-                    Directory docDir = await getApplicationDocumentsDirectory();
-                    String docPath = docDir.path;
-                    Directory docWTbgA =
-                        await Directory('$docPath\\WTbgA\\stream')
-                            .create(recursive: true);
-                    String docWTbgAPath = docWTbgA.path;
-                    File fileFFMPEG = File('$docWTbgAPath\\out\\ffmpeg.exe');
-                    File fileMona = File('$docWTbgAPath\\out\\MonaTiny.exe');
+                   final File docWTbgAStream = File('$appDocPath\\stream');
+                    await docWTbgAStream.create(recursive: true);
+                    File fileFFMPEG = File('${docWTbgAStream.path}\\out\\ffmpeg.exe');
+                    File fileMona = File('${docWTbgAStream.path}\\out\\MonaTiny.exe');
                     bool ffmpegExists = await fileFFMPEG.exists();
                     bool monaExists = await fileMona.exists();
                     if (ffmpegExists && monaExists) {
                       monaProcess = await Process.start(
                           'cmd.exe', ['/c', fileMona.path],
-                          runInShell: true);
+                          runInShell: true, workingDirectory: docWTbgAStream.path);
                       monaProcess?.stdout
                           .transform(utf8.decoder)
                           .listen((event) {
@@ -220,7 +216,7 @@ class SettingsState extends ConsumerState<Settings> {
                       isStreaming = true;
                       try {
                         outerProcess =
-                            await Ffmpeg().run(command, path: fileFFMPEG.path);
+                            await Ffmpeg().run(command, path: fileFFMPEG.path, workingDir: docWTbgAStream.path);
                         outerProcess?.stderr
                             .transform(utf8.decoder)
                             .listen((event) {
