@@ -41,7 +41,8 @@ dependencies:
   flutter_riverpod: ^1.0.4
   csv: ^5.0.1
   archive: ^3.3.0
-  fluent_ui: ^3.12.0
+  fluent_ui:
+    path: ../fluent_ui
   audioplayers: ^1.0.0-rc.4
   ffmpeg_cli:
     path: ../ffmpeg_cli
@@ -51,6 +52,11 @@ dependencies:
   firebase_core_desktop: ^1.0.0
   device_info_plus: ^3.2.2
   intl: ^0.17.0
+  flutter_acrylic: ^1.0.0+2
+  system_theme: ^2.0.0
+  dynamic_color:
+    path: ../dynamic_color
+  system_info2: ^2.0.4
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
 #  cupertino_icons: ^1.0.2

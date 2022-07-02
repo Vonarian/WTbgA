@@ -201,7 +201,7 @@ class SettingsState extends ConsumerState<Settings> {
                         }
                       });
                       final deviceIP =
-                          await AppUtil.runPowerShellScript(deviceIPPath, []);
+                          await AppUtil.runPowerShellScript(deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
                       final command = FfmpegCommand(
                         inputs: [FfmpegInput.virtualDevice('desktop')],
                         args: [
@@ -259,7 +259,7 @@ class SettingsState extends ConsumerState<Settings> {
                   } else {
                     isStreaming = false;
                     setState(() {});
-                    Process.run('taskkill', ['/F', '/IM', 'ffmpeg.exe']);
+                    await Process.run('taskkill', ['/F', '/IM', 'ffmpeg.exe']);
                     Process.run('taskkill', ['/F', '/IM', 'MonaTiny.exe']);
                   }
                 },
@@ -317,16 +317,14 @@ class SettingsState extends ConsumerState<Settings> {
               initialValue: ref.watch(provider.engineOHNotifProvider),
               title: const Text('Toggle Engine OH Notifier'),
               onToggle: (bool value) {
-                ref.read(provider.engineDeathNotifProvider.notifier).state =
-                    value;
+                ref.read(provider.engineOHNotifProvider.notifier).state = value;
               },
             ),
             SettingsTile.switchTile(
               initialValue: ref.watch(provider.waterNotifProvider),
               title: const Text('Toggle Water OH Notifier'),
               onToggle: (bool value) {
-                ref.read(provider.engineDeathNotifProvider.notifier).state =
-                    value;
+                ref.read(provider.waterNotifProvider.notifier).state = value;
               },
             ),
           ]),
@@ -342,32 +340,35 @@ class SettingsState extends ConsumerState<Settings> {
     return ScaffoldPage(
       content: Column(
         children: [
-          GestureDetector(
-            onTap: () {
-              ref.refresh(provider.deviceIPProvider);
-            },
-            child: ipValue.when(data: (data) {
-              return Text(
-                'Device IP: $data',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              );
-            }, error: (e, st) {
-              return Text(
-                'Device IP: Error',
-                style: TextStyle(fontSize: 20, color: Colors.red),
-              );
-            }, loading: () {
-              return Text(
-                'Device IP: Loading...',
-                style: TextStyle(fontSize: 20, color: Colors.orange),
-              );
-            }),
+          Expanded(
+            flex: 1,
+            child: GestureDetector(
+              onTap: () {
+                ref.refresh(provider.deviceIPProvider);
+              },
+              child: ipValue.when(data: (data) {
+                return Text(
+                  'Device IP: $data',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                );
+              }, error: (e, st) {
+                return Text(
+                  'Device IP: Error',
+                  style: TextStyle(fontSize: 20, color: Colors.red),
+                );
+              }, loading: () {
+                return Text(
+                  'Device IP: Loading...',
+                  style: TextStyle(fontSize: 20, color: Colors.orange),
+                );
+              }),
+            ),
           ),
-          Expanded(child: settings(context)),
+          Expanded(flex: 10, child: settings(context)),
         ],
       ),
     );

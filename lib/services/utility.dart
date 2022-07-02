@@ -41,13 +41,12 @@ class AppUtil {
   static Future<String> runPowerShellScript(
       String scriptPath, List<String> argumentsToScript) async {
     var process = await Process.start(
-        'Powershell.exe', ['-File', scriptPath, ...argumentsToScript]);
+        'Powershell.exe', [...argumentsToScript, '-File', scriptPath]);
     String finalString = '';
 
     await for (var line in process.stdout.transform(utf8.decoder)) {
       finalString += line;
     }
-    process.kill();
     return finalString;
   }
 }

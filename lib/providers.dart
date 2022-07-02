@@ -1,4 +1,6 @@
+
 import 'package:firebase_dart/firebase_dart.dart';
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/services/presence.dart';
@@ -24,7 +26,7 @@ class MyProvider {
       StateProvider((ref) => false);
   final deviceIPProvider = FutureProvider.autoDispose<String>(
     (ref) async {
-      String ip = await AppUtil.runPowerShellScript(deviceIPPath, []);
+      String ip = await AppUtil.runPowerShellScript(deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
       return ip;
     },
   );
@@ -35,4 +37,7 @@ class MyProvider {
       }
     },
   );
+  final systemColorProvider = StateProvider<Color>((ref) => Colors.red);
+  final systemThemeProvider =
+  StateProvider<Brightness>((ref) => Brightness.dark);
 }

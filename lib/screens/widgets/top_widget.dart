@@ -1,24 +1,42 @@
 import 'dart:async';
 
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:system_theme/system_theme.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
-class App extends StatefulWidget {
+import '../../main.dart';
+
+class App extends ConsumerStatefulWidget {
   const App({super.key, required this.child});
   final Widget child;
 
   @override
-  State<App> createState() => _AppState();
+  AppState createState() => AppState();
 }
 
-class _AppState extends State<App> with TrayListener, WindowListener {
+class AppState extends ConsumerState<App> with TrayListener, WindowListener {
   @override
   void initState() {
     super.initState();
-
     trayManager.addListener(this);
     windowManager.addListener(this);
+    Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (!focused) return;
+      Color? systemColor = await DynamicColorPlugin.getAccentColor();
+      Brightness brightness =
+      SystemTheme.isDarkMode ? Brightness.dark : Brightness.light;
+      if (ref.read(provider.systemColorProvider.notifier).state !=
+          systemColor &&
+          systemColor != null) {
+        ref.read(provider.systemColorProvider.notifier).state = systemColor;
+      }
+      if (brightness != ref.read(provider.systemThemeProvider.notifier).state) {
+        ref.read(provider.systemThemeProvider.notifier).state = brightness;
+      }
+    });
   }
 
   @override
@@ -28,17 +46,27 @@ class _AppState extends State<App> with TrayListener, WindowListener {
 
     super.dispose();
   }
-
+  bool focused = true;
   @override
   Widget build(BuildContext context) {
     return FluentApp(
-        theme: ThemeData.dark(),
+        theme: ThemeData(
+            brightness: ref.watch(provider.systemThemeProvider),
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+            accentColor:
+            ref.watch(provider.systemColorProvider).toAccentColor(),
+            navigationPaneTheme: NavigationPaneThemeData(
+                animationDuration: const Duration(milliseconds: 600),
+                animationCurve: Curves.easeInOut,
+                highlightColor: ref.watch(provider.systemColorProvider),
+                iconPadding: const EdgeInsets.only(left: 6),
+                labelPadding: const EdgeInsets.only(left: 4),
+                backgroundColor: Colors.transparent)),
         debugShowCheckedModeBanner: false,
         title: 'WTbgA',
         home: widget.child);
   }
 
-  final bool _showWindowBelowTrayIcon = false;
   Future<void> _handleClickRestore() async {
     await windowManager.setIcon('assets/app_icon.ico');
     windowManager.restore();
@@ -63,20 +91,6 @@ class _AppState extends State<App> with TrayListener, WindowListener {
 
   @override
   void onTrayIconMouseDown() async {
-    if (_showWindowBelowTrayIcon) {
-      Size windowSize = await windowManager.getSize();
-      Rect trayIconBounds = await TrayManager.instance.getBounds();
-      Size trayIconSize = trayIconBounds.size;
-      Offset trayIconNewPosition = trayIconBounds.topLeft;
-
-      Offset newPosition = Offset(
-        trayIconNewPosition.dx - ((windowSize.width - trayIconSize.width) / 2),
-        trayIconNewPosition.dy,
-      );
-
-      windowManager.setPosition(newPosition);
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
     _handleClickRestore();
     _trayUnInit();
   }
@@ -88,6 +102,7 @@ class _AppState extends State<App> with TrayListener, WindowListener {
 
   @override
   void onWindowRestore() {
+    focused = true;
     setState(() {});
   }
 
@@ -106,6 +121,7 @@ class _AppState extends State<App> with TrayListener, WindowListener {
   @override
   void onWindowMinimize() {
     windowManager.hide();
+    focused = false;
     _trayInit();
   }
 }

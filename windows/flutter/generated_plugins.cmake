@@ -4,8 +4,11 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
+  dynamic_color
+  flutter_acrylic
   hotkey_manager
   network_info_plus_windows
+  system_theme
   tray_manager
   url_launcher_windows
   win_toast
