@@ -172,8 +172,10 @@ class SettingsState extends ConsumerState<Settings> {
                 title: const Text('Start Streaming Mode'),
                 onPressed: (ctx) async {
                   if (!isStreaming) {
-                   final File docWTbgAStream = File('$appDocPath\\stream');
-                    await docWTbgAStream.create(recursive: true);
+                   final Directory docWTbgAStream = Directory('$appDocPath\\stream');
+                   if(!(await docWTbgAStream.exists())) {
+                      await docWTbgAStream.create(recursive: true);
+                    }
                     File fileFFMPEG = File('${docWTbgAStream.path}\\out\\ffmpeg.exe');
                     File fileMona = File('${docWTbgAStream.path}\\out\\MonaTiny.exe');
                     bool ffmpegExists = await fileFFMPEG.exists();
