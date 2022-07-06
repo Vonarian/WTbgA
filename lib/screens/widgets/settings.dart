@@ -146,8 +146,8 @@ class SettingsState extends ConsumerState<Settings> {
     }
   }
 
-
   List<RGBController>? controllersData;
+
   Widget settings(BuildContext context) {
     return CustomizedSettingsList(
         platform: DevicePlatform.web,
@@ -336,42 +336,44 @@ class SettingsState extends ConsumerState<Settings> {
               },
             ),
           ]),
-          SettingsSection(
-            title: const Text('OpenRGB'),
-            tiles: [
-              SettingsTile(
-                title: const Text('Pick color'),
-                onPressed: (context) {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: true,
-                    builder: (context) => ContentDialog(
-                      title: const Text('Load data'),
-                      content:
-                          const Text('Are you sure you want to load data?'),
-                      actions: [
-                        TextButton(
-                          child: const Text('Cancel'),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                        TextButton(
-                          child: const Text('Load'),
-                          onPressed: () async {
-                            if (client.notNull) {
-                              controllersData =  await client!.getAllControllers();
-                              setState((){});
-                              if (!mounted) return;
-                              Navigator.pop(context);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
-          )
+          if (ref.read(provider.orgbClientProvider).notNull)
+            SettingsSection(
+              title: const Text('OpenRGB'),
+              tiles: [
+                SettingsTile(
+                  title: const Text('Pick color'),
+                  onPressed: (context) {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (context) => ContentDialog(
+                        title: const Text('Load data'),
+                        content:
+                            const Text('Are you sure you want to load data?'),
+                        actions: [
+                          TextButton(
+                            child: const Text('Cancel'),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                          TextButton(
+                            child: const Text('Load'),
+                            onPressed: () async {
+                              if (ref.read(provider.orgbClientProvider).notNull) {
+                                controllersData =
+                                    await ref.read(provider.orgbClientProvider)!.getAllControllers();
+                                setState(() {});
+                                if (!mounted) return;
+                                Navigator.pop(context);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            )
         ]);
   }
 
@@ -390,38 +392,6 @@ class SettingsState extends ConsumerState<Settings> {
             child: GestureDetector(
               onTap: () {
                 ref.refresh(provider.deviceIPProvider);
-                showDialog(context: context, builder: (context){
-                  return ContentDialog(
-                    content:           ListView.builder(
-                        itemCount: controllersData?.length ?? 0,
-                        itemBuilder:
-                            (context, index){
-                          return ListTile(
-                            title: Text(controllersData?.elementAt(index).name ?? 'Unknown'),
-                            subtitle: GestureDetector(child: const Text('Click to Show Modes'),
-                              onTap: (){
-                                showDialog(context: context, builder: (context){
-                                  return ContentDialog(
-                                    title: const Text('Modes'),
-                                    content: ListView.builder(
-                                      itemCount: controllersData?.elementAt(index).modes.length ?? 0,
-                                      itemBuilder: (context, i){
-                                        return ListTile(
-                                          title: Text(controllersData?.elementAt(index).modes[i].modeName ?? 'Unknown'),
-                                          subtitle: Text(controllersData?.elementAt(index).modes[i].colors.length.toString() ?? 'Unknown'),
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                                barrierDismissible: true,
-                                );
-                              },
-                            ),
-                          );
-                        }),
-                  );
-                });
               },
               child: ipValue.when(data: (data) {
                 return Text(
@@ -445,8 +415,66 @@ class SettingsState extends ConsumerState<Settings> {
               }),
             ),
           ),
+          if (ref.watch(provider.orgbClientProvider).notNull)
+            GestureDetector(
+              onTap: () async {
+                controllersData = await ref.read(provider.orgbClientProvider)?.getAllControllers();
+                setState(() {});
+                showDialog(
+                    barrierDismissible: true,
+                    context: context,
+                    builder: (context) {
+                      return ContentDialog(
+                        content: ListView.builder(
+                            itemCount: controllersData?.length ?? 0,
+                            itemBuilder: (context, index) {
+                              final controller = controllersData![index];
+                              return ListTile(
+                                title: Text(controller.name),
+                                subtitle: GestureDetector(
+                                  child: const Text('Click to Show Modes'),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return ContentDialog(
+                                          title: const Text('Modes'),
+                                          content: ListView.builder(
+                                            itemCount: controller.modes.length,
+                                            itemBuilder: (context, i) {
+                                              final mode = controller.modes[i];
+                                              return ListTile(
+                                                title: Text(mode.modeName),
+                                                subtitle: controller.notNull &&
+                                                        controller
+                                                            .colors.notNull
+                                                    ? Text(
+                                                        'Colors: ${mode.modeNumColors}')
+                                                    : const Text('No color'),
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      },
+                                      barrierDismissible: true,
+                                    );
+                                  },
+                                ),
+                              );
+                            }),
+                      );
+                    });
+              },
+              child: Text(
+                'Load data',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ),
           Expanded(flex: 10, child: settings(context)),
-
         ],
       ),
     );

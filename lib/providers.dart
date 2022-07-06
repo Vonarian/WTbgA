@@ -2,6 +2,7 @@ import 'package:color/color.dart' as c;
 import 'package:firebase_dart/firebase_dart.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openrgb/openrgb.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/services/presence.dart';
 import 'package:wtbgassistant/services/utility.dart';
@@ -43,8 +44,11 @@ class MyProvider {
   final systemColorProvider = StateProvider<Color>((ref) => Colors.red);
   final systemThemeProvider =
       StateProvider<Brightness>((ref) => Brightness.dark);
+  final orgbClientProvider = StateProvider<OpenRGBClient?>(
+    (ref) => null,
+  );
   final openRGBSettingProvider = StateProvider<OpenRGBSettings>((ref) =>
-      const OpenRGBSettings(fireSettings: FireSettings(color: c.Color.rgb(255, 22, 233)), overHeat: OverHeatSettings(color: c.Color.rgb(100, 100, 100))));
+      const OpenRGBSettings(
+          fireSettings: FireSettings(color: c.Color.rgb(255, 22, 233)),
+          overHeat: OverHeatSettings(color: c.Color.rgb(100, 100, 100))));
 }
-
-

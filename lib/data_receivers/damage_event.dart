@@ -60,9 +60,6 @@ class Damage {
       rethrow;
     }
   }
-
-//<editor-fold desc="Data Methods">
-
   Damage({
     required this.id,
     required this.msg,

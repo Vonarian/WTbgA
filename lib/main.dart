@@ -39,7 +39,6 @@ final audio = AudioPlayer();
 final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
-OpenRGBClient? client;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();

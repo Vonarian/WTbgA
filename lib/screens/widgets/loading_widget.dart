@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/material.dart' show Dialog;
 
 Future<T> showLoading<T>({
   required BuildContext context,
@@ -76,12 +77,12 @@ class __LoadingDialogState extends State<_LoadingDialog> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const CircularProgressIndicator.adaptive(),
+            const ProgressRing(),
             if (widget.message != null) ...[
               const SizedBox(height: 8.0),
               Text(
                 widget.message!,
-                style: Theme.of(context).textTheme.titleLarge,
+                style: FluentTheme.of(context).typography.title,
               ),
             ],
           ],
