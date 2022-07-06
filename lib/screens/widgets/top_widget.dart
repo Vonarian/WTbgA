@@ -11,6 +11,7 @@ import '../../main.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key, required this.child});
+
   final Widget child;
 
   @override
@@ -27,9 +28,9 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       if (!focused) return;
       Color? systemColor = await DynamicColorPlugin.getAccentColor();
       Brightness brightness =
-      SystemTheme.isDarkMode ? Brightness.dark : Brightness.light;
+          SystemTheme.isDarkMode ? Brightness.dark : Brightness.light;
       if (ref.read(provider.systemColorProvider.notifier).state !=
-          systemColor &&
+              systemColor &&
           systemColor != null) {
         ref.read(provider.systemColorProvider.notifier).state = systemColor;
       }
@@ -46,7 +47,9 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
 
     super.dispose();
   }
+
   bool focused = true;
+
   @override
   Widget build(BuildContext context) {
     return FluentApp(
@@ -54,7 +57,7 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
             brightness: ref.watch(provider.systemThemeProvider),
             visualDensity: VisualDensity.adaptivePlatformDensity,
             accentColor:
-            ref.watch(provider.systemColorProvider).toAccentColor(),
+                ref.watch(provider.systemColorProvider).toAccentColor(),
             navigationPaneTheme: NavigationPaneThemeData(
                 animationDuration: const Duration(milliseconds: 600),
                 animationCurve: Curves.easeInOut,

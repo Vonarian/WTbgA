@@ -8,12 +8,14 @@ import 'package:ffmpeg_cli/ffmpeg_cli.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openrgb/data/rgb_controller.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:win_toast/win_toast.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
+import 'package:wtbgassistant/services/extensions.dart';
 
 import '../../main.dart';
 import '../../services/utility.dart';
@@ -144,6 +146,8 @@ class SettingsState extends ConsumerState<Settings> {
     }
   }
 
+
+  List<RGBController>? controllersData;
   Widget settings(BuildContext context) {
     return CustomizedSettingsList(
         platform: DevicePlatform.web,
@@ -152,6 +156,7 @@ class SettingsState extends ConsumerState<Settings> {
           settingsListBackground: Colors.transparent,
           settingsSectionBackground: Colors.transparent,
         ),
+        contentPadding: EdgeInsets.zero,
         sections: [
           SettingsSection(
             title: const Text('Main'),
@@ -172,18 +177,22 @@ class SettingsState extends ConsumerState<Settings> {
                 title: const Text('Start Streaming Mode'),
                 onPressed: (ctx) async {
                   if (!isStreaming) {
-                   final Directory docWTbgAStream = Directory('$appDocPath\\stream');
-                   if(!(await docWTbgAStream.exists())) {
+                    final Directory docWTbgAStream =
+                        Directory('$appDocPath\\stream');
+                    if (!(await docWTbgAStream.exists())) {
                       await docWTbgAStream.create(recursive: true);
                     }
-                    File fileFFMPEG = File('${docWTbgAStream.path}\\out\\ffmpeg.exe');
-                    File fileMona = File('${docWTbgAStream.path}\\out\\MonaTiny.exe');
+                    File fileFFMPEG =
+                        File('${docWTbgAStream.path}\\out\\ffmpeg.exe');
+                    File fileMona =
+                        File('${docWTbgAStream.path}\\out\\MonaTiny.exe');
                     bool ffmpegExists = await fileFFMPEG.exists();
                     bool monaExists = await fileMona.exists();
                     if (ffmpegExists && monaExists) {
                       monaProcess = await Process.start(
                           'cmd.exe', ['/c', fileMona.path],
-                          runInShell: true, workingDirectory: docWTbgAStream.path);
+                          runInShell: true,
+                          workingDirectory: docWTbgAStream.path);
                       monaProcess?.stdout
                           .transform(utf8.decoder)
                           .listen((event) {
@@ -198,8 +207,8 @@ class SettingsState extends ConsumerState<Settings> {
                           print(event);
                         }
                       });
-                      final deviceIP =
-                          await AppUtil.runPowerShellScript(deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
+                      final deviceIP = await AppUtil.runPowerShellScript(
+                          deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
                       final command = FfmpegCommand(
                         inputs: [FfmpegInput.virtualDevice('desktop')],
                         args: [
@@ -217,8 +226,9 @@ class SettingsState extends ConsumerState<Settings> {
                       );
                       isStreaming = true;
                       try {
-                        outerProcess =
-                            await Ffmpeg().run(command, path: fileFFMPEG.path, workingDir: docWTbgAStream.path);
+                        outerProcess = await Ffmpeg().run(command,
+                            path: fileFFMPEG.path,
+                            workingDir: docWTbgAStream.path);
                         outerProcess?.stderr
                             .transform(utf8.decoder)
                             .listen((event) {
@@ -326,12 +336,49 @@ class SettingsState extends ConsumerState<Settings> {
               },
             ),
           ]),
+          SettingsSection(
+            title: const Text('OpenRGB'),
+            tiles: [
+              SettingsTile(
+                title: const Text('Pick color'),
+                onPressed: (context) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (context) => ContentDialog(
+                      title: const Text('Load data'),
+                      content:
+                          const Text('Are you sure you want to load data?'),
+                      actions: [
+                        TextButton(
+                          child: const Text('Cancel'),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        TextButton(
+                          child: const Text('Load'),
+                          onPressed: () async {
+                            if (client.notNull) {
+                              controllersData =  await client!.getAllControllers();
+                              setState((){});
+                              if (!mounted) return;
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          )
         ]);
   }
 
   bool isStreaming = false;
   Process? outerProcess;
   Process? monaProcess;
+
   @override
   Widget build(BuildContext context) {
     final ipValue = ref.watch(provider.deviceIPProvider);
@@ -343,6 +390,38 @@ class SettingsState extends ConsumerState<Settings> {
             child: GestureDetector(
               onTap: () {
                 ref.refresh(provider.deviceIPProvider);
+                showDialog(context: context, builder: (context){
+                  return ContentDialog(
+                    content:           ListView.builder(
+                        itemCount: controllersData?.length ?? 0,
+                        itemBuilder:
+                            (context, index){
+                          return ListTile(
+                            title: Text(controllersData?.elementAt(index).name ?? 'Unknown'),
+                            subtitle: GestureDetector(child: const Text('Click to Show Modes'),
+                              onTap: (){
+                                showDialog(context: context, builder: (context){
+                                  return ContentDialog(
+                                    title: const Text('Modes'),
+                                    content: ListView.builder(
+                                      itemCount: controllersData?.elementAt(index).modes.length ?? 0,
+                                      itemBuilder: (context, i){
+                                        return ListTile(
+                                          title: Text(controllersData?.elementAt(index).modes[i].modeName ?? 'Unknown'),
+                                          subtitle: Text(controllersData?.elementAt(index).modes[i].colors.length.toString() ?? 'Unknown'),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                                barrierDismissible: true,
+                                );
+                              },
+                            ),
+                          );
+                        }),
+                  );
+                });
               },
               child: ipValue.when(data: (data) {
                 return Text(
@@ -367,6 +446,7 @@ class SettingsState extends ConsumerState<Settings> {
             ),
           ),
           Expanded(flex: 10, child: settings(context)),
+
         ],
       ),
     );

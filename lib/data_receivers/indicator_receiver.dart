@@ -14,6 +14,7 @@ class IndicatorData {
   double? flap2;
   double? vertical;
   bool valid;
+
   IndicatorData(
       {required this.type,
       required this.throttle,

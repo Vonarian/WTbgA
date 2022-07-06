@@ -193,7 +193,8 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
               child: Arc.draw(
                 strokeWidth: strokeWidth,
                 size: size,
-                color: color, colors: colors,
+                color: color,
+                colors: colors,
                 startAngle: -3 * math.pi / 4,
                 // endAngle: math.pi / 4
                 // endAngle: math.pi / 7.4
@@ -220,7 +221,8 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
               child: Arc.draw(
                 strokeWidth: strokeWidth,
                 size: size,
-                color: color, colors: colors,
+                color: color,
+                colors: colors,
                 startAngle: -math.pi / 3.5,
                 // endAngle: math.pi / 28,
                 endAngle: Tween<double>(
@@ -284,6 +286,7 @@ class Arc extends CustomPainter {
   final double _sweepAngle;
   final double _startAngle;
   final List<Color> _colors;
+
   Arc._(this._color, this._strokeWidth, this._startAngle, this._sweepAngle,
       this._colors);
 

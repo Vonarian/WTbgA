@@ -62,6 +62,7 @@ class FmData {
     required this.critAoa3,
     required this.critAoa4,
   });
+
   static Future<FmData?> setObject(String name) async {
     rowList ??= convertFmToList(await csvString());
     FmData? fmData;

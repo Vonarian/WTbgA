@@ -1,2 +1,2 @@
-$V=(Get-AppxPackage -Name 'WTbgA').InstallLocation;
+$V = (Get-AppxPackage -Name 'WTbgA').InstallLocation;
 Write-Output $V

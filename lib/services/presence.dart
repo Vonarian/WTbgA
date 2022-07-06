@@ -11,6 +11,7 @@ class PresenceService {
       FirebaseDatabase(app: app, databaseURL: dataBaseUrl);
   StreamSubscription? subscription;
   DatabaseReference? con;
+
   Future<void> configureUserPresence(String uid, String version) async {
     final uidRef = database.reference().child('presence').child(uid);
     final myConnectionsRef = uidRef.child('connected');

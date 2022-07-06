@@ -134,6 +134,7 @@ class DownloaderState extends State<Downloader>
   String text = 'Downloading';
   bool error = false;
   double progress = 0;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -217,6 +218,7 @@ class DownloaderState extends State<Downloader>
   }
 
   final bool _showWindowBelowTrayIcon = false;
+
   Future<void> _handleClickRestore() async {
     await windowManager.setIcon('assets/app_icon.ico');
     windowManager.restore();

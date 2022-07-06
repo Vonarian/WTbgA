@@ -19,7 +19,8 @@ Download the latest version of the application from releases And run installer.b
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/Vonarian/WTbgA/issues). 
+Contributions, issues and feature requests are welcome!<br />Feel free to
+check [issues page](https://github.com/Vonarian/WTbgA/issues).
 
 ## Show your support
 

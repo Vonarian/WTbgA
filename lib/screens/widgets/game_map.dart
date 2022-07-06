@@ -8,6 +8,7 @@ import 'package:wtbgassistant/data_receivers/map.dart';
 
 class GameMap extends StatefulWidget {
   final bool inHangar;
+
   const GameMap({Key? key, required this.inHangar}) : super(key: key);
 
   @override
@@ -50,6 +51,7 @@ class GameMapState extends State<GameMap> {
   );
 
   late Future<ui.Image> myFuture;
+
   FutureBuilder imageBuilder(MapObj e) {
     return FutureBuilder<ui.Image>(
         future: myFuture,
@@ -105,6 +107,7 @@ class GameMapState extends State<GameMap> {
   }
 
   String assetIcon = '';
+
   @override
   Widget build(BuildContext context) {
     return !widget.inHangar
@@ -191,6 +194,7 @@ class ObjectPainter extends CustomPainter {
   final BuildContext context;
   final ui.Image image;
   final List<int>? colors;
+
   @override
   Future<void> paint(Canvas canvas, Size size) async {
     var paint1 = Paint()..style = PaintingStyle.fill;
@@ -215,6 +219,7 @@ class ObjectPainter extends CustomPainter {
       required this.height,
       required this.image,
       required this.colors});
+
   static Future<ui.Image> getUiImage(String imageAssetPath) async {
     final ByteData assetImageByteData = await rootBundle.load(imageAssetPath);
     final codec = await ui.instantiateImageCodec(

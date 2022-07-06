@@ -8,6 +8,7 @@ import 'package:firebase_dart_flutter/firebase_dart_flutter.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openrgb/client/client.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_info2/system_info2.dart';
@@ -32,19 +33,13 @@ String deviceIPPath = p.joinAll([
   'data\\flutter_assets\\assets',
   'scripts\\deviceIP.ps1'
 ]);
-String pathToChecker = (p.joinAll([
-  ...p.split(p.dirname(Platform.resolvedExecutable)),
-  'data',
-  'flutter_assets',
-  'assets',
-  'checker.bat'
-]));
 String versionPath =
     '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\Version\\version.txt';
 final audio = AudioPlayer();
 final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
+OpenRGBClient? client;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
@@ -64,7 +59,8 @@ Future<void> main() async {
           effect: WindowEffect.aero,
           color: const Color(0xCC222222),
           dark: true);
-    }    await windowManager.show();
+    }
+    await windowManager.show();
   });
   appDocPath = await AppUtil.getAppDocsPath();
   await FirebaseDartFlutter.setup();

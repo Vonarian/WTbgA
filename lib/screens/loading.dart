@@ -112,13 +112,11 @@ class LoadingState extends State<Loading> {
               endColor: Colors.purple,
             ),
           ),
-          Center(
+          const Center(
             child: SizedBox(
               height: 400,
               width: 400,
-              child: ProgressRing(
-                backgroundColor: Colors.red,
-              ),
+              child: ProgressRing(),
             ),
           ),
         ]),
