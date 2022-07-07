@@ -15,7 +15,6 @@ import 'package:settings_ui/settings_ui.dart';
 import 'package:win_toast/win_toast.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
-import 'package:wtbgassistant/services/extensions.dart';
 
 import '../../main.dart';
 import '../../services/utility.dart';
@@ -336,44 +335,6 @@ class SettingsState extends ConsumerState<Settings> {
               },
             ),
           ]),
-          if (ref.read(provider.orgbClientProvider).notNull)
-            SettingsSection(
-              title: const Text('OpenRGB'),
-              tiles: [
-                SettingsTile(
-                  title: const Text('Pick color'),
-                  onPressed: (context) {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      builder: (context) => ContentDialog(
-                        title: const Text('Load data'),
-                        content:
-                            const Text('Are you sure you want to load data?'),
-                        actions: [
-                          TextButton(
-                            child: const Text('Cancel'),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                          TextButton(
-                            child: const Text('Load'),
-                            onPressed: () async {
-                              if (ref.read(provider.orgbClientProvider).notNull) {
-                                controllersData =
-                                    await ref.read(provider.orgbClientProvider)!.getAllControllers();
-                                setState(() {});
-                                if (!mounted) return;
-                                Navigator.pop(context);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            )
         ]);
   }
 
@@ -415,65 +376,6 @@ class SettingsState extends ConsumerState<Settings> {
               }),
             ),
           ),
-          if (ref.watch(provider.orgbClientProvider).notNull)
-            GestureDetector(
-              onTap: () async {
-                controllersData = await ref.read(provider.orgbClientProvider)?.getAllControllers();
-                setState(() {});
-                showDialog(
-                    barrierDismissible: true,
-                    context: context,
-                    builder: (context) {
-                      return ContentDialog(
-                        content: ListView.builder(
-                            itemCount: controllersData?.length ?? 0,
-                            itemBuilder: (context, index) {
-                              final controller = controllersData![index];
-                              return ListTile(
-                                title: Text(controller.name),
-                                subtitle: GestureDetector(
-                                  child: const Text('Click to Show Modes'),
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return ContentDialog(
-                                          title: const Text('Modes'),
-                                          content: ListView.builder(
-                                            itemCount: controller.modes.length,
-                                            itemBuilder: (context, i) {
-                                              final mode = controller.modes[i];
-                                              return ListTile(
-                                                title: Text(mode.modeName),
-                                                subtitle: controller.notNull &&
-                                                        controller
-                                                            .colors.notNull
-                                                    ? Text(
-                                                        'Colors: ${mode.modeNumColors}')
-                                                    : const Text('No color'),
-                                              );
-                                            },
-                                          ),
-                                        );
-                                      },
-                                      barrierDismissible: true,
-                                    );
-                                  },
-                                ),
-                              );
-                            }),
-                      );
-                    });
-              },
-              child: Text(
-                'Load data',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-            ),
           Expanded(flex: 10, child: settings(context)),
         ],
       ),

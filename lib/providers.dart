@@ -7,7 +7,7 @@ import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/services/presence.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
-import 'data/data_class.dart';
+import 'data/orgb_data_class.dart';
 
 class MyProvider {
   final StateProvider<bool> fullNotifProvider = StateProvider((ref) => true);
@@ -47,8 +47,5 @@ class MyProvider {
   final orgbClientProvider = StateProvider<OpenRGBClient?>(
     (ref) => null,
   );
-  final openRGBSettingProvider = StateProvider<OpenRGBSettings>((ref) =>
-      const OpenRGBSettings(
-          fireSettings: FireSettings(color: c.Color.rgb(255, 22, 233)),
-          overHeat: OverHeatSettings(color: c.Color.rgb(100, 100, 100))));
+
 }

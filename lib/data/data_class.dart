@@ -1,10 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui' as ui;
 
-import 'package:color/color.dart' as c;
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:openrgb/data/data.dart';
 
 import '../main.dart';
 import '../services/presence.dart';
@@ -18,12 +15,13 @@ class Message {
   final String? device;
 
   @override
-  const Message({required this.title,
-    required this.subtitle,
-    required this.id,
-    this.url,
-    this.operation,
-    this.device});
+  const Message(
+      {required this.title,
+      required this.subtitle,
+      required this.id,
+      this.url,
+      this.operation,
+      this.device});
 
   @override
   String toString() {
@@ -101,93 +99,4 @@ ContentDialog dialogBuilderUserName(BuildContext context, data) {
           child: const Text('Save'))
     ],
   );
-}
-
-class OpenRGBSettings {
-  final OverHeatSettings overHeat;
-  final FireSettings fireSettings;
-
-  const OpenRGBSettings({
-    required this.overHeat,
-    required this.fireSettings,
-  });
-
-  OpenRGBSettings copyWith({
-    OverHeatSettings? overHeat,
-    FireSettings? fireSettings,
-  }) {
-    return OpenRGBSettings(
-      overHeat: overHeat ?? this.overHeat,
-      fireSettings: fireSettings ?? this.fireSettings,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'overHeat': overHeat,
-      'fireSettings': fireSettings,
-    };
-  }
-
-  factory OpenRGBSettings.fromMap(Map<String, dynamic> map) {
-    return OpenRGBSettings(
-      overHeat: map['overHeat'] as OverHeatSettings,
-      fireSettings: map['fireSettings'] as FireSettings,
-    );
-  }
-}
-
-class OverHeatSettings {
-  final c.Color color;
-  final ModeData? mode;
-
-  const OverHeatSettings({
-    required this.color,
-    this.mode,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'color': color,
-      'mode': mode,
-    };
-  }
-
-  factory OverHeatSettings.fromMap(Map<String, dynamic> map) {
-    return OverHeatSettings(
-      color: map['color'] as c.Color,
-      mode: map['mode'] as ModeData?,
-    );
-  }
-}
-
-class FireSettings {
-  final c.Color color;
-  final ModeData? mode;
-
-  const FireSettings({
-    required this.color,
-    this.mode,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'color': color,
-      'mode': mode,
-    };
-  }
-
-  factory FireSettings.fromMap(Map<String, dynamic> map) {
-    return FireSettings(
-      color: map['color'] as c.Color,
-      mode: map['mode'] as ModeData?,
-    );
-  }
-}
-
-
-extension ToRGB on ui.Color{
-  c.Color toRGB() {
-    return c.Color.rgb(red, green, blue);
-  }
 }

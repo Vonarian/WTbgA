@@ -1,8 +1,12 @@
+import 'dart:convert';
+
+import 'package:color/color.dart' as c;
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/data/rgb_controller.dart';
 import 'package:settings_ui/settings_ui.dart';
-import 'package:wtbgassistant/data/data_class.dart';
+import 'package:wtbgassistant/data/orgb_data_class.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
 import 'package:wtbgassistant/services/extensions.dart';
@@ -25,20 +29,18 @@ class ORGBSettingsState extends ConsumerState<ORGBSettings> {
         settingsListBackground: Colors.transparent,
         settingsSectionBackground: Colors.transparent,
       ),
+      contentPadding: EdgeInsets.zero,
       sections: [
         SettingsSection(
           title: const Text('OpenRGB'),
           tiles: [
             SettingsTile(
               title: const Text('OpenRGB'),
-              description:
-                  const Text('OpenRGB is a software for controlling RGB LEDs'),
+              description: const Text('Select Color And Mode'),
               leading: const Icon(FluentIcons.keyboard_classic),
               onPressed: (context) async {
-                controllers = await ref
-                    .watch(provider.orgbClientProvider)!.getAllControllers();
-                await ref
-                    .watch(provider.orgbClientProvider)?.updateLeds(2,2, Colors.red.toRGB());
+                controllers = await ref.watch(provider.orgbClientProvider)!.getAllControllers();
+                await ref.read(provider.orgbClientProvider)?.updateLeds(2, 2, Colors.red.toRGB());
                 if (controllers.notNull) {
                   showBottomSheet(
                       context: context,
@@ -49,7 +51,10 @@ class ORGBSettingsState extends ConsumerState<ORGBSettings> {
                               child: SizedBox(
                                 height: 50,
                                 child: ListTile(
-                                  title: Text('Close', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),),
+                                  title: Text(
+                                    'Close',
+                                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                  ),
                                   trailing: Icon(
                                     FluentIcons.close_pane,
                                     color: Colors.red,
@@ -72,22 +77,61 @@ class ORGBSettingsState extends ConsumerState<ORGBSettings> {
                                     ),
                                     onTap: () {
                                       showDialog(
-                                        barrierDismissible: true,
+                                          barrierDismissible: true,
                                           context: context,
                                           builder: (context) {
                                             return ContentDialog(
                                               content: ListView.builder(
-                                                  itemCount:
-                                                      controller.modes.length,
+                                                  itemCount: controller.modes.length,
                                                   itemBuilder: (context, i) {
-                                                    final mode =
-                                                        controller.modes[i];
-                                                    return ListTile(
-                                                      title:
-                                                          Text(mode.modeName),
-                                                      subtitle: Text(mode
-                                                          .modeNumColors
-                                                           < 1 ? 'No Colors to Set' : '${mode.modeNumColors} color(s)'),
+                                                    final mode = controller.modes[i];
+                                                    return GestureDetector(
+                                                      child: ListTile(
+                                                        title: Text(mode.modeName),
+                                                        subtitle: Text(mode.modeNumColors < 1
+                                                            ? 'No Colors to Set'
+                                                            : '${mode.modeNumColors} color(s)'),
+                                                      ),
+                                                      onTap: () async {
+                                                        c.Color? color;
+                                                        if (mode.modeNumColors > 0) {
+                                                          color = await showDialog<c.Color>(
+                                                              context: context,
+                                                              builder: (context) {
+                                                                Color internalColor = Colors.red;
+                                                                return ContentDialog(
+                                                                  content: MaterialPicker(
+                                                                      pickerColor: Colors.grey,
+                                                                      onColorChanged: (color) {
+                                                                        internalColor = color;
+                                                                      }),
+                                                                  actions: [
+                                                                    TextButton(
+                                                                        child: const Text('Cancel'),
+                                                                        onPressed: () {
+                                                                          Navigator.of(context).pop(null);
+                                                                        }),
+                                                                    TextButton(
+                                                                        child: const Text('Set Color'),
+                                                                        onPressed: () {
+                                                                          Navigator.of(context)
+                                                                              .pop(internalColor.toRGB());
+                                                                        }),
+                                                                  ],
+                                                                );
+                                                              });
+                                                        }
+                                                        if (color.notNull) {
+                                                          OpenRGBSettings openRGBSettings = OpenRGBSettings(
+                                                              overHeat: OverHeatSettings(color: color!, mode: mode, controllerId: index),
+                                                              fireSettings: FireSettings(color: color, mode: mode, controllerId: index));
+                                                          await prefs.setString(
+                                                              'orgbSettings', json.encode(openRGBSettings.toMap()));
+                                                          openRGBSettings.setAll(ref.read(provider.orgbClientProvider)!);
+                                                        }
+                                                        if (!mounted) return;
+                                                        Navigator.pop(context);
+                                                      },
                                                     );
                                                   }),
                                             );
