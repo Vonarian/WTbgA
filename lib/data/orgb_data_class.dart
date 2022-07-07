@@ -55,7 +55,7 @@ class OverHeatSettings {
 
   Map<String, dynamic> toMap() {
     return {
-      'color': color.toMap(),
+      'color': color.toJson(),
       'mode': mode?.toMap(),
       'controllerId': controllerId,
     };
@@ -63,7 +63,7 @@ class OverHeatSettings {
 
   factory OverHeatSettings.fromMap(Map<String, dynamic> map) {
     return OverHeatSettings(
-      color: FromMap.fromMap(map['color'] as Map<String, num>),
+      color: ColorFromMap.fromMap(map['color'] as Map<String, num>),
       mode: ModeData.fromMap(map['mode'] as Map<String, dynamic>),
       controllerId: map['controllerId'] as int,
     );
@@ -79,7 +79,7 @@ class FireSettings {
 
   Map<String, dynamic> toMap() {
     return {
-      'color': color.toMap(),
+      'color': color.toJson(),
       'mode': mode?.toMap(),
       'controllerId': controllerId,
     };
@@ -87,7 +87,7 @@ class FireSettings {
 
   factory FireSettings.fromMap(Map<String, dynamic> map) {
     return FireSettings(
-      color: FromMap.fromMap(map['color'] as Map<String, num>),
+      color: ColorFromMap.fromMap(map['color'] as Map<String, num>),
       mode: ModeData.fromMap(map['mode'] as Map<String, dynamic>),
       controllerId: map['controllerId'] as int,
     );
@@ -100,8 +100,18 @@ extension ToRGB on ui.Color {
   }
 }
 
-extension FromMap on c.Color {
+extension ColorFromMap on c.Color {
   static c.Color fromMap(Map<String, num> map) {
     return c.Color.rgb(map['r'] as num, map['g'] as num, map['b'] as num).toRgbColor();
+  }
+}
+extension ToMao on c.Color {
+  Map<String, int> toJson() {
+    final rgbColor = toRgbColor();
+    return {
+      'r': rgbColor.r.toInt(),
+      'g': rgbColor.g.toInt(),
+      'b': rgbColor.b.toInt(),
+    };
   }
 }
