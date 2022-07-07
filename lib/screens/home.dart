@@ -171,11 +171,16 @@ class HomeState extends ConsumerState<Home>
 
   Future<void> tripleWarning() async {
     if (!mounted) return;
-    await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
-    await Future.delayed(const Duration(milliseconds: 200));
-    await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
-    await Future.delayed(const Duration(milliseconds: 200));
-    await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+    if (times == 0) {
+      audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+      times++;
+    } else if (times == 1) {
+      audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+      times++;
+    } else if (times == 2) {
+      audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+      times = 0;
+    }
   }
 
   void receiveDiskValues() {
@@ -238,17 +243,28 @@ class HomeState extends ConsumerState<Home>
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       if (!fullNotif.state) return;
-      if(msgData.hasValue){
+      if (msgData.hasValue) {
         if (oil != 15 && isDamageIDNew && msgData!.contains('set afire')) {
           List<String> split = msgData!.split('set afire');
-          if(split[1].contains(prefs.getString('userName') ?? 'Unknown')){
+          if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
             isDamageIDNew = false;
             var client = ref.read(provider.orgbClientProvider);
-            OpenRGBSettings? settings = OpenRGBSettings.fromMap(json.decode(prefs.getString('orgbSettings') ?? '{}'));
-            if(client.hasValue){
-              settings.setAll(client!);
+            OpenRGBSettings? settings = OpenRGBSettings.fromMap(json.decode(prefs.getString('openrgb') ?? '{}'));
+            if (client.hasValue) {
+              tripleWarning();
+              await settings.setAllFire(client!, ref.read(provider.orgbControllersProvider)!);
+              await Future.delayed(const Duration(milliseconds: 100));
+              await settings.setAllOff(client, ref.read(provider.orgbControllersProvider)!);
+              await Future.delayed(const Duration(milliseconds: 500));
+              await settings.setAllFire(client, ref.read(provider.orgbControllersProvider)!);
+              await Future.delayed(const Duration(milliseconds: 100));
+              await settings.setAllOff(client, ref.read(provider.orgbControllersProvider)!);
+              await Future.delayed(const Duration(milliseconds: 500));
+              await settings.setAllFire(client, ref.read(provider.orgbControllersProvider)!);
+              await Future.delayed(const Duration(milliseconds: 100));
+              await settings.setAllOff(client, ref.read(provider.orgbControllersProvider)!);
+              await Future.delayed(const Duration(milliseconds: 500));
             }
-            tripleWarning();
           }
         }
       }
@@ -465,54 +481,93 @@ class HomeState extends ConsumerState<Home>
             ],
           ),
           automaticallyImplyLeading: false,
-          actions: IconButton(
-            icon: Image.asset('assets/OpenRGB.png'),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return ContentDialog(
-                    content: const Text(
-                        'OpenRGB is a free software that allows WTbgA to control the RGB LED lights of your machine depending on in-game events'),
-                    actions: [
-                      TextButton(
-                        child: const Text('Cancel'),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      TextButton(
-                        child: const Text('Stop'),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Process.run('taskkill', ['/IM', 'OpenRGB.exe']);
-                          ref.read(provider.orgbClientProvider.notifier).state = null;
-                        },
-                      ),
-                      TextButton(
-                        child: const Text('Start'),
-                        onPressed: () async {
-                          String openRGBExe = await AppUtil.getOpenRGBExecutablePath(context);
-                          await Process.start(openRGBExe, ['--server', '--noautoconnect'],
-                              workingDirectory: p.dirname(openRGBExe));
-                          await showLoading(context: context, future: Future.delayed(const Duration(seconds: 2)));
-                          if (!mounted) return;
-                          Navigator.pop(context);
-                          ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
-                          if (!mounted) return;
-                          showSnackbar(
-                              context,
-                              const Snackbar(
-                                content: Text('OpenRGB connected'),
-                                extended: true,
-                              ));
-                          setState(() {});
-                        },
-                      ),
-                    ],
+          actions: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (ref.watch(provider.orgbClientProvider).hasValue)
+                IconButton(
+                    icon: const Icon(FluentIcons.add),
+                    onPressed: () async {
+                      var client = ref.read(provider.orgbClientProvider);
+                      OpenRGBSettings? settings =
+                          OpenRGBSettings.fromMap(json.decode(prefs.getString('openrgb') ?? '{}'));
+                      if (client.hasValue) {
+                        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+                        await settings.setAllFire(client!, controllersProvider!);
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        await settings.setAllOff(client, controllersProvider);
+                        await Future.delayed(const Duration(milliseconds: 200));
+                        await settings.setAllFire(client, controllersProvider);
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        await settings.setAllOff(client, controllersProvider);
+                        await Future.delayed(const Duration(milliseconds: 200));
+                        await settings.setAllFire(client, controllersProvider);
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        await settings.setAllOff(client, controllersProvider);
+                        await Future.delayed(const Duration(milliseconds: 200));
+                      }
+                    }),
+              IconButton(
+                icon: Image.asset('assets/OpenRGB.png'),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return ContentDialog(
+                        content: const Text(
+                            'OpenRGB is a free software that allows WTbgA to control the RGB LED lights of your machine depending on in-game events'),
+                        actions: [
+                          TextButton(
+                            child: const Text('Cancel'),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          TextButton(
+                            child: const Text('Stop'),
+                            onPressed: () async {
+                              await Process.run('taskkill', ['/IM', 'OpenRGB.exe']);
+                              ref.read(provider.orgbClientProvider.notifier).state = null;
+                              if (!mounted) return;
+                              Navigator.pop(context);
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('Start'),
+                            onPressed: () async {
+                              String openRGBExe = await AppUtil.getOpenRGBExecutablePath(context);
+                              await Process.start(openRGBExe, ['--server', '--noautoconnect'],
+                                  workingDirectory: p.dirname(openRGBExe));
+                              await showLoading(
+                                  context: context,
+                                  future: Future.delayed(const Duration(seconds: 2)),
+                                  message: 'Starting...');
+                              if (!mounted) return;
+                              ref.read(provider.orgbClientProvider.notifier).state = await showLoading(
+                                  context: context, future: OpenRGBClient.connect(), message: 'Connecting...');
+                              if (ref.read(provider.orgbClientProvider.notifier).state.hasValue) {
+                                ref.read(provider.orgbControllersProvider.notifier).state = await showLoading(
+                                    context: context,
+                                    future: ref.read(provider.orgbClientProvider.notifier).state!.getAllControllers(),
+                                    message: 'Getting data...');
+                              }
+                              if (!mounted) return;
+                              Navigator.pop(context);
+                              showSnackbar(
+                                  context,
+                                  const Snackbar(
+                                    content: Text('OpenRGB connected'),
+                                    extended: true,
+                                  ));
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                    barrierDismissible: true,
                   );
                 },
-                barrierDismissible: true,
-              );
-            },
+              ),
+            ],
           )),
       pane: NavigationPane(
           selected: index,

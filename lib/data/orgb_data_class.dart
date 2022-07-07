@@ -36,61 +36,91 @@ class OpenRGBSettings {
     );
   }
 
-  Future<void> setAll(OpenRGBClient client) async {
-    var data = await client.getAllControllers();
-    var count = data.length;
+  Future<void> setAllFire(OpenRGBClient client, List<RGBController> data) async {
+    for (var i = 0; i < data.length; i++) {
+      var controller = data[i];
+      await client.updateLeds(i, controller.colors.length, fireSettings.color);
+      for (var j = 0; j < controller.colors.length; j++) {
+        if (controller.colors[0].toRgbColor() == const ui.Color.fromARGB(0, 0, 0, 0).toRGB()) {
+          await client.setMode(
+              i,
+              controller.modes.indexWhere((element) => element.modeName.toLowerCase().contains('static')),
+              fireSettings.color);
+        }
+      }
+    }
+  }
+
+  Future<void> setAllOff(OpenRGBClient client, List<RGBController> data) async {
+    for (var i = 0; i < data.length; i++) {
+      var controller = data[i];
+      await client.updateLeds(i, controller.colors.length, const c.Color.rgb(0, 0, 0));
+      if (controller.colors[0].toRgbColor() != const ui.Color.fromARGB(0, 0, 0, 0).toRGB()) {
+        final modeIndex = controller.modes.indexWhere((element) => element.modeName.toLowerCase().contains('static'));
+        if (modeIndex != -1) {
+          await client.setMode(i, modeIndex, const c.Color.rgb(0, 0, 0));
+        }
+      }
+    }
+  }
+
+  Future<void> setAllOverHeat(OpenRGBClient client, List<RGBController> data) async {
+    var count = data.length - 1;
     for (var i = 0; i < count; i++) {
       var controller = data[i];
-      client.updateLeds(i, controller.colors.length, fireSettings.color);
+      await client.updateLeds(i, controller.colors.length, fireSettings.color);
     }
+  }
+
+  @override
+  String toString() {
+    return 'OpenRGBSettings{overHeat: $overHeat, fireSettings: $fireSettings}';
   }
 }
 
 class OverHeatSettings {
   final c.Color color;
-  final ModeData? mode;
-  final int controllerId;
 
-  OverHeatSettings({required this.color, this.mode, required this.controllerId});
+  OverHeatSettings({required this.color});
 
   Map<String, dynamic> toMap() {
     return {
-      'color': color.toJson(),
-      'mode': mode?.toMap(),
-      'controllerId': controllerId,
+      'color': color.toStringHex(),
     };
   }
 
   factory OverHeatSettings.fromMap(Map<String, dynamic> map) {
     return OverHeatSettings(
-      color: ColorFromMap.fromMap(map['color'] as Map<String, num>),
-      mode: ModeData.fromMap(map['mode'] as Map<String, dynamic>),
-      controllerId: map['controllerId'] as int,
+      color: c.Color.hex(map['color'] as String).toRgbColor(),
     );
+  }
+
+  @override
+  String toString() {
+    return 'OverHeatSettings{color: $color}';
   }
 }
 
 class FireSettings {
   final c.Color color;
-  final ModeData? mode;
-  final int controllerId;
 
-  FireSettings({required this.color, this.mode, required this.controllerId});
+  FireSettings({required this.color});
 
   Map<String, dynamic> toMap() {
     return {
-      'color': color.toJson(),
-      'mode': mode?.toMap(),
-      'controllerId': controllerId,
+      'color': color.toStringHex(),
     };
   }
 
   factory FireSettings.fromMap(Map<String, dynamic> map) {
     return FireSettings(
-      color: ColorFromMap.fromMap(map['color'] as Map<String, num>),
-      mode: ModeData.fromMap(map['mode'] as Map<String, dynamic>),
-      controllerId: map['controllerId'] as int,
+      color: c.Color.hex(map['color'] as String).toRgbColor(),
     );
+  }
+
+  @override
+  String toString() {
+    return 'FireSettings{color: $color}';
   }
 }
 
@@ -101,17 +131,25 @@ extension ToRGB on ui.Color {
 }
 
 extension ColorFromMap on c.Color {
-  static c.Color fromMap(Map<String, num> map) {
-    return c.Color.rgb(map['r'] as num, map['g'] as num, map['b'] as num).toRgbColor();
+  static c.Color fromMap(Map<String, dynamic> map) {
+    return c.Color.rgb(map['r'], map['g'], map['b']).toRgbColor();
   }
 }
-extension ToMao on c.Color {
-  Map<String, int> toJson() {
-    final rgbColor = toRgbColor();
+
+extension ToMap on c.Color {
+  Map<String, num> toJson() {
+    final rgbColor = toHexColor();
     return {
-      'r': rgbColor.r.toInt(),
-      'g': rgbColor.g.toInt(),
-      'b': rgbColor.b.toInt(),
+      'r': rgbColor.r,
+      'g': rgbColor.g,
+      'b': rgbColor.b,
     };
+  }
+}
+
+extension ToString on c.Color {
+  String toStringHex() {
+    final stringColor = toHexColor().toString();
+    return stringColor;
   }
 }

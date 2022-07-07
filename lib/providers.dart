@@ -47,5 +47,7 @@ class MyProvider {
   final orgbClientProvider = StateProvider<OpenRGBClient?>(
     (ref) => null,
   );
-
+  final orgbControllersProvider = StateProvider<List<RGBController>?>(
+        (ref) => null,
+  );
 }
