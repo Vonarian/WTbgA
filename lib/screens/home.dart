@@ -590,7 +590,7 @@ class HomeState extends ConsumerState<Home>
           actions: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              if (ref.watch(provider.orgbClientProvider).hasValue && kDebugMode)
+              if (ref.watch(provider.orgbClientProvider).hasValue)
                 IconButton(
                     icon: const Icon(
                       FluentIcons.test_add,
