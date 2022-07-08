@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:color/color.dart' as c;
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:openrgb/openrgb.dart';
 
 class OpenRGBSettings {
@@ -37,38 +38,63 @@ class OpenRGBSettings {
   }
 
   Future<void> setAllFire(OpenRGBClient client, List<RGBController> data) async {
-    for (var i = 0; i < data.length; i++) {
-      var controller = data[i];
-      await client.updateLeds(i, controller.colors.length, fireSettings.color);
-      for (var j = 0; j < controller.colors.length; j++) {
-        if (controller.colors[0].toRgbColor() == const ui.Color.fromARGB(0, 0, 0, 0).toRGB()) {
-          await client.setMode(
-              i,
-              controller.modes.indexWhere((element) => element.modeName.toLowerCase().contains('static')),
-              fireSettings.color);
-        }
-      }
-    }
+    await OpenRGBSettings.setAllCustomSetColor(client, data, fireSettings.color);
   }
 
   Future<void> setAllOff(OpenRGBClient client, List<RGBController> data) async {
+    await OpenRGBSettings.setAllCustomSetColor(client, data, const c.Color.rgb(0, 0, 0));
+  }
+
+  Future<void> setAllOverHeat(OpenRGBClient client, List<RGBController> data) async {
+    List<int> faultyControllers = await OpenRGBSettings.faultyControllerByModes(client, data);
     for (var i = 0; i < data.length; i++) {
-      var controller = data[i];
-      await client.updateLeds(i, controller.colors.length, const c.Color.rgb(0, 0, 0));
-      if (controller.colors[0].toRgbColor() != const ui.Color.fromARGB(0, 0, 0, 0).toRGB()) {
+      if (!faultyControllers.contains(i)) {
+        var controller = data[i];
         final modeIndex = controller.modes.indexWhere((element) => element.modeName.toLowerCase().contains('static'));
         if (modeIndex != -1) {
-          await client.setMode(i, modeIndex, const c.Color.rgb(0, 0, 0));
+          await OpenRGBSettings.setAllCustomSetColor(client, data, overHeat.color);
+        } else {
+          await client.updateLeds(i, controller.colors.length, overHeat.color);
         }
       }
     }
   }
 
-  Future<void> setAllOverHeat(OpenRGBClient client, List<RGBController> data) async {
-    var count = data.length - 1;
-    for (var i = 0; i < count; i++) {
-      var controller = data[i];
-      await client.updateLeds(i, controller.colors.length, fireSettings.color);
+  static Future<void> setAllCustomMode(OpenRGBClient client, List<RGBController> data) async {
+    List<int> faultyControllers = await OpenRGBSettings.faultyControllerByModes(client, data);
+    for (var i = 0; i < data.length; i++) {
+      if (!faultyControllers.contains(i)) {
+        await client.setCustomMode(i);
+      }
+    }
+  }
+
+  static Future<List<int>> faultyControllerByModes(OpenRGBClient client, List<RGBController> data) async {
+    var faulty = <int>[];
+    for (var i = 0; i < data.length; i++) {
+      final controller = data[i];
+      List<bool> faultyModes = [];
+      for (var j = 0; j < controller.modes.length; j++) {
+        final mode = controller.modes[j];
+        if (mode.modeNumColors == 0) {
+          faultyModes.add(true);
+        }
+      }
+      if (faultyModes.length == controller.modes.length) {
+        faulty.add(i);
+      }
+    }
+    return faulty;
+  }
+
+  static Future<void> setAllCustomSetColor(OpenRGBClient client, List<RGBController> data, c.Color color) async {
+    await OpenRGBSettings.setAllCustomMode(client, data);
+    final updatedData = await client.getAllControllers();
+    for (var i = 0; i < data.length; i++) {
+      await client.setMode(i, updatedData[i].activeMode, color);
+      if (updatedData[i].modes[updatedData[i].activeMode].modeColorPerLED) {
+        await client.updateLeds(i, updatedData[i].colors.length, color);
+      }
     }
   }
 
@@ -151,5 +177,11 @@ extension ToString on c.Color {
   String toStringHex() {
     final stringColor = toHexColor().toString();
     return stringColor;
+  }
+}
+
+extension FluentColortoRGB on Color {
+  c.Color fluentToRGB() {
+    return c.Color.rgb(red, green, blue);
   }
 }

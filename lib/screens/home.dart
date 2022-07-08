@@ -9,6 +9,7 @@ import 'package:firebase_dart/database.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/client/client.dart';
+import 'package:openrgb/data/rgb_controller.dart';
 import 'package:openrgb/helpers/extensions.dart';
 import 'package:path/path.dart' as p;
 import 'package:tray_manager/tray_manager.dart';
@@ -18,7 +19,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data/orgb_data_class.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
-import 'package:wtbgassistant/screens/widgets/orgb_settings.dart';
+import 'package:wtbgassistant/screens/widgets/rgb_settings.dart';
 import 'package:wtbgassistant/screens/widgets/settings.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
 import 'package:wtbgassistant/services/utility.dart';
@@ -49,7 +50,7 @@ class HomeState extends ConsumerState<Home>
     if (!mounted) return;
     if (ias != null) {
       if (ias! >= ref.read(provider.gearLimitProvider.notifier).state && gear! > 0) {
-        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       }
     }
   }
@@ -58,7 +59,7 @@ class HomeState extends ConsumerState<Home>
     if (!mounted) return;
     if (vertical.notNull && ias.notNull) {
       if (vertical! <= -65 && ias! >= 600) {
-        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       }
     }
   }
@@ -91,15 +92,32 @@ class HomeState extends ConsumerState<Home>
     }
     if (oilNotif.state && oil != 15 && isDamageIDNew && msgData == 'Oil overheated') {
       isDamageIDNew = false;
+      var client = ref.read(provider.orgbClientProvider);
       tripleWarning();
+      if (client.hasValue) {
+        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        await flashFourTimes(client!, controllersProvider!);
+      }
     }
     if (engineOh.state && oil != 15 && isDamageIDNew && msgData == 'Engine overheated') {
       isDamageIDNew = false;
       tripleWarning();
+      var client = ref.read(provider.orgbClientProvider);
+      tripleWarning();
+      if (client.hasValue) {
+        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        await flashFourTimes(client!, controllersProvider!);
+      }
     }
     if (waterNotif.state && water != 15 && isDamageIDNew && msgData == 'Water overheated') {
       isDamageIDNew = false;
+
+      var client = ref.read(provider.orgbClientProvider);
       tripleWarning();
+      if (client.hasValue) {
+        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        await flashFourTimes(client!, controllersProvider!);
+      }
     }
     if (engineDeath.state && oil != 15 && isDamageIDNew && msgData == 'Engine died: overheating') {
       isDamageIDNew = false;
@@ -109,12 +127,23 @@ class HomeState extends ConsumerState<Home>
       isDamageIDNew = false;
       tripleWarning();
     }
-    if (oil != 15 && isDamageIDNew && msgData == 'You are out of ammunition. Reloading is not possible.') {
-      isDamageIDNew = false;
-      tripleWarning();
-    }
-
     run = false;
+  }
+
+  Future<void> flashFourTimes(OpenRGBClient client, List<RGBController> data) async {
+    OpenRGBSettings? settings = OpenRGBSettings.fromMap(json.decode(prefs.getString('openrgb') ?? '{}'));
+    await settings.setAllFire(client, data);
+    await Future.delayed(const Duration(milliseconds: 500));
+    await settings.setAllOff(client, data);
+    await Future.delayed(const Duration(milliseconds: 200));
+    await settings.setAllFire(client, data);
+    await Future.delayed(const Duration(milliseconds: 500));
+    await settings.setAllOff(client, data);
+    await Future.delayed(const Duration(milliseconds: 200));
+    await settings.setAllFire(client, data);
+    await Future.delayed(const Duration(milliseconds: 500));
+    await settings.setAllOff(client, data);
+    await Future.delayed(const Duration(milliseconds: 200));
   }
 
   int? emptyInt = 0;
@@ -172,13 +201,13 @@ class HomeState extends ConsumerState<Home>
   Future<void> tripleWarning() async {
     if (!mounted) return;
     if (times == 0) {
-      audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       times++;
     } else if (times == 1) {
-      audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       times++;
     } else if (times == 2) {
-      audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       times = 0;
     }
   }
@@ -230,11 +259,11 @@ class HomeState extends ConsumerState<Home>
     idData.addListener(() async {
       if (lastId != idData.value) {
         isDamageIDNew = true;
+        vehicleStateCheck();
       }
       lastId = (prefs.getInt('lastId') ?? 0);
       lastId = idData.value;
       prefs.setInt('lastId', lastId!);
-      vehicleStateCheck();
 
       run = true;
     });
@@ -250,20 +279,10 @@ class HomeState extends ConsumerState<Home>
             isDamageIDNew = false;
             var client = ref.read(provider.orgbClientProvider);
             OpenRGBSettings? settings = OpenRGBSettings.fromMap(json.decode(prefs.getString('openrgb') ?? '{}'));
+            tripleWarning();
             if (client.hasValue) {
-              tripleWarning();
-              await settings.setAllFire(client!, ref.read(provider.orgbControllersProvider)!);
-              await Future.delayed(const Duration(milliseconds: 100));
-              await settings.setAllOff(client, ref.read(provider.orgbControllersProvider)!);
-              await Future.delayed(const Duration(milliseconds: 500));
-              await settings.setAllFire(client, ref.read(provider.orgbControllersProvider)!);
-              await Future.delayed(const Duration(milliseconds: 100));
-              await settings.setAllOff(client, ref.read(provider.orgbControllersProvider)!);
-              await Future.delayed(const Duration(milliseconds: 500));
-              await settings.setAllFire(client, ref.read(provider.orgbControllersProvider)!);
-              await Future.delayed(const Duration(milliseconds: 100));
-              await settings.setAllOff(client, ref.read(provider.orgbControllersProvider)!);
-              await Future.delayed(const Duration(milliseconds: 500));
+              final controllersProvider = ref.watch(provider.orgbControllersProvider);
+              await OpenRGBSettings.setAllCustomSetColor(client!, controllersProvider!, settings.fireSettings.color);
             }
           }
         }
@@ -489,22 +508,9 @@ class HomeState extends ConsumerState<Home>
                     icon: const Icon(FluentIcons.add),
                     onPressed: () async {
                       var client = ref.read(provider.orgbClientProvider);
-                      OpenRGBSettings? settings =
-                          OpenRGBSettings.fromMap(json.decode(prefs.getString('openrgb') ?? '{}'));
                       if (client.hasValue) {
                         final controllersProvider = ref.watch(provider.orgbControllersProvider);
-                        await settings.setAllFire(client!, controllersProvider!);
-                        await Future.delayed(const Duration(milliseconds: 500));
-                        await settings.setAllOff(client, controllersProvider);
-                        await Future.delayed(const Duration(milliseconds: 200));
-                        await settings.setAllFire(client, controllersProvider);
-                        await Future.delayed(const Duration(milliseconds: 500));
-                        await settings.setAllOff(client, controllersProvider);
-                        await Future.delayed(const Duration(milliseconds: 200));
-                        await settings.setAllFire(client, controllersProvider);
-                        await Future.delayed(const Duration(milliseconds: 500));
-                        await settings.setAllOff(client, controllersProvider);
-                        await Future.delayed(const Duration(milliseconds: 200));
+                        await flashFourTimes(client!, controllersProvider!);
                       }
                     }),
               IconButton(
@@ -524,6 +530,7 @@ class HomeState extends ConsumerState<Home>
                           TextButton(
                             child: const Text('Stop'),
                             onPressed: () async {
+                              await ref.read(provider.orgbClientProvider)?.disconnect();
                               await Process.run('taskkill', ['/IM', 'OpenRGB.exe']);
                               ref.read(provider.orgbClientProvider.notifier).state = null;
                               if (!mounted) return;
@@ -538,17 +545,46 @@ class HomeState extends ConsumerState<Home>
                                   workingDirectory: p.dirname(openRGBExe));
                               await showLoading(
                                   context: context,
-                                  future: Future.delayed(const Duration(seconds: 2)),
+                                  future: Future.delayed(const Duration(milliseconds: 400)),
                                   message: 'Starting...');
                               if (!mounted) return;
-                              ref.read(provider.orgbClientProvider.notifier).state = await showLoading(
-                                  context: context, future: OpenRGBClient.connect(), message: 'Connecting...');
-                              if (ref.read(provider.orgbClientProvider.notifier).state.hasValue) {
-                                ref.read(provider.orgbControllersProvider.notifier).state = await showLoading(
+                              try {
+                                ref.read(provider.orgbClientProvider.notifier).state = await showLoading(
+                                    context: context, future: OpenRGBClient.connect(), message: 'Connecting...');
+                                await showLoading(
                                     context: context,
-                                    future: ref.read(provider.orgbClientProvider.notifier).state!.getAllControllers(),
-                                    message: 'Getting data...');
+                                    future: Future.delayed(const Duration(milliseconds: 600)),
+                                    message: 'Receiving data...');
+                                ref.read(provider.orgbControllersProvider.notifier).state =
+                                    await ref.read(provider.orgbClientProvider.notifier).state!.getAllControllers();
+                              } catch (e, st) {
+                                showSnackbar(
+                                    context,
+                                    Snackbar(
+                                      content: Text('Error: $e'),
+                                      extended: true,
+                                    ),
+                                    duration: const Duration(seconds: 5));
+                                await Future.delayed(const Duration(seconds: 5));
+                                if (!mounted) return;
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return ContentDialog(
+                                      title: const Text('Error'),
+                                      content: Text('$st'),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text('Ok'),
+                                          onPressed: () => Navigator.pop(context),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                  barrierDismissible: true,
+                                );
                               }
+
                               if (!mounted) return;
                               Navigator.pop(context);
                               showSnackbar(
@@ -854,7 +890,7 @@ class HomeState extends ConsumerState<Home>
             ),
           ),
           const Settings(),
-          if (ref.watch(provider.orgbClientProvider).notNull) const ORGBSettings(),
+          if (ref.watch(provider.orgbClientProvider).notNull) const RGBSettings(),
         ],
       ),
     );

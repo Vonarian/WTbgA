@@ -12,14 +12,14 @@ import 'package:wtbgassistant/services/extensions.dart';
 
 import '../../main.dart';
 
-class ORGBSettings extends ConsumerStatefulWidget {
-  const ORGBSettings({Key? key}) : super(key: key);
+class RGBSettings extends ConsumerStatefulWidget {
+  const RGBSettings({Key? key}) : super(key: key);
 
   @override
-  ORGBSettingsState createState() => ORGBSettingsState();
+  RGBSettingsState createState() => RGBSettingsState();
 }
 
-class ORGBSettingsState extends ConsumerState<ORGBSettings> {
+class RGBSettingsState extends ConsumerState<RGBSettings> {
   List<RGBController>? controllers;
 
   Widget settings(BuildContext context) {
