@@ -388,7 +388,6 @@ class HomeState extends ConsumerState<Home>
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (fromDisk != const OpenRGBSettings()) {
         ref.read(provider.rgbSettingProvider.notifier).state = fromDisk;
-        print(fromDisk);
       }
     });
   }
