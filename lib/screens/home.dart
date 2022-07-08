@@ -7,6 +7,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:blinking_text/blinking_text.dart';
 import 'package:firebase_dart/database.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/client/client.dart';
 import 'package:openrgb/data/rgb_controller.dart';
@@ -47,27 +48,23 @@ class HomeState extends ConsumerState<Home>
   int times = 0;
 
   Future<void> userRedLineGear() async {
+    if (!isInGame.value) return;
+
     if (!mounted) return;
     if (ias != null) {
-      if (ias! >= ref.read(provider.gearLimitProvider.notifier).state && gear! > 0) {
-        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
-      }
-    }
-  }
-
-  Future<void> pullUpChecker() async {
-    if (!mounted) return;
-    if (vertical.notNull && ias.notNull) {
-      if (vertical! <= -65 && ias! >= 600) {
+      if (ias! >= ref.read(provider.gearLimitProvider.notifier).state && gear! > 30) {
         await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       }
     }
   }
 
   bool loadChecker() {
+    if (!isInGame.value) return false;
+
     if (!mounted) return false;
     if (fmData != null) {
       double? maxLoad = (fmData!.critWingOverload2 / ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
+      if (load == null) return false;
       if ((load)! >= (maxLoad - (0.15 * maxLoad))) {
         return true;
       } else {
@@ -78,7 +75,15 @@ class HomeState extends ConsumerState<Home>
     }
   }
 
+  final isInGame = ValueNotifier<bool>(false);
+
+  bool notInGame() {
+    String name = windowName.toLowerCase();
+    return (name.contains('loading') || name.contains('waiting')) || name == 'war thunder';
+  }
+
   Future<void> vehicleStateCheck() async {
+    if (!isInGame.value) return;
     var fullNotif = ref.read(provider.fullNotifProvider.notifier);
     var engineDeath = ref.read(provider.engineDeathNotifProvider.notifier);
     var oilNotif = ref.read(provider.oilNotifProvider.notifier);
@@ -86,64 +91,147 @@ class HomeState extends ConsumerState<Home>
     var engineOh = ref.read(provider.engineOHNotifProvider.notifier);
     if (!fullNotif.state) return;
     if (!run) return;
-    if (engineDeath.state && oil != 15 && isDamageIDNew && msgData == 'Engine died: no fuel' && isDamageMsgNew) {
-      isDamageIDNew = false;
-      tripleWarning();
-    }
-    if (oilNotif.state && oil != 15 && isDamageIDNew && msgData == 'Oil overheated') {
-      isDamageIDNew = false;
-      var client = ref.read(provider.orgbClientProvider);
-      tripleWarning();
-      if (client.hasValue) {
-        final controllersProvider = ref.watch(provider.orgbControllersProvider);
-        await flashFourTimes(client!, controllersProvider!);
+    if (!damages.hasValue) return;
+    for (var damage in damages!) {
+      if (engineDeath.state && oil != 15 && isDamageIDNew && damage.msg == 'Engine died: no fuel') {
+        isDamageIDNew = false;
+        tripleWarning();
       }
     }
-    if (engineOh.state && oil != 15 && isDamageIDNew && msgData == 'Engine overheated') {
-      isDamageIDNew = false;
-      tripleWarning();
-      var client = ref.read(provider.orgbClientProvider);
-      tripleWarning();
-      if (client.hasValue) {
-        final controllersProvider = ref.watch(provider.orgbControllersProvider);
-        await flashFourTimes(client!, controllersProvider!);
+    for (var damage in damages!) {
+      if (engineDeath.state && oil != 15 && isDamageIDNew && damage.msg == 'Engine died: no fuel') {
+        isDamageIDNew = false;
+        tripleWarning();
       }
-    }
-    if (waterNotif.state && water != 15 && isDamageIDNew && msgData == 'Water overheated') {
-      isDamageIDNew = false;
+      if (engineOh.state && oil != 15 && isDamageIDNew && damage.msg == 'Engine overheated') {
+        isDamageIDNew = false;
+        var client = ref.read(provider.orgbClientProvider);
+        tripleWarning();
+        if (client.hasValue) {
+          final controllersProvider = ref.watch(provider.orgbControllersProvider);
+          await flashNTimes(client!, controllersProvider!, Modes.overHeat);
+        }
+      }
+      if (oilNotif.state && oil != 15 && isDamageIDNew && damage.msg == 'Oil overheated') {
+        isDamageIDNew = false;
+        var client = ref.read(provider.orgbClientProvider);
+        tripleWarning();
+        if (client.hasValue) {
+          final controllersProvider = ref.watch(provider.orgbControllersProvider);
+          await flashNTimes(client!, controllersProvider!, Modes.overHeat);
+        }
+      }
+      if (waterNotif.state && water != 15 && isDamageIDNew && damage.msg == 'Water overheated') {
+        isDamageIDNew = false;
 
-      var client = ref.read(provider.orgbClientProvider);
-      tripleWarning();
-      if (client.hasValue) {
-        final controllersProvider = ref.watch(provider.orgbControllersProvider);
-        await flashFourTimes(client!, controllersProvider!);
+        var client = ref.read(provider.orgbClientProvider);
+        tripleWarning();
+        if (client.hasValue) {
+          final controllersProvider = ref.watch(provider.orgbControllersProvider);
+          await flashNTimes(client!, controllersProvider!, Modes.overHeat);
+        }
       }
-    }
-    if (engineDeath.state && oil != 15 && isDamageIDNew && msgData == 'Engine died: overheating') {
-      isDamageIDNew = false;
-      tripleWarning();
-    }
-    if (engineDeath.state && oil != 15 && isDamageIDNew && msgData == 'Engine died: propeller broken') {
-      isDamageIDNew = false;
-      tripleWarning();
+
+      if (engineDeath.state && oil != 15 && isDamageIDNew && damage.msg == 'Engine died: overheating') {
+        isDamageIDNew = false;
+        tripleWarning();
+      }
+      if (engineDeath.state && oil != 15 && isDamageIDNew && damage.msg == 'Engine died: propeller broken') {
+        isDamageIDNew = false;
+        tripleWarning();
+      }
+      if (oil != 15 && isDamageIDNew && damage.msg!.contains('set afire')) {
+        List<String> split = damage.msg!.split('set afire');
+        if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
+          isDamageIDNew = false;
+          var client = ref.read(provider.orgbClientProvider);
+          tripleWarning();
+          if (client.hasValue) {
+            final controllersProvider = ref.watch(provider.orgbControllersProvider);
+            await flashNTimes(client!, controllersProvider!, Modes.overHeat);
+          }
+        }
+      }
+      if (oil != 15 && isDamageIDNew && damage.msg!.contains('shot down')) {
+        List<String> split = damage.msg!.split('shot down');
+        if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
+          isDamageIDNew = false;
+          var client = ref.read(provider.orgbClientProvider);
+          tripleWarning();
+          if (client.hasValue) {
+            final controllersProvider = ref.watch(provider.orgbControllersProvider);
+            await flashNTimes(client!, controllersProvider!, Modes.overHeat);
+          }
+        }
+      } else if (oil != 15 && isDamageIDNew && damage.msg!.contains('destroyed')) {
+        List<String> split = damage.msg!.split('destroyed');
+        if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
+          isDamageIDNew = false;
+          var client = ref.read(provider.orgbClientProvider);
+          tripleWarning();
+          if (client.hasValue) {
+            final controllersProvider = ref.watch(provider.orgbControllersProvider);
+            await flashNTimes(client!, controllersProvider!, Modes.overHeat);
+          }
+        }
+      }
     }
     run = false;
   }
 
-  Future<void> flashFourTimes(OpenRGBClient client, List<RGBController> data) async {
-    OpenRGBSettings? settings = OpenRGBSettings.fromMap(json.decode(prefs.getString('openrgb') ?? '{}'));
-    await settings.setAllFire(client, data);
-    await Future.delayed(const Duration(milliseconds: 500));
-    await settings.setAllOff(client, data);
-    await Future.delayed(const Duration(milliseconds: 200));
-    await settings.setAllFire(client, data);
-    await Future.delayed(const Duration(milliseconds: 500));
-    await settings.setAllOff(client, data);
-    await Future.delayed(const Duration(milliseconds: 200));
-    await settings.setAllFire(client, data);
-    await Future.delayed(const Duration(milliseconds: 500));
-    await settings.setAllOff(client, data);
-    await Future.delayed(const Duration(milliseconds: 200));
+  Future<void> flashNTimes(OpenRGBClient client, List<RGBController> data, Modes mode, {int times = 4}) async {
+    if (prefs.getString('openrgb') != null) {
+      OpenRGBSettings settings = ref.read(provider.rgbSettingProvider.notifier).state;
+
+      if (mode == Modes.fire) {
+        for (int i = 0; i < times; i++) {
+          await settings.setAllFire(client, data);
+          await Future.delayed(const Duration(milliseconds: 500));
+          await OpenRGBSettings.setAllOff(client, data);
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+      }
+      if (mode == Modes.overHeat) {
+        for (int i = 0; i < times; i++) {
+          await settings.setAllOverHeat(client, data);
+          await Future.delayed(const Duration(milliseconds: 500));
+          await OpenRGBSettings.setAllOff(client, data);
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+      }
+    } else {
+      OpenRGBSettings settings = OpenRGBSettings(
+          overHeat: OverHeatSettings(color: const Color.fromRGBO(247, 73, 4, 1.0).toRGB()),
+          fireSettings: FireSettings(color: const Color.fromARGB(255, 0, 0, 1).toRGB()));
+      if (mode == Modes.fire) {
+        await settings.setAllFire(client, data);
+        await Future.delayed(const Duration(milliseconds: 500));
+        await OpenRGBSettings.setAllOff(client, data);
+        await Future.delayed(const Duration(milliseconds: 200));
+        await settings.setAllFire(client, data);
+        await Future.delayed(const Duration(milliseconds: 500));
+        await OpenRGBSettings.setAllOff(client, data);
+        await Future.delayed(const Duration(milliseconds: 200));
+        await settings.setAllFire(client, data);
+        await Future.delayed(const Duration(milliseconds: 500));
+        await OpenRGBSettings.setAllOff(client, data);
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+      if (mode == Modes.overHeat) {
+        await settings.setAllOverHeat(client, data);
+        await Future.delayed(const Duration(milliseconds: 500));
+        await OpenRGBSettings.setAllOff(client, data);
+        await Future.delayed(const Duration(milliseconds: 200));
+        await settings.setAllOverHeat(client, data);
+        await Future.delayed(const Duration(milliseconds: 500));
+        await OpenRGBSettings.setAllOff(client, data);
+        await Future.delayed(const Duration(milliseconds: 200));
+        await settings.setAllOverHeat(client, data);
+        await Future.delayed(const Duration(milliseconds: 500));
+        await OpenRGBSettings.setAllOff(client, data);
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+    }
   }
 
   int? emptyInt = 0;
@@ -152,33 +240,28 @@ class HomeState extends ConsumerState<Home>
   ValueNotifier<int?> idData = ValueNotifier<int?>(null);
 
   Future<void> updateMsgId() async {
-    List<Damage> dataForId = await Damage.getDamage();
-    List<Damage> dataForMsg = await Damage.getDamage();
+    if (!isInGame.value) return;
+    damages = (await Damage.getDamage()).reversed.take(4).toList();
     if (!mounted) return;
-    idData.value = dataForId.isNotEmpty ? dataForId[dataForId.length - 1].id : emptyInt;
-    msgData = dataForMsg.isNotEmpty ? dataForMsg[dataForMsg.length - 1].msg : emptyString;
-  }
-
-  Future<void> flapChecker() async {
-    if (!run) return;
-    if (msgData == 'Asymmetric flap extension' && isDamageIDNew) {
-      isDamageIDNew = false;
-      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+    if (damages.hasValue) {
+      idData.value = damages!.isNotEmpty ? damages![damages!.length - 1].id : emptyInt;
     }
   }
 
-  Future<void> averageIasForStall() async {
-    if (!mounted) return;
-    if (secondSpeed == null) return;
-    if (ias != null) {
-      firstSpeed = ias;
-      Future.delayed(const Duration(seconds: 2), () {
-        secondSpeed = ias;
-      });
+  Future<void> flapChecker() async {
+    if (!isInGame.value) return;
+    if (!run) return;
+    if (!damages.hasValue) return;
+    for (var damage in damages!) {
+      if (damage.msg == 'Asymmetric flap extension' && isDamageIDNew) {
+        isDamageIDNew = false;
+        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+      }
     }
   }
 
   bool critAoaChecker() {
+    if (!isInGame.value) return false;
     if (aoa == null || gear == null || vertical == null || flap == null) {
       return false;
     }
@@ -238,69 +321,75 @@ class HomeState extends ConsumerState<Home>
     Future.delayed(Duration.zero, () async {
       await PresenceService()
           .configureUserPresence((await deviceInfo.windowsInfo).computerName, File(versionPath).readAsStringSync());
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 50));
       subscriptionForPresence = startListening();
     });
     const twoSec = Duration(milliseconds: 2000);
     Timer.periodic(twoSec, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
-      updateMsgId();
+      await updateMsgId();
       flapChecker();
     });
     const Duration averageTimer = Duration(milliseconds: 1200);
     Timer.periodic(averageTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
-      averageIasForStall();
 
       // hostChecker();
     });
-    windowManager.addListener(this);
-
     idData.addListener(() async {
       if (lastId != idData.value) {
         isDamageIDNew = true;
         vehicleStateCheck();
       }
+      run = true;
       lastId = (prefs.getInt('lastId') ?? 0);
       lastId = idData.value;
       prefs.setInt('lastId', lastId!);
-
-      run = true;
     });
-    var fullNotif = ref.read(provider.fullNotifProvider.notifier);
-    const redLineTimer = Duration(milliseconds: 120);
-    Timer.periodic(redLineTimer, (Timer t) async {
-      if (!mounted || isStopped) t.cancel();
-      if (!fullNotif.state) return;
-      if (msgData.hasValue) {
-        if (oil != 15 && isDamageIDNew && msgData!.contains('set afire')) {
-          List<String> split = msgData!.split('set afire');
-          if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
-            isDamageIDNew = false;
-            var client = ref.read(provider.orgbClientProvider);
-            OpenRGBSettings? settings = OpenRGBSettings.fromMap(json.decode(prefs.getString('openrgb') ?? '{}'));
-            tripleWarning();
-            if (client.hasValue) {
-              final controllersProvider = ref.watch(provider.orgbControllersProvider);
-              await OpenRGBSettings.setAllCustomSetColor(client!, controllersProvider!, settings.fireSettings.color);
-            }
-          }
+    AppUtil.getWindow().listen((stringValue) {
+      windowName = stringValue ?? '';
+      if (windowName != '') {
+        if (isInGame.value != !notInGame()) {
+          isInGame.value = !notInGame();
         }
       }
+    });
+    isInGame.addListener(() async {
+      final client = ref.watch(provider.orgbClientProvider);
+      final data = await client?.getAllControllers();
+      if (isInGame.value) {
+        if (client != null && data != null) {
+          await OpenRGBSettings.setAllOff(client, data);
+        }
+      } else {
+        if (client != null && data != null) {
+          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
+          await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
+        }
+      }
+    });
+
+    var fullNotif = ref.read(provider.fullNotifProvider);
+    const redLineTimer = Duration(milliseconds: 1);
+    Timer.periodic(redLineTimer, (Timer t) async {
+      if (!mounted || isStopped) t.cancel();
+      if (!fullNotif) return;
       userRedLineGear();
-      pullUpChecker();
       checkCritAoa();
       if (loadChecker()) {
         await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
       }
-      // _csvThing();
     });
     Future.delayed(Duration.zero, () async {
       csvNames = await File(namesPath).readAsString();
 
       Map<String, String> namesMap = convertNamesToMap(csvNames);
-
       fmData = await FmData.setObject(namesMap[ref.read(provider.vehicleNameProvider.state).state] ?? '');
+      final fromDisk = await OpenRGBSettings.loadFromDisc();
+      if (fromDisk != const OpenRGBSettings()) {
+        ref.read(provider.rgbSettingProvider.notifier).state = fromDisk;
+        print(fromDisk);
+      }
     });
   }
 
@@ -389,7 +478,9 @@ class HomeState extends ConsumerState<Home>
   }
 
   Future<void> checkCritAoa() async {
+    if (!isInGame.value) return;
     if (fmData != null && vertical.notNull) {
+      if (flap == null) return;
       if (flap! <= 10 && !vertical!.isNegative) {
         critAoa = fmData!.critAoa1;
       }
@@ -415,6 +506,7 @@ class HomeState extends ConsumerState<Home>
     return map;
   }
 
+  bool wasLoading = false;
   int? gear;
   double? aoa;
   double critAoa = 10000;
@@ -430,12 +522,8 @@ class HomeState extends ConsumerState<Home>
   int? oil;
   int? water;
   FmData? fmData;
-  String? msgData;
+  List<Damage>? damages;
   String csvNames = '';
-  String path = p.dirname(Platform.resolvedExecutable);
-  String somePath = p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets']);
-  String warningLogo = p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'WARNING.png']);
-  String fmPath = p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_data_db.csv']);
   String namesPath =
       p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_names_db.csv']);
 
@@ -449,7 +537,7 @@ class HomeState extends ConsumerState<Home>
   bool isDamageMsgNew = false;
   bool run = true;
   int fuelMass = 500;
-
+  String windowName = '';
   int index = 0;
   Color textColor = Colors.white;
   final windowManager = WindowManager.instance;
@@ -482,7 +570,7 @@ class HomeState extends ConsumerState<Home>
                 if (isNew) {
                   return HoverButton(
                     builder: (context, set) => Text(
-                      'New version available',
+                      '$data available',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
                     ),
                   );
@@ -503,14 +591,28 @@ class HomeState extends ConsumerState<Home>
           actions: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              if (ref.watch(provider.orgbClientProvider).hasValue)
+              if (ref.watch(provider.orgbClientProvider).hasValue && kDebugMode)
                 IconButton(
-                    icon: const Icon(FluentIcons.add),
+                    icon: const Icon(
+                      FluentIcons.test_add,
+                      color: Color.fromRGBO(255, 222, 111, 1.0),
+                    ),
                     onPressed: () async {
                       var client = ref.read(provider.orgbClientProvider);
                       if (client.hasValue) {
-                        final controllersProvider = ref.watch(provider.orgbControllersProvider);
-                        await flashFourTimes(client!, controllersProvider!);
+                        final data = ref.watch(provider.orgbControllersProvider);
+                        if (data.hasValue) {
+                          showSnackbar(context, const Snackbar(content: Text('Running tests')));
+                          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider.notifier).state;
+                          await OpenRGBSettings.setDeathEffect(client!, data!);
+                          await settings.setAllOverHeat(client, data);
+                          await Future.delayed(const Duration(seconds: 1));
+                          await settings.setAllFire(client, data);
+                          await Future.delayed(const Duration(seconds: 1));
+                          await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
+                          await Future.delayed(const Duration(seconds: 3));
+                          await OpenRGBSettings.setAllOff(client, data);
+                        }
                       }
                     }),
               IconButton(

@@ -1,25 +1,56 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:ui' as ui;
 
 import 'package:color/color.dart' as c;
-import 'package:fluent_ui/fluent_ui.dart';
+import 'package:fluent_ui/fluent_ui.dart' as f;
 import 'package:openrgb/openrgb.dart';
+import 'package:wtbgassistant/main.dart';
 
 class OpenRGBSettings {
   final OverHeatSettings overHeat;
   final FireSettings fireSettings;
+  final c.Color loadingColor;
+  final int flashTimes;
 
-  OpenRGBSettings({
-    required this.overHeat,
-    required this.fireSettings,
+  const OpenRGBSettings({
+    this.overHeat = const OverHeatSettings(),
+    this.fireSettings = const FireSettings(),
+    this.loadingColor = const c.Color.rgb(63, 240, 4),
+    this.flashTimes = 4,
   });
+
+  Future<void> save() async {
+    await prefs.setString(
+        'openrgb',
+        jsonEncode(toMap(), toEncodable: (Object? value) {
+          if (value is c.Color) {
+            return value.toStringHex();
+          } else {
+            return value;
+          }
+        }));
+  }
+
+  static Future<OpenRGBSettings> loadFromDisc() async {
+    final Map<String, dynamic>? map = json.decode(prefs.getString('openrgb') ?? '{}');
+    if (map == null || map.isEmpty || !map.containsKey('loadingColor')) {
+      return const OpenRGBSettings();
+    }
+    return OpenRGBSettings.fromMap(map);
+  }
 
   OpenRGBSettings copyWith({
     OverHeatSettings? overHeat,
     FireSettings? fireSettings,
+    c.Color? loadingColor,
+    int? flashTimes,
   }) {
     return OpenRGBSettings(
       overHeat: overHeat ?? this.overHeat,
       fireSettings: fireSettings ?? this.fireSettings,
+      loadingColor: loadingColor ?? this.loadingColor,
+      flashTimes: flashTimes ?? this.flashTimes,
     );
   }
 
@@ -27,6 +58,8 @@ class OpenRGBSettings {
     return {
       'overHeat': overHeat.toMap(),
       'fireSettings': fireSettings.toMap(),
+      'loadingColor': loadingColor.toStringHex(),
+      'flashTimes': flashTimes,
     };
   }
 
@@ -34,6 +67,8 @@ class OpenRGBSettings {
     return OpenRGBSettings(
       overHeat: OverHeatSettings.fromMap(map['overHeat'] as Map<String, dynamic>),
       fireSettings: FireSettings.fromMap(map['fireSettings'] as Map<String, dynamic>),
+      loadingColor: c.Color.hex(map['loadingColor']).toRgbColor(),
+      flashTimes: map['flashTimes'] ?? 4,
     );
   }
 
@@ -41,23 +76,12 @@ class OpenRGBSettings {
     await OpenRGBSettings.setAllCustomSetColor(client, data, fireSettings.color);
   }
 
-  Future<void> setAllOff(OpenRGBClient client, List<RGBController> data) async {
+  static Future<void> setAllOff(OpenRGBClient client, List<RGBController> data) async {
     await OpenRGBSettings.setAllCustomSetColor(client, data, const c.Color.rgb(0, 0, 0));
   }
 
   Future<void> setAllOverHeat(OpenRGBClient client, List<RGBController> data) async {
-    List<int> faultyControllers = await OpenRGBSettings.faultyControllerByModes(client, data);
-    for (var i = 0; i < data.length; i++) {
-      if (!faultyControllers.contains(i)) {
-        var controller = data[i];
-        final modeIndex = controller.modes.indexWhere((element) => element.modeName.toLowerCase().contains('static'));
-        if (modeIndex != -1) {
-          await OpenRGBSettings.setAllCustomSetColor(client, data, overHeat.color);
-        } else {
-          await client.updateLeds(i, controller.colors.length, overHeat.color);
-        }
-      }
-    }
+    await OpenRGBSettings.setAllCustomSetColor(client, data, overHeat.color);
   }
 
   static Future<void> setAllCustomMode(OpenRGBClient client, List<RGBController> data) async {
@@ -98,16 +122,38 @@ class OpenRGBSettings {
     }
   }
 
+  static Future<void> setLoadingEffect(OpenRGBClient client, List<RGBController> data, c.Color color) async {
+    for (var i = 0; i < data.length; i++) {
+      await client.setMode(
+          i, data[i].modes.indexWhere((element) => element.modeName.toLowerCase().contains('breath')), color);
+      await client.updateLeds(i, data[i].colors.length, color);
+    }
+  }
+
+  static Future<void> setDeathEffect(OpenRGBClient client, List<RGBController> data) async {
+    for (var i = 0; i < 3; i++) {
+      await OpenRGBSettings.setAllCustomSetColor(client, data, const f.Color.fromRGBO(255, 0, 0, 1).toRGB());
+      await Future.delayed(const Duration(milliseconds: 100));
+      await OpenRGBSettings.setAllOff(client, data);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await OpenRGBSettings.setAllCustomSetColor(client, data, const f.Color.fromRGBO(255, 0, 0, 1).toRGB());
+      await Future.delayed(const Duration(milliseconds: 200));
+      await OpenRGBSettings.setAllCustomSetColor(client, data, const f.Color.fromRGBO(255, 0, 0, 1).toRGB());
+      await Future.delayed(const Duration(milliseconds: 400));
+      await OpenRGBSettings.setAllOff(client, data);
+    }
+  }
+
   @override
   String toString() {
-    return 'OpenRGBSettings{overHeat: $overHeat, fireSettings: $fireSettings}';
+    return 'OpenRGBSettings{overHeat: $overHeat, fireSettings: $fireSettings, loadingColor: $loadingColor}';
   }
 }
 
 class OverHeatSettings {
   final c.Color color;
 
-  OverHeatSettings({required this.color});
+  const OverHeatSettings({this.color = const c.Color.rgb(247, 73, 4)});
 
   Map<String, dynamic> toMap() {
     return {
@@ -125,12 +171,20 @@ class OverHeatSettings {
   String toString() {
     return 'OverHeatSettings{color: $color}';
   }
+
+  OverHeatSettings copyWith({
+    c.Color? color,
+  }) {
+    return OverHeatSettings(
+      color: color ?? this.color,
+    );
+  }
 }
 
 class FireSettings {
   final c.Color color;
 
-  FireSettings({required this.color});
+  const FireSettings({this.color = const c.Color.rgb(255, 0, 0)});
 
   Map<String, dynamic> toMap() {
     return {
@@ -147,6 +201,14 @@ class FireSettings {
   @override
   String toString() {
     return 'FireSettings{color: $color}';
+  }
+
+  FireSettings copyWith({
+    c.Color? color,
+  }) {
+    return FireSettings(
+      color: color ?? this.color,
+    );
   }
 }
 
@@ -180,8 +242,13 @@ extension ToString on c.Color {
   }
 }
 
-extension FluentColortoRGB on Color {
+extension FluentColortoRGB on f.Color {
   c.Color fluentToRGB() {
     return c.Color.rgb(red, green, blue);
   }
+}
+
+enum Modes {
+  fire,
+  overHeat,
 }

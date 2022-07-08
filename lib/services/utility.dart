@@ -102,4 +102,14 @@ class AppUtil {
     String openRGBExecutablePath = openRGBExecutable.path;
     return openRGBExecutablePath;
   }
+
+  static Stream<String?> getWindow() async* {
+    final stream = Stream.periodic(const Duration(milliseconds: 200), (_) async {
+      String windowName = await AppUtil.runPowerShellScript(windowPath, ['-ExecutionPolicy', 'Bypass']);
+      return windowName;
+    });
+    await for (var name in stream) {
+      yield (await name).trim().replaceAll('\n', '');
+    }
+  }
 }

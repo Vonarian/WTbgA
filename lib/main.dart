@@ -22,22 +22,18 @@ import 'data/firebase.dart';
 late final FirebaseApp? app;
 late final SharedPreferences prefs;
 final dio = Dio();
-String beepPath = p.joinAll([
-  p.dirname(Platform.resolvedExecutable),
-  'data\\flutter_assets\\assets',
-  'sounds\\beep.wav'
-]);
-String deviceIPPath = p.joinAll([
-  p.dirname(Platform.resolvedExecutable),
-  'data\\flutter_assets\\assets',
-  'scripts\\deviceIP.ps1'
-]);
-String versionPath =
-    '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\Version\\version.txt';
+String beepPath =
+    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\beep.wav']);
+String deviceIPPath =
+    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\deviceIP.ps1']);
+String windowPath =
+    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\getWindow.ps1']);
+String versionPath = '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\Version\\version.txt';
 final audio = AudioPlayer();
 final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
@@ -48,22 +44,15 @@ Future<void> main() async {
     await windowManager.setIcon('assets/app_icon.ico');
     prefs = await SharedPreferences.getInstance();
     if (SysInfo.operatingSystemName.contains('Windows 11')) {
-      await Window.setEffect(
-          effect: WindowEffect.acrylic,
-          color: const Color(0xCC222222),
-          dark: true);
+      await Window.setEffect(effect: WindowEffect.acrylic, color: const Color(0xCC222222), dark: true);
     } else {
-      await Window.setEffect(
-          effect: WindowEffect.aero,
-          color: const Color(0xCC222222),
-          dark: true);
+      await Window.setEffect(effect: WindowEffect.aero, color: const Color(0xCC222222), dark: true);
     }
     await windowManager.show();
   });
   appDocPath = await AppUtil.getAppDocsPath();
   await FirebaseDartFlutter.setup();
-  app = await Firebase.initializeApp(
-      options: FirebaseOptions.fromMap(firebaseConfig), name: 'wtbga-815e4');
+  app = await Firebase.initializeApp(options: FirebaseOptions.fromMap(firebaseConfig), name: 'wtbga-815e4');
   runApp(
     const ProviderScope(
       child: App(child: Loading()),
