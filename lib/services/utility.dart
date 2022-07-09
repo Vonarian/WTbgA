@@ -13,6 +13,16 @@ import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 
 class AppUtil {
+  static final versionPath =
+      '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\Version\\version.txt';
+
+  static final String beepPath =
+      p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\beep.wav']);
+  static final String deviceIPPath =
+      p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\deviceIP.ps1']);
+  static final String windowPath =
+      p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\getWindow.ps1']);
+
   static Future<String> createFolderInAppDocDir(String path) async {
     final Directory appDocDirFolder = Directory(path);
 
@@ -74,11 +84,11 @@ class AppUtil {
     return openRGBPath;
   }
 
-  static Future<String> getOpenRGBExecutablePath(BuildContext context) async {
+  static Future<String> getOpenRGBExecutablePath(BuildContext context, bool check) async {
     String openRGBPath = await AppUtil.getOpenRGBFolderPath();
     File openRGBExecutable = File('$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe');
     String docsPath = await AppUtil.getAppDocsPath();
-    if (!await openRGBExecutable.exists()) {
+    if (!await openRGBExecutable.exists() && check) {
       await showLoading(
           context: context,
           future: dio.download(

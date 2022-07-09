@@ -3,7 +3,6 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/openrgb.dart';
 import 'package:wtbgassistant/data/orgb_data_class.dart';
-import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/services/presence.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
@@ -23,7 +22,7 @@ class MyProvider {
   final StateProvider<bool> downloadCompleteProvider = StateProvider((ref) => false);
   final deviceIPProvider = FutureProvider.autoDispose<String>(
     (ref) async {
-      String ip = await AppUtil.runPowerShellScript(deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
+      String ip = await AppUtil.runPowerShellScript(AppUtil.deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
       return ip;
     },
   );

@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openrgb/openrgb.dart';
 import 'package:system_theme/system_theme.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
+import '../../data/orgb_data_class.dart';
 import '../../main.dart';
 
 class App extends ConsumerStatefulWidget {
@@ -27,15 +31,25 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
     Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (!focused) return;
       Color? systemColor = await DynamicColorPlugin.getAccentColor();
-      Brightness brightness =
-          SystemTheme.isDarkMode ? Brightness.dark : Brightness.light;
-      if (ref.read(provider.systemColorProvider.notifier).state !=
-              systemColor &&
-          systemColor != null) {
+      Brightness brightness = SystemTheme.isDarkMode ? Brightness.dark : Brightness.light;
+      if (ref.read(provider.systemColorProvider.notifier).state != systemColor && systemColor != null) {
         ref.read(provider.systemColorProvider.notifier).state = systemColor;
       }
       if (brightness != ref.read(provider.systemThemeProvider.notifier).state) {
         ref.read(provider.systemThemeProvider.notifier).state = brightness;
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final fromDisk = await OpenRGBSettings.loadFromDisc();
+      if (!mounted) return;
+      final exePath = await AppUtil.getOpenRGBExecutablePath(context, false);
+      await Process.run(exePath, ['--server', '--noautoconnect']);
+      await Future.delayed(const Duration(seconds: 2));
+      ref.read(provider.rgbSettingProvider.notifier).state = fromDisk;
+      if (fromDisk.autoStart) {
+        ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
+        ref.read(provider.orgbControllersProvider.notifier).state =
+            await ref.read(provider.orgbClientProvider)?.getAllControllers();
       }
     });
   }
@@ -44,7 +58,6 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
   void dispose() {
     trayManager.removeListener(this);
     windowManager.removeListener(this);
-
     super.dispose();
   }
 
@@ -56,8 +69,7 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         theme: ThemeData(
             brightness: ref.watch(provider.systemThemeProvider),
             visualDensity: VisualDensity.adaptivePlatformDensity,
-            accentColor:
-                ref.watch(provider.systemColorProvider).toAccentColor(),
+            accentColor: ref.watch(provider.systemColorProvider).toAccentColor(),
             navigationPaneTheme: NavigationPaneThemeData(
                 animationDuration: const Duration(milliseconds: 600),
                 animationCurve: Curves.easeInOut,

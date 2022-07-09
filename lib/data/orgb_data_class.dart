@@ -12,12 +12,16 @@ class OpenRGBSettings {
   final FireSettings fireSettings;
   final c.Color loadingColor;
   final int flashTimes;
+  final bool autoStart;
+  final int delayBetweenFlashes;
 
   const OpenRGBSettings({
     this.overHeat = const OverHeatSettings(),
     this.fireSettings = const FireSettings(),
     this.loadingColor = const c.Color.rgb(63, 240, 4),
     this.flashTimes = 4,
+    this.autoStart = true,
+    this.delayBetweenFlashes = 350,
   });
 
   Future<void> save() async {
@@ -34,7 +38,7 @@ class OpenRGBSettings {
 
   static Future<OpenRGBSettings> loadFromDisc() async {
     final Map<String, dynamic>? map = json.decode(prefs.getString('openrgb') ?? '{}');
-    if (map == null || map.isEmpty || !map.containsKey('loadingColor')) {
+    if (map == null || map.isEmpty) {
       return const OpenRGBSettings();
     }
     return OpenRGBSettings.fromMap(map);
@@ -45,12 +49,16 @@ class OpenRGBSettings {
     FireSettings? fireSettings,
     c.Color? loadingColor,
     int? flashTimes,
+    bool? autoStart,
+    int? delayBetweenFlashes,
   }) {
     return OpenRGBSettings(
       overHeat: overHeat ?? this.overHeat,
       fireSettings: fireSettings ?? this.fireSettings,
       loadingColor: loadingColor ?? this.loadingColor,
       flashTimes: flashTimes ?? this.flashTimes,
+      autoStart: autoStart ?? this.autoStart,
+      delayBetweenFlashes: delayBetweenFlashes ?? this.delayBetweenFlashes,
     );
   }
 
@@ -60,6 +68,8 @@ class OpenRGBSettings {
       'fireSettings': fireSettings.toMap(),
       'loadingColor': loadingColor.toStringHex(),
       'flashTimes': flashTimes,
+      'autoStart': autoStart,
+      'delayBetweenFlashes': delayBetweenFlashes,
     };
   }
 
@@ -69,6 +79,8 @@ class OpenRGBSettings {
       fireSettings: FireSettings.fromMap(map['fireSettings'] as Map<String, dynamic>),
       loadingColor: c.Color.hex(map['loadingColor']).toRgbColor(),
       flashTimes: map['flashTimes'] ?? 4,
+      autoStart: map['autoStart'] ?? true,
+      delayBetweenFlashes: map['delayBetweenFlashes'] ?? 350,
     );
   }
 

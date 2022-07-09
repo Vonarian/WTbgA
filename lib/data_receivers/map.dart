@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:wtbgassistant/main.dart';
 
 class MapObj {
@@ -58,9 +61,7 @@ class MapObj {
       return MapObj(
         type: map['type'] as String,
         color: map['color'] as String,
-        colors: map['color[]'] != null
-            ? map['color[]'].cast<int>() as List<int>
-            : null,
+        colors: map['color[]'] != null ? map['color[]'].cast<int>() as List<int> : null,
         blink: map['blink'] as int,
         icon: map['icon'] as String,
         iconBg: (map['iconBg'] ?? 'NONE') as String,
@@ -80,18 +81,16 @@ class MapObj {
       return MapObj(
         type: map['type'] as String,
         color: map['color'] as String,
-        colors: map['color[]'] != null
-            ? map['color[]'].cast<int>() as List<int>
-            : null,
+        colors: map['color[]'] != null ? map['color[]'].cast<int>() as List<int> : null,
         blink: map['blink'] as int,
         icon: map['icon'] as String,
-        iconBg: (map['iconBg'] ?? 'NONE') as String,
+        iconBg: (map['iconBg'] ?? 'NONE'),
         sx: null,
         sy: null,
         ex: null,
         ey: null,
-        x: map['x'] as double,
-        y: map['y'] as double,
+        x: map['x'] as double?,
+        y: map['y'] as double?,
         dx: null,
         dy: null,
       );
@@ -99,16 +98,14 @@ class MapObj {
       return MapObj(
         type: map['type'] as String,
         color: map['color'] as String,
-        colors: map['color[]'] != null
-            ? map['color[]'].cast<int>() as List<int>
-            : null,
+        colors: map['color[]'] != null ? map['color[]'].cast<int>() as List<int> : null,
         blink: map['blink'] as int,
         icon: map['icon'] as String,
-        iconBg: (map['iconBg'] ?? 'NONE') as String,
-        sx: map['sx'] as double,
-        sy: map['sy'] as double,
-        ex: map['ex'] as double,
-        ey: map['ey'] as double,
+        iconBg: (map['iconBg'] ?? 'NONE'),
+        sx: map['sx'],
+        sy: map['sy'],
+        ex: map['ex'],
+        ey: map['ey'],
         x: null,
         y: null,
         dx: null,
@@ -122,14 +119,16 @@ class MapObj {
       Response response = await dio.get('http://localhost:8111/map_obj.json');
 
       List<MapObj> mapObjList = [];
-      for (final Map<String, dynamic> element in response.data) {
-        mapObjList.add(MapObj.fromMap((element)));
+      if (response.data.isNotEmpty) {
+        for (final Map<String, dynamic> element in response.data) {
+          mapObjList.add(MapObj.fromMap((element)));
+        }
       }
       return mapObjList;
-    } catch (e) {
-      // if (kDebugMode) {
-      //   log('ERROR: $e', stackTrace: st);
-      // }
+    } catch (e, st) {
+      if (kDebugMode) {
+        log('ERROR: $e', stackTrace: st);
+      }
       rethrow;
     }
   }

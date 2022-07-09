@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
 import '../main.dart';
 import '../services/presence.dart';
@@ -15,13 +16,7 @@ class Message {
   final String? device;
 
   @override
-  const Message(
-      {required this.title,
-      required this.subtitle,
-      required this.id,
-      this.url,
-      this.operation,
-      this.device});
+  const Message({required this.title, required this.subtitle, required this.id, this.url, this.operation, this.device});
 
   @override
   String toString() {
@@ -51,12 +46,9 @@ class Message {
   }
 
   static Future<void> getUserName(BuildContext context, data) async {
-    if (prefs.getString('userName') == null ||
-        prefs.getString('userName') == '') {
+    if (prefs.getString('userName') == null || prefs.getString('userName') == '') {
       try {
-        showDialog(
-            context: context,
-            builder: (context) => dialogBuilderUserName(context, data));
+        showDialog(context: context, builder: (context) => dialogBuilderUserName(context, data));
       } catch (e, st) {
         log(e.toString(), stackTrace: st);
       }
@@ -92,8 +84,7 @@ ContentDialog dialogBuilderUserName(BuildContext context, data) {
             Navigator.of(context).pop();
             await prefs.setString('userName', userNameController.text);
             await PresenceService().configureUserPresence(
-                (await deviceInfo.windowsInfo).computerName,
-                await File(versionPath).readAsString());
+                (await deviceInfo.windowsInfo).computerName, await File(AppUtil.versionPath).readAsString());
             await prefs.setInt('id', data['id']);
           },
           child: const Text('Save'))

@@ -3,40 +3,35 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-String fmPath = p.joinAll([
-  p.dirname(Platform.resolvedExecutable),
-  'data/flutter_assets/assets',
-  'fm_data_db.csv'
-]);
-List<String>? rowList;
+String fmPath = p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_data_db.csv']);
 
 class FmData {
-  String name;
-  double length;
-  double wingSpan;
-  double wingArea;
-  double emptyMass;
-  double maxFuelMass;
-  int critAirSpd;
-  double airSpdMach;
-  int critGearSpd;
-  int combatFlaps;
-  int takeOffFlaps;
-  double flapState1;
-  double flapState2;
-  double flapDestruction1;
-  double flapDestruction2;
-  double critWingOverload1;
-  double critWingOverload2;
-  int engineNum;
-  double maxNitro;
-  double nitroConsume;
-  double critAoa1;
-  double critAoa2;
-  double critAoa3;
-  double critAoa4;
+  final String name;
+  final double length;
+  final double wingSpan;
+  final double wingArea;
+  final double emptyMass;
+  final double maxFuelMass;
+  final int critAirSpd;
+  final double airSpdMach;
+  final int critGearSpd;
+  final int combatFlaps;
+  final int takeOffFlaps;
+  final double flapState1;
+  final double flapState2;
+  final double flapDestruction1;
+  final double flapDestruction2;
+  final double critWingOverload1;
+  final double critWingOverload2;
+  final int engineNum;
+  final double maxNitro;
+  final double nitroConsume;
+  final double critAoa1;
+  final double critAoa2;
+  final double critAoa3;
+  final double critAoa4;
 
-  FmData({
+  const FmData({
     required this.name,
     required this.length,
     required this.wingSpan,
@@ -64,47 +59,30 @@ class FmData {
   });
 
   static Future<FmData?> setObject(String name) async {
-    rowList ??= convertFmToList(await csvString());
+    final List<String> rowList = convertFmToList(await csvString());
     FmData? fmData;
-    for (var element in rowList!.skip(1)) {
+    for (var element in rowList.skip(1)) {
       if (element.split(';')[0] == name) {
         fmData = FmData(
             name: element.split(';')[0],
             length: double.parse(element.split(';')[1]),
-            wingSpan: !element.split(';')[2].contains(',')
-                ? double.parse(element.split(';')[2])
-                : 0,
-            wingArea: !element.split(';')[3].contains(',')
-                ? double.parse(element.split(';')[3])
-                : 0,
+            wingSpan: !element.split(';')[2].contains(',') ? double.parse(element.split(';')[2]) : 0,
+            wingArea: !element.split(';')[3].contains(',') ? double.parse(element.split(';')[3]) : 0,
             emptyMass: double.parse(element.split(';')[4]),
             maxFuelMass: double.parse(element.split(';')[5]),
-            critAirSpd: !element.split(';')[6].contains(',')
-                ? int.parse(element.split(';')[6])
-                : 2000,
-            airSpdMach: !element.split(';')[7].contains(',')
-                ? double.parse(element.split(';')[7])
-                : 2,
+            critAirSpd: !element.split(';')[6].contains(',') ? int.parse(element.split(';')[6]) : 2000,
+            airSpdMach: !element.split(';')[7].contains(',') ? double.parse(element.split(';')[7]) : 2,
             critGearSpd: int.parse(element.split(';')[8]),
             combatFlaps: int.parse(element.split(';')[9]),
             takeOffFlaps: int.parse(element.split(';')[10]),
-            flapState1: element.split(';')[11].isNotEmpty
-                ? double.parse(element.split(';')[11].split(',')[0])
-                : 0,
-            flapState2: element.split(';')[11].isNotEmpty
-                ? double.parse(element.split(';')[11].split(',')[2])
-                : 0,
-            flapDestruction1: element.split(';')[11].isNotEmpty
-                ? double.parse(element.split(';')[11].split(',')[1])
-                : 0,
-            flapDestruction2: element.split(';')[11].isNotEmpty
-                ? double.parse(element.split(';')[11].split(',')[3])
-                : 0,
-            critWingOverload1:
-                double.parse(element.split(';')[12].split(',').first)
-                    .toDouble(),
-            critWingOverload2:
-                double.parse(element.split(';')[12].split(',').last),
+            flapState1: element.split(';')[11].isNotEmpty ? double.parse(element.split(';')[11].split(',')[0]) : 0,
+            flapState2: element.split(';')[11].isNotEmpty ? double.parse(element.split(';')[11].split(',')[2]) : 0,
+            flapDestruction1:
+                element.split(';')[11].isNotEmpty ? double.parse(element.split(';')[11].split(',')[1]) : 0,
+            flapDestruction2:
+                element.split(';')[11].isNotEmpty ? double.parse(element.split(';')[11].split(',')[3]) : 0,
+            critWingOverload1: double.parse(element.split(';')[12].split(',').first).toDouble(),
+            critWingOverload2: double.parse(element.split(';')[12].split(',').last),
             engineNum: int.parse(element.split(';')[13]),
             maxNitro: double.parse(element.split(';')[14]),
             nitroConsume: double.parse(element.split(';')[15]),

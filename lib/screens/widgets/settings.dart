@@ -34,23 +34,19 @@ class SettingsState extends ConsumerState<Settings> {
     await WinToast.instance().showToast(
         type: ToastType.text04,
         title: 'Downloading FFMPEG...',
-        subtitle:
-            'Do not close the application until the download process is finished');
+        subtitle: 'Do not close the application until the download process is finished');
     Directory docDir = await getApplicationDocumentsDirectory();
     String docPath = docDir.path;
-    Directory docWTbgA =
-        await Directory('$docPath\\WTbgA\\stream').create(recursive: true);
+    Directory docWTbgA = await Directory('$docPath\\WTbgA\\stream').create(recursive: true);
     if (ffmpegMissing && monaMissing) {
       try {
         await dio.download(
-            'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/ffmpeg.zip',
-            '${docWTbgA.path}\\ffmpeg.zip',
+            'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/ffmpeg.zip', '${docWTbgA.path}\\ffmpeg.zip',
             onReceiveProgress: (downloaded, full) {
           setState(() {});
         }, deleteOnError: true).whenComplete(() async {
           final File filePath = File('${docWTbgA.path}\\ffmpeg.zip');
-          final Uint8List bytes =
-              await File('${docWTbgA.path}\\ffmpeg.zip').readAsBytes();
+          final Uint8List bytes = await File('${docWTbgA.path}\\ffmpeg.zip').readAsBytes();
           final archive = ZipDecoder().decodeBytes(bytes);
           for (final file in archive) {
             final filename = file.name;
@@ -60,20 +56,17 @@ class SettingsState extends ConsumerState<Settings> {
                 ..createSync(recursive: true)
                 ..writeAsBytesSync(data);
             } else {
-              Directory('${p.dirname(filePath.path)}\\out\\$filename')
-                  .create(recursive: true);
+              Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
             }
           }
         });
         await dio
             .download(
-                'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/mona.zip',
-                '${docWTbgA.path}\\mona.zip',
+                'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/mona.zip', '${docWTbgA.path}\\mona.zip',
                 deleteOnError: true)
             .whenComplete(() async {
           final File filePath = File('${docWTbgA.path}\\mona.zip');
-          final Uint8List bytes =
-              await File('${docWTbgA.path}\\mona.zip').readAsBytes();
+          final Uint8List bytes = await File('${docWTbgA.path}\\mona.zip').readAsBytes();
           final archive = ZipDecoder().decodeBytes(bytes);
           for (final file in archive) {
             final filename = file.name;
@@ -83,8 +76,7 @@ class SettingsState extends ConsumerState<Settings> {
                 ..createSync(recursive: true)
                 ..writeAsBytesSync(data);
             } else {
-              Directory('${p.dirname(filePath.path)}\\out\\$filename')
-                  .create(recursive: true);
+              Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
             }
           }
         });
@@ -97,13 +89,11 @@ class SettingsState extends ConsumerState<Settings> {
     } else if (monaMissing && !ffmpegMissing) {
       await dio
           .download(
-              'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/mona.zip',
-              '${docWTbgA.path}\\mona.zip',
+              'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/mona.zip', '${docWTbgA.path}\\mona.zip',
               deleteOnError: true)
           .whenComplete(() async {
         final File filePath = File('${docWTbgA.path}\\mona.zip');
-        final Uint8List bytes =
-            await File('${docWTbgA.path}\\mona.zip').readAsBytes();
+        final Uint8List bytes = await File('${docWTbgA.path}\\mona.zip').readAsBytes();
         final archive = ZipDecoder().decodeBytes(bytes);
         for (final file in archive) {
           final filename = file.name;
@@ -113,8 +103,7 @@ class SettingsState extends ConsumerState<Settings> {
               ..createSync(recursive: true)
               ..writeAsBytesSync(data);
           } else {
-            Directory('${p.dirname(filePath.path)}\\out\\$filename')
-                .create(recursive: true);
+            Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
           }
         }
       });
@@ -126,8 +115,7 @@ class SettingsState extends ConsumerState<Settings> {
       )
           .whenComplete(() async {
         final File filePath = File('${docWTbgA.path}\\ffmpeg.zip');
-        final Uint8List bytes =
-            await File('${docWTbgA.path}\\ffmpeg.zip').readAsBytes();
+        final Uint8List bytes = await File('${docWTbgA.path}\\ffmpeg.zip').readAsBytes();
         final archive = ZipDecoder().decodeBytes(bytes);
         for (final file in archive) {
           final filename = file.name;
@@ -137,8 +125,7 @@ class SettingsState extends ConsumerState<Settings> {
               ..createSync(recursive: true)
               ..writeAsBytesSync(data);
           } else {
-            Directory('${p.dirname(filePath.path)}\\out\\$filename')
-                .create(recursive: true);
+            Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
           }
         }
       });
@@ -165,10 +152,8 @@ class SettingsState extends ConsumerState<Settings> {
                 title: const Text('Toggle All Notifications'),
                 onToggle: (bool value) {
                   ref.read(provider.fullNotifProvider.notifier).state = value;
-                  ref.read(provider.engineOHNotifProvider.notifier).state =
-                      value;
-                  ref.read(provider.engineDeathNotifProvider.notifier).state =
-                      value;
+                  ref.read(provider.engineOHNotifProvider.notifier).state = value;
+                  ref.read(provider.engineDeathNotifProvider.notifier).state = value;
                   ref.read(provider.waterNotifProvider.notifier).state = value;
                 },
               ),
@@ -176,38 +161,29 @@ class SettingsState extends ConsumerState<Settings> {
                 title: const Text('Start Streaming Mode'),
                 onPressed: (ctx) async {
                   if (!isStreaming) {
-                    final Directory docWTbgAStream =
-                        Directory('$appDocPath\\stream');
+                    final Directory docWTbgAStream = Directory('$appDocPath\\stream');
                     if (!(await docWTbgAStream.exists())) {
                       await docWTbgAStream.create(recursive: true);
                     }
-                    File fileFFMPEG =
-                        File('${docWTbgAStream.path}\\out\\ffmpeg.exe');
-                    File fileMona =
-                        File('${docWTbgAStream.path}\\out\\MonaTiny.exe');
+                    File fileFFMPEG = File('${docWTbgAStream.path}\\out\\ffmpeg.exe');
+                    File fileMona = File('${docWTbgAStream.path}\\out\\MonaTiny.exe');
                     bool ffmpegExists = await fileFFMPEG.exists();
                     bool monaExists = await fileMona.exists();
                     if (ffmpegExists && monaExists) {
-                      monaProcess = await Process.start(
-                          'cmd.exe', ['/c', fileMona.path],
-                          runInShell: true,
-                          workingDirectory: docWTbgAStream.path);
-                      monaProcess?.stdout
-                          .transform(utf8.decoder)
-                          .listen((event) {
+                      monaProcess = await Process.start('cmd.exe', ['/c', fileMona.path],
+                          runInShell: true, workingDirectory: docWTbgAStream.path);
+                      monaProcess?.stdout.transform(utf8.decoder).listen((event) {
                         if (kDebugMode) {
                           print(event);
                         }
                       });
-                      monaProcess?.stderr
-                          .transform(utf8.decoder)
-                          .listen((event) {
+                      monaProcess?.stderr.transform(utf8.decoder).listen((event) {
                         if (kDebugMode) {
                           print(event);
                         }
                       });
-                      final deviceIP = await AppUtil.runPowerShellScript(
-                          deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
+                      final deviceIP =
+                          await AppUtil.runPowerShellScript(AppUtil.deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
                       final command = FfmpegCommand(
                         inputs: [FfmpegInput.virtualDevice('desktop')],
                         args: [
@@ -225,12 +201,9 @@ class SettingsState extends ConsumerState<Settings> {
                       );
                       isStreaming = true;
                       try {
-                        outerProcess = await Ffmpeg().run(command,
-                            path: fileFFMPEG.path,
-                            workingDir: docWTbgAStream.path);
-                        outerProcess?.stderr
-                            .transform(utf8.decoder)
-                            .listen((event) {
+                        outerProcess =
+                            await Ffmpeg().run(command, path: fileFFMPEG.path, workingDir: docWTbgAStream.path);
+                        outerProcess?.stderr.transform(utf8.decoder).listen((event) {
                           if (kDebugMode) {
                             print(event);
                           }
@@ -243,23 +216,15 @@ class SettingsState extends ConsumerState<Settings> {
                       try {
                         await showLoading(
                             context: context,
-                            future:
-                                downloadFfmpegMona(monaExists, ffmpegExists),
+                            future: downloadFfmpegMona(monaExists, ffmpegExists),
                             message: 'Downloading FFMPEG / Mona');
                         if (!mounted) return;
 
-                        showSnackbar(
-                            context,
-                            const Snackbar(
-                                content: Text(
-                                    'Downloaded FFMPEG / Mona, click again to start streaming')));
+                        showSnackbar(context,
+                            const Snackbar(content: Text('Downloaded FFMPEG / Mona, click again to start streaming')));
                       } catch (e, st) {
                         if (!mounted) return;
-                        showSnackbar(
-                            context,
-                            const Snackbar(
-                                content:
-                                    Text('Failed to download FFMPEG / Mona')));
+                        showSnackbar(context, const Snackbar(content: Text('Failed to download FFMPEG / Mona')));
                         log(e.toString(), stackTrace: st);
                       }
                     }
@@ -286,8 +251,7 @@ class SettingsState extends ConsumerState<Settings> {
                     context: context,
                     builder: (context) => ContentDialog(
                       title: const Text('Reset app'),
-                      content: const Text(
-                          'Are you sure you want to reset app data?'),
+                      content: const Text('Are you sure you want to reset app data?'),
                       actions: [
                         TextButton(
                           child: const Text('Cancel'),
@@ -298,10 +262,7 @@ class SettingsState extends ConsumerState<Settings> {
                           onPressed: () async {
                             await prefs.clear();
                             if (!mounted) return;
-                            Navigator.pushReplacement(
-                                context,
-                                FluentPageRoute(
-                                    builder: (context) => const Loading()));
+                            Navigator.pushReplacement(context, FluentPageRoute(builder: (context) => const Loading()));
                           },
                         ),
                       ],
@@ -316,8 +277,7 @@ class SettingsState extends ConsumerState<Settings> {
               initialValue: ref.watch(provider.engineDeathNotifProvider),
               title: const Text('Toggle Engine Death Notifier'),
               onToggle: (bool value) {
-                ref.read(provider.engineDeathNotifProvider.notifier).state =
-                    value;
+                ref.read(provider.engineDeathNotifProvider.notifier).state = value;
               },
             ),
             SettingsTile.switchTile(

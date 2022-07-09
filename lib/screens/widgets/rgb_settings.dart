@@ -182,13 +182,14 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
               },
             ),
             SettingsTile(
-              title: Row(
-                children: [
-                  Text('Flash times: ${orgbSettings.flashTimes}'),
-                ],
-              ),
+              title: Text('Flash times: ${orgbSettings.flashTimes}'),
               description: const Text('Number of times to flash devices'),
               leading: counter(context, orgbSettings),
+            ),
+            SettingsTile(
+              title: Text('Delay Between Each Flash: ${orgbSettings.delayBetweenFlashes} ms'),
+              description: const Text('Delay between each flash for flash (OH and Fire) effects'),
+              leading: delayCounter(context, orgbSettings),
             ),
           ],
         ),
@@ -212,6 +213,29 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
               ref.read(provider.rgbSettingProvider.notifier).state =
                   orgbSettings.copyWith(flashTimes: orgbSettings.flashTimes - 1);
               await orgbSettings.save();
+            }),
+      ],
+    );
+  }
+
+  Widget delayCounter(BuildContext context, OpenRGBSettings orgbSettings) {
+    return Column(
+      children: [
+        IconButton(
+            icon: const Icon(FluentIcons.add),
+            onPressed: () async {
+              ref.read(provider.rgbSettingProvider.notifier).state =
+                  orgbSettings.copyWith(delayBetweenFlashes: orgbSettings.delayBetweenFlashes + 100);
+              await ref.read(provider.rgbSettingProvider).save();
+            }),
+        IconButton(
+            icon: const Icon(FluentIcons.remove),
+            onPressed: () async {
+              if (ref.read(provider.rgbSettingProvider).delayBetweenFlashes > 50) {
+                ref.read(provider.rgbSettingProvider.notifier).state =
+                    orgbSettings.copyWith(delayBetweenFlashes: orgbSettings.delayBetweenFlashes - 100);
+                await ref.read(provider.rgbSettingProvider).save();
+              }
             }),
       ],
     );
