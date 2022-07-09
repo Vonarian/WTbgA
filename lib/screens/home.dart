@@ -7,7 +7,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:blinking_text/blinking_text.dart';
 import 'package:firebase_dart/database.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/client/client.dart';
 import 'package:openrgb/data/rgb_controller.dart';
@@ -159,8 +158,8 @@ class HomeState extends ConsumerState<Home>
           var client = ref.read(provider.orgbClientProvider);
           tripleWarning();
           if (client.hasValue) {
-            final controllersProvider = ref.watch(provider.orgbControllersProvider);
-            await flashNTimes(client!, controllersProvider!, Modes.overHeat);
+            final data = ref.watch(provider.orgbControllersProvider);
+            await OpenRGBSettings.setDeathEffect(client!, data!, [255, 255]);
           }
         }
       } else if (oil != 15 && isDamageIDNew && damage.msg!.contains('destroyed')) {
@@ -170,8 +169,8 @@ class HomeState extends ConsumerState<Home>
           var client = ref.read(provider.orgbClientProvider);
           tripleWarning();
           if (client.hasValue) {
-            final controllersProvider = ref.watch(provider.orgbControllersProvider);
-            await flashNTimes(client!, controllersProvider!, Modes.overHeat);
+            final data = ref.watch(provider.orgbControllersProvider);
+            await OpenRGBSettings.setDeathEffect(client!, data!, [255, 255]);
           }
         }
       }
@@ -598,12 +597,18 @@ class HomeState extends ConsumerState<Home>
                     ),
                     onPressed: () async {
                       var client = ref.read(provider.orgbClientProvider);
-                      if (client.hasValue) {
+                      if (client != null) {
                         final data = ref.watch(provider.orgbControllersProvider);
-                        if (data.hasValue) {
-                          showSnackbar(context, const Snackbar(content: Text('Running tests')));
+                        if (data != null) {
+                          showSnackbar(
+                              context,
+                              const Snackbar(
+                                content: Text('Running tests'),
+                                extended: true,
+                              ),
+                              duration: const Duration(seconds: 5));
                           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider.notifier).state;
-                          await OpenRGBSettings.setDeathEffect(client!, data!);
+                          await OpenRGBSettings.setDeathEffect(client, data, [255, 255]);
                           await settings.setAllOverHeat(client, data);
                           await Future.delayed(const Duration(seconds: 1));
                           await settings.setAllFire(client, data);

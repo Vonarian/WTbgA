@@ -130,18 +130,42 @@ class OpenRGBSettings {
     }
   }
 
-  static Future<void> setDeathEffect(OpenRGBClient client, List<RGBController> data) async {
-    for (var i = 0; i < 3; i++) {
-      await OpenRGBSettings.setAllCustomSetColor(client, data, const f.Color.fromRGBO(255, 0, 0, 1).toRGB());
-      await Future.delayed(const Duration(milliseconds: 100));
-      await OpenRGBSettings.setAllOff(client, data);
-      await Future.delayed(const Duration(milliseconds: 100));
-      await OpenRGBSettings.setAllCustomSetColor(client, data, const f.Color.fromRGBO(255, 0, 0, 1).toRGB());
-      await Future.delayed(const Duration(milliseconds: 200));
-      await OpenRGBSettings.setAllCustomSetColor(client, data, const f.Color.fromRGBO(255, 0, 0, 1).toRGB());
-      await Future.delayed(const Duration(milliseconds: 400));
-      await OpenRGBSettings.setAllOff(client, data);
+  static Future<void> setGradientOn(OpenRGBClient client, List<RGBController> data, int redInt) async {
+    await OpenRGBSettings.setAllCustomMode(client, data);
+    final updatedData = await client.getAllControllers();
+    for (var i = 0; i < data.length; i++) {
+      for (var j = 0; j < redInt; j++) {
+        await client.setMode(i, updatedData[i].activeMode, c.Color.rgb(j, 0, 0));
+        if (updatedData[i].modes[updatedData[i].activeMode].modeColorPerLED) {
+          await client.updateLeds(i, updatedData[i].colors.length, c.Color.rgb(j, 0, 0));
+        }
+      }
     }
+  }
+
+  static Future<void> setGradientOff(OpenRGBClient client, List<RGBController> data, int redInt) async {
+    await OpenRGBSettings.setAllCustomMode(client, data);
+    final updatedData = await client.getAllControllers();
+    for (var i = 0; i < data.length; i++) {
+      for (var j = redInt; j >= 0; j--) {
+        await client.setMode(i, updatedData[i].activeMode, c.Color.rgb(j, 0, 0));
+        if (updatedData[i].modes[updatedData[i].activeMode].modeColorPerLED) {
+          await client.updateLeds(i, updatedData[i].colors.length, c.Color.rgb(j, 0, 0));
+        }
+      }
+    }
+    await OpenRGBSettings.setAllOff(client, data);
+  }
+
+  static Future<void> setDeathEffect(OpenRGBClient client, List<RGBController> data, List<int> values) async {
+    await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
+    await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
+    await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
+    await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
+    await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
+    await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
+    await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
+    await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
   }
 
   @override
