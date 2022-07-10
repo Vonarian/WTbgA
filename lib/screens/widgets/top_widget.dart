@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
@@ -7,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/openrgb.dart';
 import 'package:system_theme/system_theme.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/services/utility.dart';
+import 'package:wtbgassistant/screens/downloader.dart';
+import 'package:wtbgassistant/services/presence.dart';
 
 import '../../data/orgb_data_class.dart';
 import '../../main.dart';
@@ -42,14 +43,31 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!mounted) return;
-      final exePath = await AppUtil.getOpenRGBExecutablePath(context, false);
-      await Process.run(exePath, ['--server', '--noautoconnect']);
       await Future.delayed(const Duration(seconds: 2));
       ref.read(provider.rgbSettingProvider.notifier).state = fromDisk;
       if (fromDisk.autoStart) {
         ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
         ref.read(provider.orgbControllersProvider.notifier).state =
             await ref.read(provider.orgbClientProvider)?.getAllControllers();
+      }
+    });
+
+    PresenceService().getVersion().listen((event) async {
+      final version = event.snapshot.value.toString().replaceAll('.', '');
+      final currentVersion = appVersion.replaceAll('.', '');
+      if (int.parse(version) > int.parse(currentVersion)) {
+        final toast = await WinToast.instance().showToast(
+          title: 'New Version Available!',
+          subtitle: 'Click on this notification to download the latest version.',
+          type: ToastType.text04,
+        );
+        toast?.eventStream.listen((event) async {
+          if (event is ActivatedEvent) {
+            await _handleClickRestore();
+            if (!mounted) return;
+            Navigator.of(context).pushReplacement(FluentPageRoute(builder: (context) => const Downloader()));
+          }
+        });
       }
     });
   }
@@ -84,8 +102,8 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
 
   Future<void> _handleClickRestore() async {
     await windowManager.setIcon('assets/app_icon.ico');
-    windowManager.restore();
-    windowManager.show();
+    await windowManager.restore();
+    await windowManager.show();
   }
 
   Future<void> _trayInit() async {

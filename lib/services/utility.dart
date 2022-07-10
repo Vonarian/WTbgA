@@ -84,13 +84,13 @@ class AppUtil {
     return openRGBPath;
   }
 
-  static Future<String> getOpenRGBExecutablePath(BuildContext context, bool check) async {
+  static Future<String> getOpenRGBExecutablePath(BuildContext? context, bool check) async {
     String openRGBPath = await AppUtil.getOpenRGBFolderPath();
     File openRGBExecutable = File('$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe');
     String docsPath = await AppUtil.getAppDocsPath();
     if (!await openRGBExecutable.exists() && check) {
       await showLoading(
-          context: context,
+          context: context!,
           future: dio.download(
               'https://github.com/Vonarian/WTbgA/releases/download/2.6.2.0/OpenRGB.zip', '$docsPath\\OpenRGB.zip'),
           message: 'Downloading OpenRGB...');

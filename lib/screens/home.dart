@@ -91,7 +91,7 @@ class HomeState extends ConsumerState<Home>
     final settings = ref.read(provider.rgbSettingProvider);
     if (!fullNotif) return;
     if (!damages.hasValue) return;
-    for (var damage in damages!) {
+    for (var damage in damages) {
       if (engineDeath && oil != 15 && damage.msg == 'Engine died: no fuel') {
         tripleWarning();
       }
@@ -129,8 +129,8 @@ class HomeState extends ConsumerState<Home>
       if (engineDeath && oil != 15 && damage.msg == 'Engine died: propeller broken') {
         tripleWarning();
       }
-      if (oil != 15 && damage.msg!.contains('set afire')) {
-        List<String> split = damage.msg!.split('set afire');
+      if (oil != 15 && damage.msg.contains('set afire')) {
+        List<String> split = damage.msg.split('set afire');
         if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
           var client = ref.read(provider.orgbClientProvider);
           tripleWarning();
@@ -140,8 +140,8 @@ class HomeState extends ConsumerState<Home>
           }
         }
       }
-      if (oil != 15 && damage.msg!.contains('shot down')) {
-        List<String> split = damage.msg!.split('shot down');
+      if (oil != 15 && damage.msg.contains('shot down')) {
+        List<String> split = damage.msg.split('shot down');
         if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
           var client = ref.read(provider.orgbClientProvider);
           tripleWarning();
@@ -150,8 +150,8 @@ class HomeState extends ConsumerState<Home>
             await OpenRGBSettings.setDeathEffect(client!, data!, [255, 255]);
           }
         }
-      } else if (oil != 15 && damage.msg!.contains('destroyed')) {
-        List<String> split = damage.msg!.split('destroyed');
+      } else if (oil != 15 && damage.msg.contains('destroyed')) {
+        List<String> split = damage.msg.split('destroyed');
         if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
           var client = ref.read(provider.orgbClientProvider);
           tripleWarning();
@@ -183,24 +183,22 @@ class HomeState extends ConsumerState<Home>
     }
   }
 
-  int? emptyInt = 0;
+  int emptyInt = 0;
   String? emptyString = 'No Data';
   bool? emptyBool;
-  ValueNotifier<int?> idData = ValueNotifier<int?>(null);
+  ValueNotifier<int> idData = ValueNotifier<int>(0);
 
   Future<void> updateMsgId() async {
     if (!isInGame.value) return;
-    damages = (await Damage.getDamage((idData.value ?? 0) - 1)).toList();
+    damages = (await Damage.getDamages((idData.value - 1))).toList();
     if (!mounted) return;
-    if (damages != null) {
-      idData.value = damages!.isNotEmpty ? damages![damages!.length - 1].id : emptyInt;
-    }
+    idData.value = damages.isNotEmpty ? damages.last.id : emptyInt;
   }
 
   Future<void> flapChecker() async {
     if (!isInGame.value) return;
-    if (!damages.hasValue) return;
-    for (var damage in damages!) {
+    if (damages.isEmpty) return;
+    for (var damage in damages) {
       if (damage.msg == 'Asymmetric flap extension') {
         await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
       }
@@ -313,13 +311,14 @@ class HomeState extends ConsumerState<Home>
     isInGame.addListener(() async {
       final client = ref.watch(provider.orgbClientProvider);
       final data = await client?.getAllControllers();
+      OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
       if (isInGame.value) {
         if (client != null && data != null) {
+          await OpenRGBSettings.setJoinBattleEffect(client, data, settings.loadingColor);
           await OpenRGBSettings.setAllOff(client, data);
         }
       } else {
         if (client != null && data != null) {
-          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
           await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
         }
       }
@@ -473,7 +472,7 @@ class HomeState extends ConsumerState<Home>
   int? oil;
   int? water;
   FmData? fmData;
-  List<Damage>? damages;
+  List<Damage> damages = [];
   String csvNames = '';
   String namesPath =
       p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_names_db.csv']);
@@ -511,8 +510,7 @@ class HomeState extends ConsumerState<Home>
               ),
               fireBaseVersion.when(data: (data) {
                 bool isNew = false;
-                if (int.parse(data.replaceAll('.', '')) >
-                    int.parse(File(AppUtil.versionPath).readAsStringSync().replaceAll('.', ''))) {
+                if (int.parse(data.replaceAll('.', '')) > int.parse(appVersion.replaceAll('.', ''))) {
                   isNew = true;
                 }
                 if (isNew) {
@@ -565,7 +563,7 @@ class HomeState extends ConsumerState<Home>
                           await Future.delayed(const Duration(seconds: 1));
                           await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
                           await Future.delayed(const Duration(seconds: 3));
-                          await OpenRGBSettings.setAllOff(client, data);
+                          await OpenRGBSettings.setJoinBattleEffect(client, data, settings.loadingColor, times: 6);
                         }
                       }
                     }),
@@ -625,13 +623,6 @@ class HomeState extends ConsumerState<Home>
                                       context: context,
                                       future: Future.delayed(const Duration(milliseconds: 600)),
                                       message: 'Receiving data...');
-                                  if (!controller.hasListener && ref.read(provider.orgbClientProvider) != null) {
-                                    controller.addStream(ref.read(provider.orgbClientProvider)!.deviceListUpdated);
-                                    controller.stream.listen((event) async {
-                                      ref.read(provider.orgbControllersProvider.notifier).state =
-                                          await ref.read(provider.orgbClientProvider)?.getAllControllers();
-                                    });
-                                  }
                                 } catch (e, st) {
                                   showSnackbar(
                                       context,
@@ -850,16 +841,11 @@ class HomeState extends ConsumerState<Home>
                               child: Container(
                                 padding: const EdgeInsets.only(left: 20),
                                 alignment: Alignment.topLeft,
-                                child: critAoaChecker()
-                                    ? Text(
-                                        'AoA= ${shot.data!.aoa}°',
-                                        style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                      )
-                                    : BlinkText(
-                                        'AoA= ${shot.data!.aoa}°',
-                                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 40),
-                                      ),
+                                child: Text(
+                                  'AoA= ${shot.data!.aoa}°',
+                                  style:
+                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                ),
                               ),
                             ),
                           ],

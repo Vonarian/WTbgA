@@ -37,6 +37,7 @@ class LoadingState extends State<Loading> {
             context,
             Snackbar(
               content: Text('Version: $version. Status: Proceeding to update in 4 seconds!'),
+              extended: true,
               action: TextButton(
                   child: const Text('Cancel update'),
                   onPressed: () {
@@ -59,7 +60,12 @@ class LoadingState extends State<Loading> {
       } else {
         if (!mounted) return;
 
-        showSnackbar(context, Snackbar(content: Text('Version: $version ___ Status: Up-to-date!')));
+        showSnackbar(
+            context,
+            Snackbar(
+              content: Text('Version: $version ___ Status: Up-to-date!'),
+              extended: true,
+            ));
         Future.delayed(const Duration(microseconds: 500), () async {
           Navigator.pushReplacement(
             context,
@@ -68,7 +74,12 @@ class LoadingState extends State<Loading> {
         });
       }
     } catch (e, st) {
-      showSnackbar(context, Snackbar(content: Text('Version: $version ___ Status: Error checking for update!')));
+      showSnackbar(
+          context,
+          Snackbar(
+            content: Text('Version: $version ___ Status: Error checking for update!'),
+            extended: true,
+          ));
       log(e.toString(), stackTrace: st);
       Future.delayed(const Duration(seconds: 2), () async {
         Navigator.pushReplacement(

@@ -19,7 +19,7 @@ class GameMapState extends State<GameMap> {
   @override
   void initState() {
     super.initState();
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    Timer.periodic(const Duration(milliseconds: 1200), (timer) {
       if (mounted) {
         image = Image.network(
           'http://localhost:8111/map.img',
@@ -143,16 +143,13 @@ class GameMapState extends State<GameMap> {
                             break;
                         }
                         if (e.type == 'aircraft') {
-                          myFuture = ObjectPainter.getUiImage(
-                              'assets/icons/$assetIcon.png');
+                          myFuture = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
                           return imageBuilder(e);
                         } else if (e.type == 'ground_model') {
-                          myFuture = ObjectPainter.getUiImage(
-                              'assets/icons/$assetIcon.png');
+                          myFuture = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
                           return imageBuilder(e);
                         } else if (e.type == 'airfield') {
-                          myFuture = ObjectPainter.getUiImage(
-                              'assets/icons/$assetIcon.png');
+                          myFuture = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
                           return imageBuilder(e);
                         } else {
                           return const Text('NOPE');

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -17,6 +18,7 @@ import 'package:wtbgassistant/screens/widgets/top_widget.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
 import 'data/firebase.dart';
+import 'data/orgb_data_class.dart';
 
 late final FirebaseApp? app;
 late final SharedPreferences prefs;
@@ -27,7 +29,7 @@ final audio2 = AudioPlayer();
 final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
-StreamController<void> controller = StreamController();
+late final String appVersion;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +39,8 @@ Future<void> main() async {
     await windowManager.setResizable(true);
     await windowManager.setTitle('WTbgA');
     await windowManager.setIcon('assets/app_icon.ico');
-    prefs = await SharedPreferences.getInstance();
+    appDocPath = await AppUtil.getAppDocsPath();
+
     if (SysInfo.operatingSystemName.contains('Windows 11')) {
       await Window.setEffect(effect: WindowEffect.acrylic, color: const Color(0xCC222222), dark: true);
     } else {
@@ -45,7 +48,13 @@ Future<void> main() async {
     }
     await windowManager.show();
   });
-  appDocPath = await AppUtil.getAppDocsPath();
+  appVersion = await File(AppUtil.versionPath).readAsString();
+  prefs = await SharedPreferences.getInstance();
+  OpenRGBSettings settings = await OpenRGBSettings.loadFromDisc();
+  if (settings.autoStart) {
+    String exePath = await AppUtil.getOpenRGBExecutablePath(null, false);
+    Process.run(exePath, ['--server', '--noautoconnect']);
+  }
   await FirebaseDartFlutter.setup();
   app = await Firebase.initializeApp(options: FirebaseOptions.fromMap(firebaseConfig), name: 'wtbga-815e4');
   runApp(

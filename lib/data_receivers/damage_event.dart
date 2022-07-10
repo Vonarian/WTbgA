@@ -1,10 +1,10 @@
 import '../main.dart';
 
 class Damage {
-  int? id;
-  String? msg;
+  int id;
+  String msg;
 
-  static Future<List<Damage>> getDamage(int lastDmg) async {
+  static Future<List<Damage>> getDamages(int lastDmg) async {
     try {
       final response = await dio.get('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=$lastDmg');
       final damageEvents = response.data['damage'].map<Damage>((model) => Damage.fromMap(model)).toList();

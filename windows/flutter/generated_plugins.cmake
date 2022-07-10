@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_acrylic
   hotkey_manager
   network_info_plus_windows
+  screen_retriever
   system_theme
   tray_manager
   url_launcher_windows

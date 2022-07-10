@@ -136,9 +136,20 @@ class OpenRGBSettings {
 
   static Future<void> setLoadingEffect(OpenRGBClient client, List<RGBController> data, c.Color color) async {
     for (var i = 0; i < data.length; i++) {
-      await client.setMode(
-          i, data[i].modes.indexWhere((element) => element.modeName.toLowerCase().contains('breath')), color);
-      await client.updateLeds(i, data[i].colors.length, color);
+      var modeIndex = data[i].modes.indexWhere((element) {
+        String modeName = element.modeName.toLowerCase();
+        return modeName.contains('breath') ||
+            modeName.contains('rainbow') ||
+            modeName.contains('cycle') ||
+            modeName.contains('strob') ||
+            modeName.contains('fade') ||
+            modeName.contains('blink') ||
+            modeName.contains('flash');
+      });
+      if (modeIndex != -1) {
+        await client.setMode(i, modeIndex, color);
+        await client.updateLeds(i, data[i].colors.length, color);
+      }
     }
   }
 
@@ -147,9 +158,10 @@ class OpenRGBSettings {
     final updatedData = await client.getAllControllers();
     for (var i = 0; i < data.length; i++) {
       for (var j = 0; j < redInt; j++) {
-        await client.setMode(i, updatedData[i].activeMode, c.Color.rgb(j, 0, 0));
         if (updatedData[i].modes[updatedData[i].activeMode].modeColorPerLED) {
           await client.updateLeds(i, updatedData[i].colors.length, c.Color.rgb(j, 0, 0));
+        } else {
+          await client.setMode(i, updatedData[i].activeMode, c.Color.rgb(j, 0, 0));
         }
       }
     }
@@ -166,18 +178,27 @@ class OpenRGBSettings {
         }
       }
     }
-    await OpenRGBSettings.setAllOff(client, data);
   }
 
   static Future<void> setDeathEffect(OpenRGBClient client, List<RGBController> data, List<int> values) async {
     await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
     await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
+    await OpenRGBSettings.setGradientOn(client, data, values.first);
+    await OpenRGBSettings.setGradientOff(client, data, values.last);
+    await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
+    await OpenRGBSettings.setGradientOff(client, data, values.last);
     await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
     await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
-    await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
-    await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
-    await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
-    await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
+  }
+
+  static Future<void> setJoinBattleEffect(OpenRGBClient client, List<RGBController> data, c.Color color,
+      {int times = 4, int delay = 130}) async {
+    for (var i = 0; i < times; i++) {
+      await OpenRGBSettings.setAllCustomSetColor(client, data, color);
+      await Future.delayed(Duration(milliseconds: delay));
+      await OpenRGBSettings.setAllOff(client, data);
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
   }
 
   @override
