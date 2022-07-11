@@ -2,18 +2,12 @@ import 'package:firebase_dart/firebase_dart.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/openrgb.dart';
+import 'package:wtbgassistant/data/app_settings.dart';
 import 'package:wtbgassistant/data/orgb_data_class.dart';
 import 'package:wtbgassistant/services/presence.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
 class MyProvider {
-  final StateProvider<bool> fullNotifProvider = StateProvider((ref) => true);
-  final StateProvider<bool> oilNotifProvider = StateProvider((ref) => true);
-  final StateProvider<bool> engineOHNotifProvider = StateProvider((ref) => true);
-  final StateProvider<bool> engineDeathNotifProvider = StateProvider((ref) => true);
-
-  final StateProvider<bool> waterNotifProvider = StateProvider((ref) => true);
-
   final StateProvider<bool> trayProvider = StateProvider((ref) => true);
   final StateProvider<String?> vehicleNameProvider = StateProvider((ref) => null);
   final StateProvider<int> gearLimitProvider = StateProvider((ref) => 1000);
@@ -42,4 +36,6 @@ class MyProvider {
     (ref) => null,
   );
   final rgbSettingProvider = StateProvider<OpenRGBSettings>((ref) => const OpenRGBSettings());
+
+  final appSettingsProvider = StateNotifierProvider<SettingsNotifier, AppSettings>((ref) => SettingsNotifier());
 }

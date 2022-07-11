@@ -15,8 +15,7 @@ import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 class AppUtil {
   static final versionPath =
       '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\Version\\version.txt';
-
-  static final String beepPath =
+  static final defaultBeepPath =
       p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\beep.wav']);
   static final String deviceIPPath =
       p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\deviceIP.ps1']);
@@ -72,8 +71,11 @@ class AppUtil {
   static Future<String> getAppDocsPath() async {
     Directory docDir = await getApplicationDocumentsDirectory();
     String docPath = docDir.path;
-    Directory docWTbgA = await Directory('$docPath\\WTbgA').create(recursive: true);
-    String docWTbgAPath = docWTbgA.path;
+    Directory directory = Directory('$docPath\\WTbgA');
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+    String docWTbgAPath = directory.path;
     return docWTbgAPath;
   }
 

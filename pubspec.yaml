@@ -22,7 +22,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  settings_ui: ^2.0.2
+  settings_ui:
+    path: ../flutter-settings-ui
   win_toast: ^0.0.2
   blinking_text: ^1.0.1+2
   json_annotation: 4.5.0

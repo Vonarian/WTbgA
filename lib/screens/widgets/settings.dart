@@ -13,6 +13,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:win_toast/win_toast.dart';
+import 'package:wtbgassistant/data/app_settings.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
 
@@ -135,6 +136,8 @@ class SettingsState extends ConsumerState<Settings> {
   List<RGBController>? controllersData;
 
   Widget settings(BuildContext context) {
+    final appSettings = ref.watch(provider.appSettingsProvider);
+    final appSettingsNotifier = ref.read(provider.appSettingsProvider.notifier);
     return CustomizedSettingsList(
         platform: DevicePlatform.web,
         brightness: Brightness.dark,
@@ -148,13 +151,19 @@ class SettingsState extends ConsumerState<Settings> {
             title: const Text('Main'),
             tiles: [
               SettingsTile.switchTile(
-                initialValue: ref.watch(provider.fullNotifProvider),
+                initialValue: ref.watch(provider.appSettingsProvider).fullNotif,
                 title: const Text('Toggle All Notifications'),
-                onToggle: (bool value) {
-                  ref.read(provider.fullNotifProvider.notifier).state = value;
-                  ref.read(provider.engineOHNotifProvider.notifier).state = value;
-                  ref.read(provider.engineDeathNotifProvider.notifier).state = value;
-                  ref.read(provider.waterNotifProvider.notifier).state = value;
+                onToggle: (bool value) async {
+                  appSettingsNotifier.update(appSettings.copyWith(fullNotif: value));
+                  if (!value) {
+                    appSettingsNotifier.update(
+                        appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(enabled: value)));
+                    appSettingsNotifier.update(
+                        appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(enabled: value)));
+                    appSettingsNotifier
+                        .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(enabled: value)));
+                  }
+                  await appSettingsNotifier.save();
                 },
               ),
               SettingsTile(
@@ -272,30 +281,90 @@ class SettingsState extends ConsumerState<Settings> {
               ),
             ],
           ),
-          SettingsSection(title: const Text('Notifications'), tiles: [
+          SettingsSection(title: const Text('Notifiers'), tiles: [
             SettingsTile.switchTile(
-              initialValue: ref.watch(provider.engineDeathNotifProvider),
-              title: const Text('Toggle Engine Death Notifier'),
-              onToggle: (bool value) {
-                ref.read(provider.engineDeathNotifProvider.notifier).state = value;
+              initialValue: appSettings.engineWarning.enabled,
+              onToggle: (bool value) async {
+                appSettingsNotifier
+                    .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(enabled: value)));
+                await appSettingsNotifier.save();
               },
+              title: const Text('Engine sound'),
+              description: const Text('Click to change file path'),
+              leading: SizedBox(height: 55, child: _buildSliderEngine(appSettings)),
             ),
             SettingsTile.switchTile(
-              initialValue: ref.watch(provider.engineOHNotifProvider),
-              title: const Text('Toggle Engine OH Notifier'),
-              onToggle: (bool value) {
-                ref.read(provider.engineOHNotifProvider.notifier).state = value;
+              initialValue: appSettings.overHeatWarning.enabled,
+              onToggle: (bool value) async {
+                appSettingsNotifier.update(
+                    appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(enabled: value)));
+                await appSettingsNotifier.save();
               },
+              title: const Text('Overheat sound'),
+              description: const Text('Click to change file path'),
+              leading: SizedBox(height: 55, child: _buildSliderOverHeat(appSettings)),
             ),
             SettingsTile.switchTile(
-              initialValue: ref.watch(provider.waterNotifProvider),
-              title: const Text('Toggle Water OH Notifier'),
-              onToggle: (bool value) {
-                ref.read(provider.waterNotifProvider.notifier).state = value;
+              initialValue: appSettings.overGWarning.enabled,
+              onToggle: (value) async {
+                appSettingsNotifier
+                    .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(enabled: value)));
+                await appSettingsNotifier.save();
               },
+              title: const Text('OverG sound'),
+              description: const Text('Click to change file path'),
+              leading: SizedBox(height: 55, child: _buildSliderOverG(appSettings)),
             ),
           ]),
         ]);
+  }
+
+  Widget _buildSliderEngine(AppSettings appSettings) {
+    return Slider(
+      value: appSettings.engineWarning.volume,
+      min: 0,
+      max: 100,
+      divisions: 100,
+      label: '${appSettings.engineWarning.volume.toInt()} %',
+      onChanged: (value) {
+        ref
+            .read(provider.appSettingsProvider.notifier)
+            .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(volume: value)));
+      },
+      vertical: true,
+    );
+  }
+
+  Widget _buildSliderOverHeat(AppSettings appSettings) {
+    return Slider(
+      value: appSettings.overHeatWarning.volume,
+      min: 0,
+      max: 100,
+      divisions: 100,
+      label: '${appSettings.overHeatWarning.volume.toInt()} %',
+      onChanged: (value) {
+        ref
+            .read(provider.appSettingsProvider.notifier)
+            .update(appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(volume: value)));
+      },
+      vertical: true,
+    );
+  }
+
+  Widget _buildSliderOverG(AppSettings appSettings) {
+    return Slider(
+      value: appSettings.overGWarning.volume,
+      min: 0,
+      max: 100,
+      divisions: 100,
+      label: '${appSettings.overGWarning.volume.toInt()} %',
+      onChanged: (value) {
+        ref
+            .read(provider.appSettingsProvider.notifier)
+            .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(volume: value)));
+      },
+      vertical: true,
+    );
   }
 
   bool isStreaming = false;
@@ -337,6 +406,7 @@ class SettingsState extends ConsumerState<Settings> {
             ),
           ),
           Expanded(flex: 10, child: settings(context)),
+          const SizedBox(height: 10),
         ],
       ),
     );

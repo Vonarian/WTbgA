@@ -16,6 +16,7 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:wtbgassistant/data/app_settings.dart';
 import 'package:wtbgassistant/data/orgb_data_class.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
@@ -24,6 +25,7 @@ import 'package:wtbgassistant/screens/widgets/settings.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
+import '../data/app_settings.dart';
 import '../data/data_class.dart';
 import '../data/firebase.dart';
 import '../data_receivers/damage_event.dart';
@@ -83,57 +85,51 @@ class HomeState extends ConsumerState<Home>
 
   Future<void> vehicleStateCheck() async {
     if (!isInGame.value) return;
-    var fullNotif = ref.read(provider.fullNotifProvider);
-    var engineDeath = ref.read(provider.engineDeathNotifProvider);
-    var oilNotif = ref.read(provider.oilNotifProvider);
-    var waterNotif = ref.read(provider.waterNotifProvider);
-    final engineOh = ref.read(provider.engineOHNotifProvider);
+    if (!mounted) return;
+    final appSettings = ref.read(provider.appSettingsProvider);
     final settings = ref.read(provider.rgbSettingProvider);
-    if (!fullNotif) return;
-    if (!damages.hasValue) return;
+    if (!appSettings.fullNotif) return;
+    if (damages.isEmpty) return;
     for (var damage in damages) {
-      if (engineDeath && oil != 15 && damage.msg == 'Engine died: no fuel') {
-        tripleWarning();
+      if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: no fuel') {
+        tripleWarning(AppSettingsEnum.engineSetting);
       }
-      if (engineDeath && oil != 15 && damage.msg == 'Engine died: no fuel') {
-        tripleWarning();
-      }
-      if (engineOh && oil != 15 && damage.msg == 'Engine overheated') {
+      if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Engine overheated') {
         var client = ref.read(provider.orgbClientProvider);
-        tripleWarning();
+        tripleWarning(AppSettingsEnum.overHeatSetting);
         if (client.hasValue) {
           final controllersProvider = ref.watch(provider.orgbControllersProvider);
           await flashNTimes(client!, controllersProvider!, Modes.overHeat, settings);
         }
       }
-      if (oilNotif && oil != 15 && damage.msg == 'Oil overheated') {
+      if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Oil overheated') {
         var client = ref.read(provider.orgbClientProvider);
-        tripleWarning();
+        tripleWarning(AppSettingsEnum.overHeatSetting);
         if (client.hasValue) {
           final controllersProvider = ref.watch(provider.orgbControllersProvider);
           await flashNTimes(client!, controllersProvider!, Modes.overHeat, settings);
         }
       }
-      if (waterNotif && water != 15 && damage.msg == 'Water overheated') {
+      if (appSettings.overHeatWarning.enabled && water != 15 && damage.msg == 'Water overheated') {
         var client = ref.read(provider.orgbClientProvider);
-        tripleWarning();
+        tripleWarning(AppSettingsEnum.overHeatSetting);
         if (client.hasValue) {
           final controllersProvider = ref.watch(provider.orgbControllersProvider);
           await flashNTimes(client!, controllersProvider!, Modes.overHeat, settings);
         }
       }
 
-      if (engineDeath && oil != 15 && damage.msg == 'Engine died: overheating') {
-        tripleWarning();
+      if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: overheating') {
+        tripleWarning(AppSettingsEnum.engineSetting);
       }
-      if (engineDeath && oil != 15 && damage.msg == 'Engine died: propeller broken') {
-        tripleWarning();
+      if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: propeller broken') {
+        tripleWarning(AppSettingsEnum.engineSetting);
       }
       if (oil != 15 && damage.msg.contains('set afire')) {
         List<String> split = damage.msg.split('set afire');
         if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
           var client = ref.read(provider.orgbClientProvider);
-          tripleWarning();
+          tripleWarning(AppSettingsEnum.defaultSetting);
           if (client.hasValue) {
             final controllersProvider = ref.watch(provider.orgbControllersProvider);
             await flashNTimes(client!, controllersProvider!, Modes.overHeat, settings);
@@ -144,7 +140,7 @@ class HomeState extends ConsumerState<Home>
         List<String> split = damage.msg.split('shot down');
         if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
           var client = ref.read(provider.orgbClientProvider);
-          tripleWarning();
+          tripleWarning(AppSettingsEnum.defaultSetting);
           if (client.hasValue) {
             final data = ref.watch(provider.orgbControllersProvider);
             await OpenRGBSettings.setDeathEffect(client!, data!, [255, 255]);
@@ -154,7 +150,7 @@ class HomeState extends ConsumerState<Home>
         List<String> split = damage.msg.split('destroyed');
         if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
           var client = ref.read(provider.orgbClientProvider);
-          tripleWarning();
+          tripleWarning(AppSettingsEnum.defaultSetting);
           if (client.hasValue) {
             final data = ref.watch(provider.orgbControllersProvider);
             await OpenRGBSettings.setDeathEffect(client!, data!, [255, 255]);
@@ -226,32 +222,59 @@ class HomeState extends ConsumerState<Home>
     }
   }
 
-  Future<void> tripleWarning() async {
+  Future<void> tripleWarning(AppSettingsEnum appEnum) async {
     if (!mounted) return;
-    if (times == 0) {
-      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
-      times++;
-    } else if (times == 1) {
-      await audio1.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
-      times++;
-    } else if (times == 2) {
-      await audio2.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
-      times = 0;
+    final appSetting = ref.read(provider.appSettingsProvider);
+    if (appEnum == AppSettingsEnum.engineSetting) {
+      if (times == 0) {
+        await audio.play(DeviceFileSource(appSetting.engineWarning.path),
+            volume: appSetting.engineWarning.volume, mode: PlayerMode.lowLatency);
+        times++;
+      } else if (times == 1) {
+        await audio.play(DeviceFileSource(appSetting.engineWarning.path),
+            volume: appSetting.engineWarning.volume, mode: PlayerMode.lowLatency);
+        times++;
+      } else if (times == 2) {
+        await audio.play(DeviceFileSource(appSetting.engineWarning.path),
+            volume: appSetting.engineWarning.volume, mode: PlayerMode.lowLatency);
+        times = 0;
+      }
+    }
+    if (appEnum == AppSettingsEnum.overHeatSetting) {
+      if (times == 0) {
+        await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
+            volume: appSetting.overHeatWarning.volume, mode: PlayerMode.lowLatency);
+        times++;
+      } else if (times == 1) {
+        await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
+            volume: appSetting.overHeatWarning.volume, mode: PlayerMode.lowLatency);
+        times++;
+      } else if (times == 2) {
+        await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
+            volume: appSetting.overHeatWarning.volume, mode: PlayerMode.lowLatency);
+        times = 0;
+      }
+    }
+    if (appEnum == AppSettingsEnum.overGSetting) {
+      if (times == 0) {
+        await audio.play(DeviceFileSource(appSetting.overGWarning.path),
+            volume: appSetting.overGWarning.volume, mode: PlayerMode.lowLatency);
+        times++;
+      } else if (times == 1) {
+        await audio.play(DeviceFileSource(appSetting.overGWarning.path),
+            volume: appSetting.overGWarning.volume, mode: PlayerMode.lowLatency);
+        times++;
+      } else if (times == 2) {
+        await audio.play(DeviceFileSource(appSetting.overGWarning.path),
+            volume: appSetting.overGWarning.volume, mode: PlayerMode.lowLatency);
+        times = 0;
+      }
     }
   }
 
-  void receiveDiskValues() {
-    var fullNotif = ref.read(provider.fullNotifProvider.notifier);
-    var oilNotif = ref.read(provider.oilNotifProvider.notifier);
-    var engineDeath = ref.read(provider.engineDeathNotifProvider.notifier);
-    var waterNotif = ref.read(provider.waterNotifProvider.notifier);
-    var tray = ref.read(provider.trayProvider.notifier);
-    lastId = (prefs.getInt('lastId') ?? 0);
-    oilNotif.state = (prefs.getBool('isOilNotifOn') ?? true);
-    tray.state = (prefs.getBool('isTrayEnabled') ?? true);
-    waterNotif.state = (prefs.getBool('isWaterNotifOn') ?? true);
-    engineDeath.state = (prefs.getBool('isEngineDeathNotifOn') ?? true);
-    fullNotif.state = (prefs.getBool('isFullNotifOn') ?? true);
+  Future<void> receiveDiskValues() async {
+    final appSettingsNotifier = ref.read(provider.appSettingsProvider.notifier);
+    await appSettingsNotifier.load();
   }
 
   @override
@@ -296,9 +319,7 @@ class HomeState extends ConsumerState<Home>
         vehicleStateCheck();
         flapChecker();
       }
-      lastId = (prefs.getInt('lastId') ?? 0);
       lastId = idData.value;
-      prefs.setInt('lastId', lastId!);
     });
     AppUtil.getWindow().listen((stringValue) {
       windowName = stringValue ?? '';
@@ -324,11 +345,11 @@ class HomeState extends ConsumerState<Home>
       }
     });
 
-    var fullNotif = ref.read(provider.fullNotifProvider);
+    var appSettings = ref.read(provider.appSettingsProvider);
     const redLineTimer = Duration(milliseconds: 1);
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
-      if (!fullNotif) return;
+      if (!appSettings.fullNotif) return;
       userRedLineGear();
       checkCritAoa();
       if (loadChecker()) {
