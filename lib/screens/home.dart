@@ -99,7 +99,7 @@ class HomeState extends ConsumerState<Home>
         tripleWarning(AppSettingsEnum.overHeatSetting);
         if (client.hasValue) {
           final controllersProvider = ref.watch(provider.orgbControllersProvider);
-          await flashNTimes(client!, controllersProvider!, Modes.overHeat, settings);
+          await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
         }
       }
       if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Oil overheated') {
@@ -107,7 +107,7 @@ class HomeState extends ConsumerState<Home>
         tripleWarning(AppSettingsEnum.overHeatSetting);
         if (client.hasValue) {
           final controllersProvider = ref.watch(provider.orgbControllersProvider);
-          await flashNTimes(client!, controllersProvider!, Modes.overHeat, settings);
+          await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
         }
       }
       if (appSettings.overHeatWarning.enabled && water != 15 && damage.msg == 'Water overheated') {
@@ -115,7 +115,7 @@ class HomeState extends ConsumerState<Home>
         tripleWarning(AppSettingsEnum.overHeatSetting);
         if (client.hasValue) {
           final controllersProvider = ref.watch(provider.orgbControllersProvider);
-          await flashNTimes(client!, controllersProvider!, Modes.overHeat, settings);
+          await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
         }
       }
 
@@ -132,18 +132,17 @@ class HomeState extends ConsumerState<Home>
           tripleWarning(AppSettingsEnum.defaultSetting);
           if (client.hasValue) {
             final controllersProvider = ref.watch(provider.orgbControllersProvider);
-            await flashNTimes(client!, controllersProvider!, Modes.overHeat, settings);
+            await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
           }
         }
-      }
-      if (oil != 15 && damage.msg.contains('shot down')) {
+      } else if (oil != 15 && damage.msg.contains('shot down')) {
         List<String> split = damage.msg.split('shot down');
         if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
           var client = ref.read(provider.orgbClientProvider);
           tripleWarning(AppSettingsEnum.defaultSetting);
           if (client.hasValue) {
             final data = ref.watch(provider.orgbControllersProvider);
-            await OpenRGBSettings.setDeathEffect(client!, data!, [255, 255]);
+            await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
           }
         }
       } else if (oil != 15 && damage.msg.contains('destroyed')) {
@@ -153,7 +152,7 @@ class HomeState extends ConsumerState<Home>
           tripleWarning(AppSettingsEnum.defaultSetting);
           if (client.hasValue) {
             final data = ref.watch(provider.orgbControllersProvider);
-            await OpenRGBSettings.setDeathEffect(client!, data!, [255, 255]);
+            await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
           }
         }
       }
@@ -293,8 +292,10 @@ class HomeState extends ConsumerState<Home>
       ref.read(provider.rgbSettingProvider.notifier).state = fromDisk;
       if (fromDisk.autoStart) {
         ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
-        ref.read(provider.orgbControllersProvider.notifier).state =
-            await ref.read(provider.orgbClientProvider)?.getAllControllers();
+        if (ref.read(provider.orgbClientProvider.notifier).state != null) {
+          ref.read(provider.orgbControllersProvider.notifier).state =
+              await ref.read(provider.orgbClientProvider)!.getAllControllers();
+        }
       }
     });
     Future.delayed(Duration.zero, () async {
@@ -346,14 +347,14 @@ class HomeState extends ConsumerState<Home>
     });
 
     var appSettings = ref.read(provider.appSettingsProvider);
-    const redLineTimer = Duration(milliseconds: 1);
+    const redLineTimer = Duration(milliseconds: 400);
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       if (!appSettings.fullNotif) return;
       userRedLineGear();
       checkCritAoa();
       if (loadChecker()) {
-        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
+        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       }
     });
     Future.delayed(Duration.zero, () async {
@@ -518,34 +519,61 @@ class HomeState extends ConsumerState<Home>
     startListeners();
     final theme = FluentTheme.of(context);
     final fireBaseVersion = ref.watch(provider.versionFBProvider);
+    final developer = ref.watch(provider.developerMessageProvider);
     return NavigationView(
       appBar: NavigationAppBar(
-          title: Row(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'War Thunder background Assistant',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      if (ref.watch(provider.premiumUserProvider))
+                        Icon(FluentIcons.starburst, color: Colors.yellow, size: 20),
+                      if (ref.watch(provider.premiumUserProvider)) const SizedBox(width: 5),
+                      Text(
+                        'War Thunder background Assistant',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  fireBaseVersion.when(data: (data) {
+                    bool isNew = false;
+                    if (int.parse(data.replaceAll('.', '')) > int.parse(appVersion.replaceAll('.', ''))) {
+                      isNew = true;
+                    }
+                    if (isNew) {
+                      return HoverButton(
+                        builder: (context, set) => Text(
+                          '$data available',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
+                        ),
+                      );
+                    } else {
+                      return Text(
+                        'v$data',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
+                      );
+                    }
+                  }, error: (e, st) {
+                    return const SizedBox();
+                  }, loading: () {
+                    return const SizedBox();
+                  }),
+                ],
               ),
-              const SizedBox(
-                width: 5,
-              ),
-              fireBaseVersion.when(data: (data) {
-                bool isNew = false;
-                if (int.parse(data.replaceAll('.', '')) > int.parse(appVersion.replaceAll('.', ''))) {
-                  isNew = true;
-                }
-                if (isNew) {
-                  return HoverButton(
-                    builder: (context, set) => Text(
-                      '$data available',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
-                    ),
+              developer.when(data: (data) {
+                if (data != null) {
+                  return Text(
+                    'Developer\'s message: $data',
+                    style: TextStyle(color: Colors.red),
                   );
                 } else {
-                  return Text(
-                    'v$data',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
-                  );
+                  return const SizedBox();
                 }
               }, error: (e, st) {
                 return const SizedBox();
@@ -568,7 +596,7 @@ class HomeState extends ConsumerState<Home>
                       var client = ref.read(provider.orgbClientProvider);
                       if (client != null) {
                         final data = ref.watch(provider.orgbControllersProvider);
-                        if (data != null) {
+                        if (data.isNotEmpty) {
                           showSnackbar(
                               context,
                               const Snackbar(
@@ -585,6 +613,14 @@ class HomeState extends ConsumerState<Home>
                           await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
                           await Future.delayed(const Duration(seconds: 3));
                           await OpenRGBSettings.setJoinBattleEffect(client, data, settings.loadingColor, times: 6);
+                        } else {
+                          showSnackbar(
+                              context,
+                              const Snackbar(
+                                content: Text('No data found'),
+                                extended: true,
+                              ),
+                              duration: const Duration(seconds: 5));
                         }
                       }
                     }),
@@ -704,7 +740,9 @@ class HomeState extends ConsumerState<Home>
             PaneItem(icon: const Icon(FluentIcons.home), title: const Text('Home')),
             PaneItem(icon: const Icon(FluentIcons.nav2_d_map_view), title: const Text('Game Map')),
             PaneItem(icon: const Icon(FluentIcons.settings), title: const Text('Settings')),
-            if (ref.watch(provider.orgbClientProvider).notNull)
+            if (ref.watch(provider.orgbClientProvider).notNull &&
+                ref.watch(provider.orgbControllersProvider).notNull &&
+                ref.watch(provider.orgbControllersProvider).isNotEmpty)
               PaneItem(
                   icon: Icon(
                     FluentIcons.settings,
@@ -972,7 +1010,10 @@ class HomeState extends ConsumerState<Home>
             ),
           ),
           const Settings(),
-          if (ref.watch(provider.orgbClientProvider).notNull) const RGBSettings(),
+          if (ref.watch(provider.orgbClientProvider).notNull &&
+              ref.watch(provider.orgbControllersProvider).notNull &&
+              ref.watch(provider.orgbControllersProvider).isNotEmpty)
+            const RGBSettings(),
         ],
       ),
     );

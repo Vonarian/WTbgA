@@ -16,6 +16,7 @@ import 'package:win_toast/win_toast.dart';
 import 'package:wtbgassistant/data/app_settings.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
+import 'package:wtbgassistant/services/presence.dart';
 
 import '../../main.dart';
 import '../../services/utility.dart';
@@ -314,6 +315,17 @@ class SettingsState extends ConsumerState<Settings> {
               title: const Text('OverG sound'),
               description: const Text('Click to change file path'),
               leading: SizedBox(height: 55, child: _buildSliderOverG(appSettings)),
+            ),
+            SettingsTile.switchTile(
+              initialValue: ref.watch(provider.needPremiumProvider),
+              onToggle: (value) async {
+                ref.read(provider.needPremiumProvider.notifier).state = value;
+                await PresenceService().needPremium((await deviceInfo.windowsInfo).computerName, value);
+                await prefs.setBool('needPremium', value);
+              },
+              title: const Text('Please indicate if you need premium features'),
+              description: const Text(
+                  'This is a way to notify me (Vonarian) if you need premium features and you can\'t get one :)'),
             ),
           ]),
         ]);

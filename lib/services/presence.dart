@@ -41,6 +41,12 @@ class PresenceService {
     return sub.asBroadcastStream();
   }
 
+  Stream<Event> getDeveloperMessage() {
+    final developerMessageRef = database.reference().child('developerMessage');
+    final sub = developerMessageRef.onValue;
+    return sub.asBroadcastStream();
+  }
+
   void connect() {
     database.goOnline();
   }
@@ -50,5 +56,18 @@ class PresenceService {
       subscription?.cancel();
     }
     database.goOffline();
+  }
+
+  Stream<Event> getPremium(String uid) {
+    final uidRef = database.reference().child('presence').child(uid);
+    final premiumRef = uidRef.child('premium');
+    final sub = premiumRef.onValue;
+    return sub.asBroadcastStream();
+  }
+
+  Future<void> needPremium(String uid, bool needsPremium) async {
+    final uidRef = database.reference().child('presence').child(uid);
+    final premiumRef = uidRef.child('needPremium');
+    premiumRef.set(needsPremium);
   }
 }

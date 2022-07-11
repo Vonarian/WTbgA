@@ -41,15 +41,22 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      ref.read(provider.needPremiumProvider.notifier).state = prefs.getBool('needPremium') ?? false;
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!mounted) return;
       await Future.delayed(const Duration(seconds: 2));
       ref.read(provider.rgbSettingProvider.notifier).state = fromDisk;
       if (fromDisk.autoStart) {
         ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
-        ref.read(provider.orgbControllersProvider.notifier).state =
-            await ref.read(provider.orgbClientProvider)?.getAllControllers();
+        if (ref.read(provider.orgbClientProvider.notifier).state != null) {
+          ref.read(provider.orgbControllersProvider.notifier).state =
+              await ref.read(provider.orgbClientProvider)!.getAllControllers();
+        }
       }
+      PresenceService().getPremium((await deviceInfo.windowsInfo).computerName).listen((event) {
+        if (!mounted) return;
+        ref.read(provider.premiumUserProvider.notifier).state = event.snapshot.value as bool;
+      });
     });
 
     PresenceService().getVersion().listen((event) async {

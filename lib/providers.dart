@@ -32,10 +32,19 @@ class MyProvider {
   final orgbClientProvider = StateProvider<OpenRGBClient?>(
     (ref) => null,
   );
-  final orgbControllersProvider = StateProvider<List<RGBController>?>(
-    (ref) => null,
+  final orgbControllersProvider = StateProvider<List<RGBController>>(
+    (ref) => [],
   );
   final rgbSettingProvider = StateProvider<OpenRGBSettings>((ref) => const OpenRGBSettings());
 
   final appSettingsProvider = StateNotifierProvider<SettingsNotifier, AppSettings>((ref) => SettingsNotifier());
+  final premiumUserProvider = StateProvider<bool>((ref) => false);
+  final needPremiumProvider = StateProvider<bool>((ref) => false);
+  final developerMessageProvider = StreamProvider<String?>(
+    (ref) async* {
+      await for (Event e in PresenceService().getDeveloperMessage()) {
+        yield e.snapshot.value as String?;
+      }
+    },
+  );
 }

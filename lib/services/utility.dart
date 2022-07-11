@@ -116,7 +116,7 @@ class AppUtil {
   }
 
   static Stream<String?> getWindow() async* {
-    final stream = Stream.periodic(const Duration(milliseconds: 200), (_) async {
+    final stream = Stream.periodic(const Duration(milliseconds: 350), (_) async {
       String windowName = await AppUtil.runPowerShellScript(windowPath, ['-ExecutionPolicy', 'Bypass']);
       return windowName;
     });
