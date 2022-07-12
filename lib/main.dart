@@ -35,7 +35,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   await Window.initialize();
-  windowManager.waitUntilReadyToShow().then((_) async {
+  await windowManager.waitUntilReadyToShow().then((_) async {
     await windowManager.setResizable(true);
     await windowManager.setTitle('WTbgA');
     await windowManager.setIcon('assets/app_icon.ico');

@@ -80,7 +80,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 
   Future<void> save() async {
-    await prefs.setString('settings', json.encode(state.toMap()));
+    await prefs.setString('settings', jsonEncode(state.toMap()));
   }
 
   Future<void> load() async {

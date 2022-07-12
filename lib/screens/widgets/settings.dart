@@ -152,9 +152,9 @@ class SettingsState extends ConsumerState<Settings> {
             title: const Text('Main'),
             tiles: [
               SettingsTile.switchTile(
-                initialValue: ref.watch(provider.appSettingsProvider).fullNotif,
+                initialValue: appSettings.fullNotif,
                 title: const Text('Toggle All Notifications'),
-                onToggle: (bool value) async {
+                onToggle: (bool value) {
                   appSettingsNotifier.update(appSettings.copyWith(fullNotif: value));
                   if (!value) {
                     appSettingsNotifier.update(
@@ -164,7 +164,7 @@ class SettingsState extends ConsumerState<Settings> {
                     appSettingsNotifier
                         .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(enabled: value)));
                   }
-                  await appSettingsNotifier.save();
+                  appSettingsNotifier.save();
                 },
               ),
               SettingsTile(
@@ -288,7 +288,7 @@ class SettingsState extends ConsumerState<Settings> {
               onToggle: (bool value) async {
                 appSettingsNotifier
                     .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(enabled: value)));
-                await appSettingsNotifier.save();
+                appSettingsNotifier.save();
               },
               title: const Text('Engine sound'),
               description: const Text('Click to change file path'),
@@ -299,7 +299,7 @@ class SettingsState extends ConsumerState<Settings> {
               onToggle: (bool value) async {
                 appSettingsNotifier.update(
                     appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(enabled: value)));
-                await appSettingsNotifier.save();
+                appSettingsNotifier.save();
               },
               title: const Text('Overheat sound'),
               description: const Text('Click to change file path'),
@@ -310,7 +310,7 @@ class SettingsState extends ConsumerState<Settings> {
               onToggle: (value) async {
                 appSettingsNotifier
                     .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(enabled: value)));
-                await appSettingsNotifier.save();
+                appSettingsNotifier.save();
               },
               title: const Text('OverG sound'),
               description: const Text('Click to change file path'),

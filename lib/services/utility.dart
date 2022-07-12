@@ -89,8 +89,8 @@ class AppUtil {
   static Future<String> getOpenRGBExecutablePath(BuildContext? context, bool check) async {
     String openRGBPath = await AppUtil.getOpenRGBFolderPath();
     File openRGBExecutable = File('$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe');
-    String docsPath = await AppUtil.getAppDocsPath();
     if (!await openRGBExecutable.exists() && check) {
+      String docsPath = await AppUtil.getAppDocsPath();
       await showLoading(
           context: context!,
           future: dio.download(

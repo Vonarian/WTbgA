@@ -90,70 +90,68 @@ class HomeState extends ConsumerState<Home>
     final settings = ref.read(provider.rgbSettingProvider);
     if (!appSettings.fullNotif) return;
     if (damages.isEmpty) return;
-    for (var damage in damages) {
-      if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: no fuel') {
-        tripleWarning(AppSettingsEnum.engineSetting);
+    if (appSettings.engineWarning.enabled && oil != 15 && damages.last.msg == 'Engine died: no fuel') {
+      tripleWarning(AppSettingsEnum.engineSetting);
+    }
+    if (appSettings.overHeatWarning.enabled && oil != 15 && damages.last.msg == 'Engine overheated') {
+      var client = ref.read(provider.orgbClientProvider);
+      tripleWarning(AppSettingsEnum.overHeatSetting);
+      if (client.hasValue) {
+        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
       }
-      if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Engine overheated') {
-        var client = ref.read(provider.orgbClientProvider);
-        tripleWarning(AppSettingsEnum.overHeatSetting);
-        if (client.hasValue) {
-          final controllersProvider = ref.watch(provider.orgbControllersProvider);
-          await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
-        }
+    }
+    if (appSettings.overHeatWarning.enabled && oil != 15 && damages.last.msg == 'Oil overheated') {
+      var client = ref.read(provider.orgbClientProvider);
+      tripleWarning(AppSettingsEnum.overHeatSetting);
+      if (client.hasValue) {
+        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
       }
-      if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Oil overheated') {
-        var client = ref.read(provider.orgbClientProvider);
-        tripleWarning(AppSettingsEnum.overHeatSetting);
-        if (client.hasValue) {
-          final controllersProvider = ref.watch(provider.orgbControllersProvider);
-          await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
-        }
+    }
+    if (appSettings.overHeatWarning.enabled && water != 15 && damages.last.msg == 'Water overheated') {
+      var client = ref.read(provider.orgbClientProvider);
+      tripleWarning(AppSettingsEnum.overHeatSetting);
+      if (client.hasValue) {
+        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
       }
-      if (appSettings.overHeatWarning.enabled && water != 15 && damage.msg == 'Water overheated') {
-        var client = ref.read(provider.orgbClientProvider);
-        tripleWarning(AppSettingsEnum.overHeatSetting);
-        if (client.hasValue) {
-          final controllersProvider = ref.watch(provider.orgbControllersProvider);
-          await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
-        }
-      }
+    }
 
-      if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: overheating') {
-        tripleWarning(AppSettingsEnum.engineSetting);
-      }
-      if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: propeller broken') {
-        tripleWarning(AppSettingsEnum.engineSetting);
-      }
-      if (oil != 15 && damage.msg.contains('set afire')) {
-        List<String> split = damage.msg.split('set afire');
-        if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
-          var client = ref.read(provider.orgbClientProvider);
-          tripleWarning(AppSettingsEnum.defaultSetting);
-          if (client.hasValue) {
-            final controllersProvider = ref.watch(provider.orgbControllersProvider);
-            await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
-          }
+    if (appSettings.engineWarning.enabled && oil != 15 && damages.last.msg == 'Engine died: overheating') {
+      tripleWarning(AppSettingsEnum.engineSetting);
+    }
+    if (appSettings.engineWarning.enabled && oil != 15 && damages.last.msg == 'Engine died: propeller broken') {
+      tripleWarning(AppSettingsEnum.engineSetting);
+    }
+    if (oil != 15 && damages.last.msg.contains('set afire')) {
+      List<String> split = damages.last.msg.split('set afire');
+      if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
+        var client = ref.read(provider.orgbClientProvider);
+        tripleWarning(AppSettingsEnum.defaultSetting);
+        if (client.hasValue) {
+          final controllersProvider = ref.watch(provider.orgbControllersProvider);
+          await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
         }
-      } else if (oil != 15 && damage.msg.contains('shot down')) {
-        List<String> split = damage.msg.split('shot down');
-        if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
-          var client = ref.read(provider.orgbClientProvider);
-          tripleWarning(AppSettingsEnum.defaultSetting);
-          if (client.hasValue) {
-            final data = ref.watch(provider.orgbControllersProvider);
-            await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
-          }
+      }
+    } else if (oil != 15 && damages.last.msg.contains('shot down')) {
+      List<String> split = damages.last.msg.split('shot down');
+      if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
+        var client = ref.read(provider.orgbClientProvider);
+        tripleWarning(AppSettingsEnum.defaultSetting);
+        if (client.hasValue) {
+          final data = ref.watch(provider.orgbControllersProvider);
+          await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
         }
-      } else if (oil != 15 && damage.msg.contains('destroyed')) {
-        List<String> split = damage.msg.split('destroyed');
-        if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
-          var client = ref.read(provider.orgbClientProvider);
-          tripleWarning(AppSettingsEnum.defaultSetting);
-          if (client.hasValue) {
-            final data = ref.watch(provider.orgbControllersProvider);
-            await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
-          }
+      }
+    } else if (oil != 15 && damages.last.msg.contains('destroyed')) {
+      List<String> split = damages.last.msg.split('destroyed');
+      if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
+        var client = ref.read(provider.orgbClientProvider);
+        tripleWarning(AppSettingsEnum.defaultSetting);
+        if (client.hasValue) {
+          final data = ref.watch(provider.orgbControllersProvider);
+          await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
         }
       }
     }
@@ -185,18 +183,16 @@ class HomeState extends ConsumerState<Home>
 
   Future<void> updateMsgId() async {
     if (!isInGame.value) return;
-    damages = (await Damage.getDamages((idData.value - 1))).toList();
+    damages = (await Damage.getDamages((idData.value))).toList();
     if (!mounted) return;
-    idData.value = damages.isNotEmpty ? damages.last.id : emptyInt;
+    idData.value = damages.isNotEmpty ? damages.last.id : idData.value;
   }
 
   Future<void> flapChecker() async {
     if (!isInGame.value) return;
     if (damages.isEmpty) return;
-    for (var damage in damages) {
-      if (damage.msg == 'Asymmetric flap extension') {
-        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
-      }
+    if (damages.last.msg == 'Asymmetric flap extension') {
+      await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
     }
   }
 
@@ -272,8 +268,7 @@ class HomeState extends ConsumerState<Home>
   }
 
   Future<void> receiveDiskValues() async {
-    final appSettingsNotifier = ref.read(provider.appSettingsProvider.notifier);
-    await appSettingsNotifier.load();
+    await ref.read(provider.appSettingsProvider.notifier).load();
   }
 
   @override
