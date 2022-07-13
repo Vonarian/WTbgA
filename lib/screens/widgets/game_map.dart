@@ -19,6 +19,18 @@ class GameMapState extends State<GameMap> {
   @override
   void initState() {
     super.initState();
+    if (mounted) {
+      image = Image.network(
+        'http://localhost:8111/map.img',
+        key: key,
+        errorBuilder: (context, e, st) {
+          return const Text('Error loading map');
+        },
+      );
+      _getSizes();
+      future = MapObj.mapObj();
+      setState(() {});
+    }
     Timer.periodic(const Duration(milliseconds: 1200), (timer) {
       if (mounted) {
         image = Image.network(
@@ -29,6 +41,7 @@ class GameMapState extends State<GameMap> {
           },
         );
         _getSizes();
+        future = MapObj.mapObj();
         setState(() {});
       }
     });
@@ -99,14 +112,16 @@ class GameMapState extends State<GameMap> {
             }
           }
           if (snapshot.hasError) {
-            return const Text('ERROR');
+            return const Text('');
           } else {
-            return const Text('LOADING');
+            return const Text('');
           }
         });
   }
 
   String assetIcon = '';
+
+  Future<List<MapObj>> future = MapObj.mapObj();
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +130,7 @@ class GameMapState extends State<GameMap> {
             children: [
               image,
               FutureBuilder<List<MapObj>>(
-                  future: MapObj.mapObj(),
+                  future: future,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       List<Widget> columnChildren = snapshot.data!.map((e) {
@@ -152,7 +167,7 @@ class GameMapState extends State<GameMap> {
                           myFuture = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
                           return imageBuilder(e);
                         } else {
-                          return const Text('NOPE');
+                          return const SizedBox();
                         }
                       }).toList();
 

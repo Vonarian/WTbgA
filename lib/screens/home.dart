@@ -758,8 +758,8 @@ class HomeState extends ConsumerState<Home>
                     }
                     return isNew ? const InfoBadge(source: Text('!')) : null;
                   },
-                  error: (e, st) {},
-                  loading: () {}),
+                  error: (e, st) => null,
+                  loading: () => null),
             ),
             if (ref.watch(provider.orgbClientProvider).notNull &&
                 ref.watch(provider.orgbControllersProvider).notNull &&
