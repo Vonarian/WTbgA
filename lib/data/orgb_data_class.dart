@@ -147,7 +147,6 @@ class OpenRGBSettings {
       });
       if (modeIndex != -1) {
         await client.setMode(i, modeIndex, color);
-        await client.updateLeds(i, data[i].colors.length, color);
       }
     }
   }

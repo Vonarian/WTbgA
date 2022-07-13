@@ -612,11 +612,6 @@ class HomeState extends ConsumerState<Home>
                               ),
                               duration: const Duration(seconds: 5));
                           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider.notifier).state;
-                          await OpenRGBSettings.setDeathEffect(client, data, [255, 255]);
-                          await settings.setAllOverHeat(client, data);
-                          await Future.delayed(const Duration(seconds: 1));
-                          await settings.setAllFire(client, data);
-                          await Future.delayed(const Duration(seconds: 1));
                           await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
                           await Future.delayed(const Duration(seconds: 3));
                           await OpenRGBSettings.setJoinBattleEffect(client, data, settings.loadingColor, times: 6);
