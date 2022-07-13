@@ -310,16 +310,10 @@ class HomeState extends ConsumerState<Home>
       await Future.delayed(const Duration(seconds: 50));
       subscriptionForPresence = startListening();
     });
-    const twoSec = Duration(milliseconds: 2000);
-    Timer.periodic(twoSec, (Timer t) async {
+    const oneSec = Duration(milliseconds: 999);
+    Timer.periodic(oneSec, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       await updateMsgId();
-    });
-    const Duration averageTimer = Duration(milliseconds: 1200);
-    Timer.periodic(averageTimer, (Timer t) async {
-      if (!mounted || isStopped) t.cancel();
-
-      // hostChecker();
     });
     idData.addListener(() async {
       if (lastId != idData.value) {
