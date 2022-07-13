@@ -61,6 +61,7 @@ dependencies:
   flutter_colorpicker: ^1.0.3
   color: 3.0.0
   file_picker: ^4.6.1
+  angles: ^2.1.1
 
 
 

@@ -5,6 +5,8 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:wtbgassistant/data_receivers/map.dart';
+import 'package:wtbgassistant/data_receivers/map_info.dart';
+import 'package:wtbgassistant/services/extensions.dart';
 
 class GameMap extends StatefulWidget {
   final bool inHangar;
@@ -21,11 +23,25 @@ class GameMapState extends State<GameMap> {
     super.initState();
     _getSizes();
     future = MapObj.mapObj();
-    Timer.periodic(const Duration(milliseconds: 1200), (timer) {
+    Timer.periodic(const Duration(milliseconds: 1200), (timer) async {
       if (mounted) {
         _getSizes();
         future = MapObj.mapObj();
+        List<MapObj> mapObjects = await future;
+        List<MapObj> enemyFighters = getEnemyFighters(mapObjects);
+        player = getPlayer(mapObjects);
+        MapInfo mapInfo = await MapInfo.getMapInfo();
+        for (MapObj enemyFighter in enemyFighters) {
+          //Check if enemy fighter is near player
+          if (enemyFighter.x != null && enemyFighter.y != null && player?.x != null && player?.y != null) {
+            final Coord coord = getObjectCoords(player!.x!, player!.y!, mapInfo.mapMax);
+            print(coord.bearing);
+            print(coord.lat);
+          }
+        }
         setState(() {});
+      } else {
+        timer.cancel();
       }
     });
   }
@@ -38,28 +54,33 @@ class GameMapState extends State<GameMap> {
     }
   }
 
+  List<MapObj> getEnemyFighters(List<MapObj> mapObjects) {
+    return mapObjects.where((MapObj mapObj) => mapObj.icon == 'Fighter').toList();
+  }
+
   MapObj getPlayer(List<MapObj> objects) {
     MapObj player = objects.firstWhere((MapObj obj) => obj.icon == 'Player');
     return player;
   }
 
+  MapObj? player;
+
+  final double earthRadiusKM = 6378.137;
+
   double widgetWidth = 0;
+
   double widgetHeight = 0;
   GlobalKey key = GlobalKey();
-
-  Image image = Image.network(
-    'http://localhost:8111/map.img',
-  );
+  final List<String> enemyHexColor = ['#f40C00', '#ff0D00', '#ff0000'];
 
   late Future<ui.Image> myFuture;
 
-  FutureBuilder imageBuilder(MapObj e) {
+  FutureBuilder<ui.Image> imageBuilder(MapObj e) {
     return FutureBuilder<ui.Image>(
         future: myFuture,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (e.type == 'aircraft') {
-              List<int>? colors = e.colors;
               return CustomPaint(
                   painter: ObjectPainter(
                 x: e.x!,
@@ -68,10 +89,9 @@ class GameMapState extends State<GameMap> {
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
-                colors: colors,
+                colorHex: e.color,
               ));
             } else if (e.type == 'ground_model') {
-              List<int>? colors = e.colors;
               return CustomPaint(
                   painter: ObjectPainter(
                 x: e.x!,
@@ -80,11 +100,9 @@ class GameMapState extends State<GameMap> {
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
-                colors: colors,
+                colorHex: e.color,
               ));
             } else if (e.type == 'airfield') {
-              List<int>? colors = e.colors;
-
               return CustomPaint(
                   painter: ObjectPainter(
                 x: e.sx!,
@@ -93,7 +111,7 @@ class GameMapState extends State<GameMap> {
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
-                colors: colors,
+                colorHex: e.color,
               ));
             } else {
               return const Text('NOPE');
@@ -199,13 +217,13 @@ class ObjectPainter extends CustomPainter {
   final double? width;
   final BuildContext context;
   final ui.Image image;
-  final List<int>? colors;
+  final String colorHex;
 
   @override
   Future<void> paint(Canvas canvas, Size size) async {
     var paint1 = Paint()..style = PaintingStyle.fill;
     paint1.colorFilter = ColorFilter.mode(
-      Color.fromARGB(255, colors![0], colors![1], colors![2]),
+      HexColor.fromHex(colorHex),
       BlendMode.srcATop,
     );
 
@@ -224,7 +242,7 @@ class ObjectPainter extends CustomPainter {
       required this.width,
       required this.height,
       required this.image,
-      required this.colors});
+      required this.colorHex});
 
   static Future<ui.Image> getUiImage(String imageAssetPath) async {
     final ByteData assetImageByteData = await rootBundle.load(imageAssetPath);
