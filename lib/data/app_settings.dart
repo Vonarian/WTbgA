@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:wtbgassistant/services/utility.dart';
 
 import '../main.dart';
 
@@ -11,6 +10,7 @@ class AppSettings {
   final OverHeatSetting overHeatWarning;
   final EngineSetting engineWarning;
   final OverGSetting overGWarning;
+  final PullUpSetting pullUpSetting;
   final bool fullNotif;
 
   AppSettings copyWith({
@@ -18,12 +18,14 @@ class AppSettings {
     EngineSetting? engineWarning,
     OverGSetting? overGWarning,
     bool? fullNotif,
+    PullUpSetting? pullUpSetting,
   }) {
     return AppSettings(
       overHeatWarning: overHeatWarning ?? this.overHeatWarning,
       engineWarning: engineWarning ?? this.engineWarning,
       overGWarning: overGWarning ?? this.overGWarning,
       fullNotif: fullNotif ?? this.fullNotif,
+      pullUpSetting: pullUpSetting ?? this.pullUpSetting,
     );
   }
 
@@ -32,6 +34,7 @@ class AppSettings {
       'overHeatWarning': overHeatWarning.toMap(),
       'engineWarning': engineWarning.toMap(),
       'overGWarning': overGWarning.toMap(),
+      'pullUpSetting': pullUpSetting.toMap(),
       'fullNotif': fullNotif,
     };
   }
@@ -41,6 +44,7 @@ class AppSettings {
       overHeatWarning: OverHeatSetting.fromMap(map['overHeatWarning']),
       engineWarning: EngineSetting.fromMap(map['engineWarning']),
       overGWarning: OverGSetting.fromMap(map['overGWarning']),
+      pullUpSetting: PullUpSetting.fromMap(map['pullUpSetting']),
       fullNotif: map['fullNotif'],
     );
   }
@@ -50,21 +54,14 @@ class AppSettings {
     required this.engineWarning,
     required this.overGWarning,
     required this.fullNotif,
+    required this.pullUpSetting,
   });
-
-  static Future<String> saveInDocs(String filePath) async {
-    final String docPath = await AppUtil.getAppDocsPath();
-    final Directory directory = Directory('$docPath\\Settings');
-    if (!directory.existsSync()) {
-      await directory.create();
-    }
-    final File file = File(filePath);
-    return (await file.copy(directory.path)).path;
-  }
 }
 
 final defaultBeepPath =
     p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\beep.wav']);
+final defaultPullUpPath =
+    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\pullup.mp3']);
 
 class SettingsNotifier extends StateNotifier<AppSettings> {
   SettingsNotifier()
@@ -72,6 +69,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
           overHeatWarning: OverHeatSetting(enabled: true, path: defaultBeepPath, volume: 0.22),
           engineWarning: EngineSetting(enabled: true, path: defaultBeepPath, volume: 0.22),
           overGWarning: OverGSetting(path: defaultBeepPath, enabled: true, volume: 0.22),
+          pullUpSetting: PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 0.22),
           fullNotif: true,
         ));
 
@@ -101,6 +99,10 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
 
   void setOverGWarning(String path, bool enabled, double volume) {
     state = state.copyWith(overGWarning: OverGSetting(path: path, enabled: enabled, volume: volume));
+  }
+
+  void setPullUpSetting(String path, bool enabled, double volume) {
+    state = state.copyWith(pullUpSetting: PullUpSetting(path: path, enabled: enabled, volume: volume));
   }
 }
 
@@ -224,9 +226,50 @@ class EngineSetting {
   }
 }
 
+class PullUpSetting {
+  final bool enabled;
+  final double volume;
+  final String path;
+
+  const PullUpSetting({
+    required this.enabled,
+    required this.volume,
+    required this.path,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'enabled': enabled,
+      'volume': volume,
+      'path': path,
+    };
+  }
+
+  factory PullUpSetting.fromMap(Map<String, dynamic> map) {
+    return PullUpSetting(
+      enabled: map['enabled'] as bool,
+      volume: map['volume'] as double,
+      path: map['path'] as String,
+    );
+  }
+
+  PullUpSetting copyWith({
+    bool? enabled,
+    double? volume,
+    String? path,
+  }) {
+    return PullUpSetting(
+      enabled: enabled ?? this.enabled,
+      volume: volume ?? this.volume,
+      path: path ?? this.path,
+    );
+  }
+}
+
 enum AppSettingsEnum {
   overHeatSetting,
   engineSetting,
   overGSetting,
+  pullUpSetting,
   defaultSetting,
 }

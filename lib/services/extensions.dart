@@ -1,17 +1,19 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
-extension HexColor on Color {
+import 'package:color/color.dart' as c;
+import 'package:fluent_ui/fluent_ui.dart' as f;
+
+extension HexColor on ui.Color {
   /// String is in the format "aabbcc" or "ffaabbcc" with an optional leading "#".
-  static Color fromHex(String hexString) {
+  static ui.Color fromHex(String hexString) {
     final buffer = StringBuffer();
     if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
     buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
+    return ui.Color(int.parse(buffer.toString(), radix: 16));
   }
 
   /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `false`).
-  String toHex({bool leadingHashSign = false}) =>
-      '${leadingHashSign ? '#' : ''}'
+  String toHex({bool leadingHashSign = false}) => '${leadingHashSign ? '#' : ''}'
       '${alpha.toRadixString(16).padLeft(2, '0')}'
       '${red.toRadixString(16).padLeft(2, '0')}'
       '${green.toRadixString(16).padLeft(2, '0')}'
@@ -20,4 +22,40 @@ extension HexColor on Color {
 
 extension IsNotNull on Object? {
   bool get notNull => this != null;
+}
+
+extension ToRGB on ui.Color {
+  c.Color toRGB() {
+    return c.Color.rgb(red, green, blue);
+  }
+}
+
+extension ColorFromMap on c.Color {
+  static c.Color fromMap(Map<String, dynamic> map) {
+    return c.Color.rgb(num.parse(map['r'].toString()), num.parse(map['g'].toString()), num.parse(map['b'].toString()));
+  }
+}
+
+extension ColorToMap on c.Color {
+  Map<String, num> toJson() {
+    final color = toRgbColor();
+    return {
+      'r': color.r,
+      'g': color.g,
+      'b': color.b,
+    };
+  }
+}
+
+extension ToString on c.Color {
+  String toStringHex() {
+    final stringColor = toHexColor().toString();
+    return stringColor;
+  }
+}
+
+extension FluentColortoRGB on f.Color {
+  c.Color fluentToRGB() {
+    return c.Color.rgb(red, green, blue);
+  }
 }

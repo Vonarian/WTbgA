@@ -4,7 +4,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:blinking_text/blinking_text.dart';
 import 'package:ffmpeg_cli/ffmpeg_cli.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:win_toast/win_toast.dart';
 import 'package:wtbgassistant/data/app_settings.dart';
+import 'package:wtbgassistant/screens/downloader.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
 import 'package:wtbgassistant/services/presence.dart';
@@ -139,6 +143,8 @@ class SettingsState extends ConsumerState<Settings> {
   Widget settings(BuildContext context) {
     final appSettings = ref.watch(provider.appSettingsProvider);
     final appSettingsNotifier = ref.read(provider.appSettingsProvider.notifier);
+    final firebaseVersion = ref.watch(provider.versionFBProvider);
+    final theme = FluentTheme.of(context);
     return CustomizedSettingsList(
         platform: DevicePlatform.web,
         brightness: Brightness.dark,
@@ -167,6 +173,98 @@ class SettingsState extends ConsumerState<Settings> {
                   appSettingsNotifier.save();
                 },
               ),
+              firebaseVersion.when(data: (data) {
+                int fbVersion = int.parse(data?.replaceAll('.', '') ?? '0000');
+                int currentVersion = int.parse(appVersion.replaceAll('.', ''));
+                final bool updateAvailable = fbVersion > currentVersion;
+                if (updateAvailable) {
+                  return SettingsTile(
+                    description: Text('v$data available'),
+                    title: BlinkText(
+                      'Download & Install Update',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                    leading: Icon(FluentIcons.update_restore, color: theme.accentColor),
+                    onPressed: (ctx) {
+                      Navigator.pushReplacement(context, FluentPageRoute(builder: (context) => const Downloader()));
+                    },
+                  );
+                } else {
+                  return SettingsTile(
+                    description: const Text('There is no update available'),
+                    title: const Text(
+                      'Download & Install Update',
+                      style: TextStyle(decoration: TextDecoration.lineThrough),
+                    ),
+                    leading: Icon(FluentIcons.update_restore, color: theme.accentColor),
+                    onPressed: (ctx) {
+                      showDialog(
+                          context: ctx,
+                          builder: (ctx) => ContentDialog(
+                                title: const Text('Update'),
+                                content: const Text('There is no update available at this time.'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text('OK'),
+                                    onPressed: () => Navigator.pop(ctx),
+                                  ),
+                                ],
+                              ));
+                    },
+                  );
+                }
+              }, error: (e, st) {
+                return SettingsTile(
+                  description: const Text('Error fetching version'),
+                  title: const Text(
+                    'Download & Install Update',
+                    style: TextStyle(decoration: TextDecoration.lineThrough),
+                  ),
+                  leading: Icon(FluentIcons.update_restore, color: theme.accentColor),
+                  onPressed: (ctx) {
+                    showDialog(
+                        context: ctx,
+                        builder: (ctx) => ContentDialog(
+                              title: const Text('Update'),
+                              content: const Text('Error fetching version. Please try again later.'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () => Navigator.pop(ctx),
+                                ),
+                              ],
+                            ));
+                  },
+                );
+              }, loading: () {
+                return SettingsTile(
+                  description: const Text('Fetching version...'),
+                  title: const Text(
+                    'Download & Install Update',
+                    style: TextStyle(decoration: TextDecoration.lineThrough),
+                  ),
+                  leading: Icon(FluentIcons.update_restore, color: theme.accentColor),
+                  onPressed: (ctx) {
+                    showDialog(
+                        context: ctx,
+                        builder: (ctx) => ContentDialog(
+                              title: const Text('Update'),
+                              content: const Text('Fetching version...'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () => Navigator.pop(ctx),
+                                ),
+                              ],
+                            ));
+                  },
+                );
+              }),
               SettingsTile(
                 title: const Text('Start Streaming Mode'),
                 onPressed: (ctx) async {
@@ -290,9 +388,20 @@ class SettingsState extends ConsumerState<Settings> {
                     .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(enabled: value)));
                 appSettingsNotifier.save();
               },
-              title: const Text('Engine sound'),
-              description: const Text('Click to change file path'),
+              title: const Text('Engine Sound'),
+              description: const Text('Click to change file'),
               leading: SizedBox(height: 55, child: _buildSliderEngine(appSettings)),
+              onPressed: (context) async {
+                final file = await FilePicker.platform
+                    .pickFiles(dialogTitle: 'Select audio file for engine', type: FileType.audio);
+                if (file != null) {
+                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+
+                  appSettingsNotifier.update(
+                      appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(path: docFilePath)));
+                  appSettingsNotifier.save();
+                }
+              },
             ),
             SettingsTile.switchTile(
               initialValue: appSettings.overHeatWarning.enabled,
@@ -301,9 +410,20 @@ class SettingsState extends ConsumerState<Settings> {
                     appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(enabled: value)));
                 appSettingsNotifier.save();
               },
-              title: const Text('Overheat sound'),
-              description: const Text('Click to change file path'),
+              title: const Text('Overheat Sound'),
+              description: const Text('Click to change file'),
               leading: SizedBox(height: 55, child: _buildSliderOverHeat(appSettings)),
+              onPressed: (context) async {
+                final file = await FilePicker.platform
+                    .pickFiles(dialogTitle: 'Select audio file for overheat', type: FileType.audio);
+                if (file != null) {
+                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+
+                  appSettingsNotifier.update(
+                      appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(path: docFilePath)));
+                  appSettingsNotifier.save();
+                }
+              },
             ),
             SettingsTile.switchTile(
               initialValue: appSettings.overGWarning.enabled,
@@ -312,9 +432,42 @@ class SettingsState extends ConsumerState<Settings> {
                     .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(enabled: value)));
                 appSettingsNotifier.save();
               },
-              title: const Text('OverG sound'),
-              description: const Text('Click to change file path'),
+              title: const Text('OverG Sound'),
+              description: const Text('Click to change file'),
               leading: SizedBox(height: 55, child: _buildSliderOverG(appSettings)),
+              onPressed: (context) async {
+                final file = await FilePicker.platform
+                    .pickFiles(dialogTitle: 'Select audio file for high G-Load', type: FileType.audio);
+                if (file != null) {
+                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+
+                  appSettingsNotifier
+                      .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(path: docFilePath)));
+                  appSettingsNotifier.save();
+                }
+              },
+            ),
+            SettingsTile.switchTile(
+              initialValue: appSettings.pullUpSetting.enabled,
+              onToggle: (value) async {
+                appSettingsNotifier
+                    .update(appSettings.copyWith(pullUpSetting: appSettings.pullUpSetting.copyWith(enabled: value)));
+                appSettingsNotifier.save();
+              },
+              title: const Text('Pull up Sound'),
+              description: const Text('Click to change file'),
+              leading: SizedBox(height: 55, child: _buildSliderPullUP(appSettings)),
+              onPressed: (context) async {
+                final file = await FilePicker.platform
+                    .pickFiles(dialogTitle: 'Select audio file for pull up', type: FileType.audio);
+                if (file != null) {
+                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+
+                  appSettingsNotifier.update(
+                      appSettings.copyWith(pullUpSetting: appSettings.pullUpSetting.copyWith(path: docFilePath)));
+                  appSettingsNotifier.save();
+                }
+              },
             ),
             SettingsTile.switchTile(
               initialValue: ref.watch(provider.needPremiumProvider),
@@ -323,7 +476,7 @@ class SettingsState extends ConsumerState<Settings> {
                 await PresenceService().needPremium((await deviceInfo.windowsInfo).computerName, value);
                 await prefs.setBool('needPremium', value);
               },
-              title: const Text('Please indicate if you need premium features'),
+              title: const Text('Gib Premium!'),
               description: const Text(
                   'This is a way to notify me (Vonarian) if you need premium features and you can\'t get one :)'),
             ),
@@ -332,50 +485,118 @@ class SettingsState extends ConsumerState<Settings> {
   }
 
   Widget _buildSliderEngine(AppSettings appSettings) {
-    return Slider(
-      value: appSettings.engineWarning.volume,
-      min: 0,
-      max: 100,
-      divisions: 100,
-      label: '${appSettings.engineWarning.volume.toInt()} %',
-      onChanged: (value) {
-        ref
-            .read(provider.appSettingsProvider.notifier)
-            .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(volume: value)));
-      },
-      vertical: true,
+    return Row(
+      children: [
+        Slider(
+          value: appSettings.engineWarning.volume,
+          min: 0,
+          max: 100,
+          divisions: 100,
+          label: '${appSettings.engineWarning.volume.toInt()} %',
+          onChanged: (value) {
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(volume: value)));
+            ref.read(provider.appSettingsProvider.notifier).save();
+          },
+          vertical: true,
+        ),
+        const SizedBox(width: 10),
+        IconButton(
+          icon: const Icon(FluentIcons.play),
+          onPressed: () async {
+            await audio1.play(DeviceFileSource(appSettings.engineWarning.path),
+                volume: appSettings.engineWarning.volume / 100, mode: PlayerMode.lowLatency);
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildSliderOverHeat(AppSettings appSettings) {
-    return Slider(
-      value: appSettings.overHeatWarning.volume,
-      min: 0,
-      max: 100,
-      divisions: 100,
-      label: '${appSettings.overHeatWarning.volume.toInt()} %',
-      onChanged: (value) {
-        ref
-            .read(provider.appSettingsProvider.notifier)
-            .update(appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(volume: value)));
-      },
-      vertical: true,
+    return Row(
+      children: [
+        Slider(
+          value: appSettings.overHeatWarning.volume,
+          min: 0,
+          max: 100,
+          divisions: 100,
+          label: '${appSettings.overHeatWarning.volume.toInt()} %',
+          onChanged: (value) {
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .update(appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(volume: value)));
+            ref.read(provider.appSettingsProvider.notifier).save();
+          },
+          vertical: true,
+        ),
+        const SizedBox(width: 10),
+        IconButton(
+          icon: const Icon(FluentIcons.play),
+          onPressed: () async {
+            await audio1.play(DeviceFileSource(appSettings.overHeatWarning.path),
+                volume: appSettings.overHeatWarning.volume / 100, mode: PlayerMode.lowLatency);
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildSliderOverG(AppSettings appSettings) {
-    return Slider(
-      value: appSettings.overGWarning.volume,
-      min: 0,
-      max: 100,
-      divisions: 100,
-      label: '${appSettings.overGWarning.volume.toInt()} %',
-      onChanged: (value) {
-        ref
-            .read(provider.appSettingsProvider.notifier)
-            .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(volume: value)));
-      },
-      vertical: true,
+    return Row(
+      children: [
+        Slider(
+          value: appSettings.overGWarning.volume,
+          min: 0,
+          max: 100,
+          divisions: 100,
+          label: '${appSettings.overGWarning.volume.toInt()} %',
+          onChanged: (value) {
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(volume: value)));
+            ref.read(provider.appSettingsProvider.notifier).save();
+          },
+          vertical: true,
+        ),
+        const SizedBox(width: 10),
+        IconButton(
+          icon: const Icon(FluentIcons.play),
+          onPressed: () async {
+            await audio1.play(DeviceFileSource(appSettings.overGWarning.path),
+                volume: appSettings.overGWarning.volume / 100, mode: PlayerMode.lowLatency);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSliderPullUP(AppSettings appSettings) {
+    return Row(
+      children: [
+        Slider(
+          value: appSettings.pullUpSetting.volume,
+          min: 0,
+          max: 100,
+          divisions: 100,
+          label: '${appSettings.pullUpSetting.volume.toInt()} %',
+          onChanged: (value) {
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .update(appSettings.copyWith(pullUpSetting: appSettings.pullUpSetting.copyWith(volume: value)));
+            ref.read(provider.appSettingsProvider.notifier).save();
+          },
+          vertical: true,
+        ),
+        const SizedBox(width: 10),
+        IconButton(
+          icon: const Icon(FluentIcons.play),
+          onPressed: () async {
+            await audio1.play(DeviceFileSource(appSettings.pullUpSetting.path),
+                volume: appSettings.pullUpSetting.volume / 100, mode: PlayerMode.lowLatency);
+          },
+        ),
+      ],
     );
   }
 

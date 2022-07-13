@@ -45,8 +45,8 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!mounted) return;
       await Future.delayed(const Duration(seconds: 2));
-      ref.read(provider.rgbSettingProvider.notifier).state = fromDisk;
-      if (fromDisk.autoStart) {
+      ref.read(provider.rgbSettingProvider.notifier).state = fromDisk ?? const OpenRGBSettings();
+      if (ref.read(provider.rgbSettingProvider.notifier).state.autoStart) {
         ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
         if (ref.read(provider.orgbClientProvider.notifier).state != null) {
           ref.read(provider.orgbControllersProvider.notifier).state =

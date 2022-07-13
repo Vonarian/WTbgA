@@ -6,6 +6,7 @@ import 'package:settings_ui/settings_ui.dart';
 import 'package:wtbgassistant/data/orgb_data_class.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
+import 'package:wtbgassistant/services/extensions.dart';
 
 class RGBSettings extends ConsumerStatefulWidget {
   const RGBSettings({Key? key}) : super(key: key);

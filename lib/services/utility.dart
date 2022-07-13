@@ -124,4 +124,14 @@ class AppUtil {
       yield (await name).trim().replaceAll('\n', '');
     }
   }
+
+  static Future<String> saveInDocs(String filePath) async {
+    final String docPath = await AppUtil.getAppDocsPath();
+    final Directory directory = Directory('$docPath\\Settings\\');
+    if (!directory.existsSync()) {
+      await directory.create();
+    }
+    final File file = File(filePath);
+    return (await file.copy('${directory.path}\\${p.basename(filePath)}')).path;
+  }
 }

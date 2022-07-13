@@ -18,7 +18,6 @@ import 'package:wtbgassistant/screens/widgets/top_widget.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
 import 'data/firebase.dart';
-import 'data/orgb_data_class.dart';
 
 late final FirebaseApp? app;
 late final SharedPreferences prefs;
@@ -50,8 +49,8 @@ Future<void> main() async {
   });
   appVersion = await File(AppUtil.versionPath).readAsString();
   prefs = await SharedPreferences.getInstance();
-  OpenRGBSettings settings = await OpenRGBSettings.loadFromDisc();
-  if (settings.autoStart) {
+  bool? autoStart = prefs.get('autoStart') as bool?;
+  if (autoStart ?? false) {
     String exePath = await AppUtil.getOpenRGBExecutablePath(null, false);
     Process.run(exePath, ['--server', '--noautoconnect']);
   }

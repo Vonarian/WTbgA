@@ -52,6 +52,7 @@ class HomeState extends ConsumerState<Home>
     if (!isInGame.value) return;
 
     if (!mounted) return;
+    if (!ref.read(provider.premiumUserProvider)) return;
     if (ias != null) {
       if (ias! >= ref.read(provider.gearLimitProvider.notifier).state && gear! > 30) {
         await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
@@ -117,7 +118,6 @@ class HomeState extends ConsumerState<Home>
         await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
       }
     }
-
     if (appSettings.engineWarning.enabled && oil != 15 && damages.last.msg == 'Engine died: overheating') {
       tripleWarning(AppSettingsEnum.engineSetting);
     }
@@ -191,6 +191,7 @@ class HomeState extends ConsumerState<Home>
   Future<void> flapChecker() async {
     if (!isInGame.value) return;
     if (damages.isEmpty) return;
+    if (!ref.read(provider.premiumUserProvider)) return;
     if (damages.last.msg == 'Asymmetric flap extension') {
       await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
     }
@@ -201,9 +202,8 @@ class HomeState extends ConsumerState<Home>
     if (aoa == null || gear == null || vertical == null || flap == null) {
       return false;
     }
-    if (gear! > 0) {
-      return false;
-    }
+    if (gear! > 0) return false;
+
     if (vertical! >= 10 && flap! <= 10 && aoa! >= critAoa) {
       return true;
     } else if (vertical! <= -10 && flap! <= 10 && aoa! <= critAoa) {
@@ -223,45 +223,45 @@ class HomeState extends ConsumerState<Home>
     if (appEnum == AppSettingsEnum.engineSetting) {
       if (times == 0) {
         await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.engineWarning.volume / 100, mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 1) {
         await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.engineWarning.volume / 100, mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 2) {
         await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.engineWarning.volume / 100, mode: PlayerMode.lowLatency);
         times = 0;
       }
     }
     if (appEnum == AppSettingsEnum.overHeatSetting) {
       if (times == 0) {
         await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.overHeatWarning.volume / 100, mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 1) {
         await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.overHeatWarning.volume / 100, mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 2) {
         await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.overHeatWarning.volume / 100, mode: PlayerMode.lowLatency);
         times = 0;
       }
     }
     if (appEnum == AppSettingsEnum.overGSetting) {
       if (times == 0) {
         await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.overGWarning.volume / 100, mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 1) {
         await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.overGWarning.volume / 100, mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 2) {
         await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume, mode: PlayerMode.lowLatency);
+            volume: appSetting.overGWarning.volume / 100, mode: PlayerMode.lowLatency);
         times = 0;
       }
     }
@@ -269,6 +269,17 @@ class HomeState extends ConsumerState<Home>
 
   Future<void> receiveDiskValues() async {
     await ref.read(provider.appSettingsProvider.notifier).load();
+  }
+
+  bool pullUp() {
+    if (!isInGame.value) return false;
+    if (aoa == null || gear == null || vertical == null || flap == null || ias == null || altitude == null) {
+      return false;
+    }
+    if (vertical! * -1 <= -25 && ias! >= 550 && gear! == 0 && altitude! <= 300) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -284,8 +295,8 @@ class HomeState extends ConsumerState<Home>
       if (!mounted) return;
       final exePath = await AppUtil.getOpenRGBExecutablePath(context, false);
       await Process.run(exePath, ['--server', '--noautoconnect']);
-      ref.read(provider.rgbSettingProvider.notifier).state = fromDisk;
-      if (fromDisk.autoStart) {
+      ref.read(provider.rgbSettingProvider.notifier).state = fromDisk ?? const OpenRGBSettings();
+      if (ref.read(provider.rgbSettingProvider).autoStart) {
         ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
         if (ref.read(provider.orgbClientProvider.notifier).state != null) {
           ref.read(provider.orgbControllersProvider.notifier).state =
@@ -347,7 +358,13 @@ class HomeState extends ConsumerState<Home>
       if (!mounted || isStopped) t.cancel();
       if (!appSettings.fullNotif) return;
       userRedLineGear();
+      if (pullUp() && ref.read(provider.premiumUserProvider)) {
+        final setting = ref.read(provider.appSettingsProvider).pullUpSetting;
+        if (!setting.enabled) return;
+        await audio2.play(DeviceFileSource(setting.path), volume: setting.volume / 100, mode: PlayerMode.lowLatency);
+      }
       checkCritAoa();
+      if (!ref.read(provider.premiumUserProvider)) return;
       if (loadChecker()) {
         await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       }
@@ -538,7 +555,8 @@ class HomeState extends ConsumerState<Home>
                   ),
                   fireBaseVersion.when(data: (data) {
                     bool isNew = false;
-                    if (int.parse(data.replaceAll('.', '')) > int.parse(appVersion.replaceAll('.', ''))) {
+                    if (data.hasValue &&
+                        int.parse(data!.replaceAll('.', '')) > int.parse(appVersion.replaceAll('.', ''))) {
                       isNew = true;
                     }
                     if (isNew) {
@@ -734,7 +752,21 @@ class HomeState extends ConsumerState<Home>
           items: [
             PaneItem(icon: const Icon(FluentIcons.home), title: const Text('Home')),
             PaneItem(icon: const Icon(FluentIcons.nav2_d_map_view), title: const Text('Game Map')),
-            PaneItem(icon: const Icon(FluentIcons.settings), title: const Text('Settings')),
+            PaneItem(
+              icon: const Icon(FluentIcons.settings),
+              title: const Text('Settings'),
+              infoBadge: fireBaseVersion.when(
+                  data: (data) {
+                    bool isNew = false;
+                    if (data.hasValue &&
+                        int.parse(data!.replaceAll('.', '')) > int.parse(appVersion.replaceAll('.', ''))) {
+                      isNew = true;
+                    }
+                    return isNew ? const InfoBadge(source: Text('!')) : null;
+                  },
+                  error: (e, st) {},
+                  loading: () {}),
+            ),
             if (ref.watch(provider.orgbClientProvider).notNull &&
                 ref.watch(provider.orgbControllersProvider).notNull &&
                 ref.watch(provider.orgbControllersProvider).isNotEmpty)

@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui' as ui;
 
 import 'package:color/color.dart' as c;
-import 'package:fluent_ui/fluent_ui.dart' as f;
 import 'package:openrgb/openrgb.dart';
 import 'package:wtbgassistant/main.dart';
+import 'package:wtbgassistant/services/extensions.dart';
 
 class OpenRGBSettings {
   final OverHeatSettings overHeat;
@@ -29,15 +28,15 @@ class OpenRGBSettings {
         'openrgb',
         jsonEncode(toMap(), toEncodable: (Object? value) {
           if (value is c.Color) {
-            return value.toStringHex();
+            return value.toJson();
           } else {
             return value;
           }
         }));
   }
 
-  static Future<OpenRGBSettings> loadFromDisc() async {
-    final Map<String, dynamic>? map = json.decode(prefs.getString('openrgb') ?? '{}');
+  static Future<OpenRGBSettings?> loadFromDisc() async {
+    final Map<String, dynamic>? map = jsonDecode(prefs.getString('openrgb') ?? '{}');
     if (map == null || map.isEmpty) {
       return const OpenRGBSettings();
     }
@@ -66,7 +65,7 @@ class OpenRGBSettings {
     return {
       'overHeat': overHeat.toMap(),
       'fireSettings': fireSettings.toMap(),
-      'loadingColor': loadingColor.toStringHex(),
+      'loadingColor': loadingColor.toJson(),
       'flashTimes': flashTimes,
       'autoStart': autoStart,
       'delayBetweenFlashes': delayBetweenFlashes,
@@ -74,10 +73,11 @@ class OpenRGBSettings {
   }
 
   factory OpenRGBSettings.fromMap(Map<String, dynamic> map) {
+    print(map);
     return OpenRGBSettings(
-      overHeat: OverHeatSettings.fromMap(map['overHeat'] as Map<String, dynamic>),
-      fireSettings: FireSettings.fromMap(map['fireSettings'] as Map<String, dynamic>),
-      loadingColor: c.Color.hex(map['loadingColor']).toRgbColor(),
+      overHeat: OverHeatSettings.fromMap(map['overHeat']),
+      fireSettings: FireSettings.fromMap(map['fireSettings']),
+      loadingColor: ColorFromMap.fromMap(map['loadingColor']),
       flashTimes: map['flashTimes'] ?? 4,
       autoStart: map['autoStart'] ?? true,
       delayBetweenFlashes: map['delayBetweenFlashes'] ?? 350,
@@ -214,13 +214,13 @@ class OverHeatSettings {
 
   Map<String, dynamic> toMap() {
     return {
-      'color': color.toStringHex(),
+      'color': color.toJson(),
     };
   }
 
   factory OverHeatSettings.fromMap(Map<String, dynamic> map) {
     return OverHeatSettings(
-      color: c.Color.hex(map['color'] as String).toRgbColor(),
+      color: ColorFromMap.fromMap(map),
     );
   }
 
@@ -245,13 +245,13 @@ class FireSettings {
 
   Map<String, dynamic> toMap() {
     return {
-      'color': color.toStringHex(),
+      'color': color.toJson(),
     };
   }
 
   factory FireSettings.fromMap(Map<String, dynamic> map) {
     return FireSettings(
-      color: c.Color.hex(map['color'] as String).toRgbColor(),
+      color: ColorFromMap.fromMap(map),
     );
   }
 
@@ -266,42 +266,6 @@ class FireSettings {
     return FireSettings(
       color: color ?? this.color,
     );
-  }
-}
-
-extension ToRGB on ui.Color {
-  c.Color toRGB() {
-    return c.Color.rgb(red, green, blue);
-  }
-}
-
-extension ColorFromMap on c.Color {
-  static c.Color fromMap(Map<String, dynamic> map) {
-    return c.Color.rgb(map['r'], map['g'], map['b']).toRgbColor();
-  }
-}
-
-extension ToMap on c.Color {
-  Map<String, num> toJson() {
-    final rgbColor = toHexColor();
-    return {
-      'r': rgbColor.r,
-      'g': rgbColor.g,
-      'b': rgbColor.b,
-    };
-  }
-}
-
-extension ToString on c.Color {
-  String toStringHex() {
-    final stringColor = toHexColor().toString();
-    return stringColor;
-  }
-}
-
-extension FluentColortoRGB on f.Color {
-  c.Color fluentToRGB() {
-    return c.Color.rgb(red, green, blue);
   }
 }
 

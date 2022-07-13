@@ -20,10 +20,10 @@ class MyProvider {
       return ip;
     },
   );
-  final versionFBProvider = StreamProvider<String>(
+  final versionFBProvider = StreamProvider<String?>(
     (ref) async* {
       await for (Event e in PresenceService().getVersion()) {
-        yield e.snapshot.value.toString();
+        yield e.snapshot.value as String?;
       }
     },
   );
