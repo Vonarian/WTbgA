@@ -32,7 +32,7 @@ extension ToRGB on ui.Color {
 
 extension ColorFromMap on c.Color {
   static c.Color fromMap(Map<String, dynamic> map) {
-    return c.Color.rgb(num.parse(map['r'].toString()), num.parse(map['g'].toString()), num.parse(map['b'].toString()));
+    return c.Color.rgb(map['r'], map['g'], map['b']);
   }
 }
 

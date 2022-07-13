@@ -73,7 +73,6 @@ class OpenRGBSettings {
   }
 
   factory OpenRGBSettings.fromMap(Map<String, dynamic> map) {
-    print(map);
     return OpenRGBSettings(
       overHeat: OverHeatSettings.fromMap(map['overHeat']),
       fireSettings: FireSettings.fromMap(map['fireSettings']),
@@ -220,7 +219,7 @@ class OverHeatSettings {
 
   factory OverHeatSettings.fromMap(Map<String, dynamic> map) {
     return OverHeatSettings(
-      color: ColorFromMap.fromMap(map),
+      color: ColorFromMap.fromMap(map['color']),
     );
   }
 
@@ -251,7 +250,7 @@ class FireSettings {
 
   factory FireSettings.fromMap(Map<String, dynamic> map) {
     return FireSettings(
-      color: ColorFromMap.fromMap(map),
+      color: ColorFromMap.fromMap(map['color']),
     );
   }
 
