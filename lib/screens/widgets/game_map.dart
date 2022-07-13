@@ -19,27 +19,10 @@ class GameMapState extends State<GameMap> {
   @override
   void initState() {
     super.initState();
-    if (mounted) {
-      image = Image.network(
-        'http://localhost:8111/map.img',
-        key: key,
-        errorBuilder: (context, e, st) {
-          return const Text('Error loading map');
-        },
-      );
-      _getSizes();
-      future = MapObj.mapObj();
-      setState(() {});
-    }
+    _getSizes();
+    future = MapObj.mapObj();
     Timer.periodic(const Duration(milliseconds: 1200), (timer) {
       if (mounted) {
-        image = Image.network(
-          'http://localhost:8111/map.img',
-          key: key,
-          errorBuilder: (context, e, st) {
-            return const Text('Error loading map');
-          },
-        );
         _getSizes();
         future = MapObj.mapObj();
         setState(() {});
@@ -47,12 +30,17 @@ class GameMapState extends State<GameMap> {
     });
   }
 
-  _getSizes() {
+  void _getSizes() {
     imageCache.clear();
     if (key.currentContext != null) {
       widgetHeight = key.currentContext!.size!.height;
       widgetWidth = key.currentContext!.size!.width;
     }
+  }
+
+  MapObj getPlayer(List<MapObj> objects) {
+    MapObj player = objects.firstWhere((MapObj obj) => obj.icon == 'Player');
+    return player;
   }
 
   double widgetWidth = 0;
@@ -128,7 +116,13 @@ class GameMapState extends State<GameMap> {
     return !widget.inHangar
         ? Stack(
             children: [
-              image,
+              Image.network(
+                'http://localhost:8111/map.img',
+                key: key,
+                errorBuilder: (context, e, st) {
+                  return const Text('Error loading map');
+                },
+              ),
               FutureBuilder<List<MapObj>>(
                   future: future,
                   builder: (context, snapshot) {

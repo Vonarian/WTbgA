@@ -143,6 +143,8 @@ class OpenRGBSettings {
             modeName.contains('strob') ||
             modeName.contains('fade') ||
             modeName.contains('blink') ||
+            modeName.contains('puls') ||
+            modeName.contains('wave') ||
             modeName.contains('flash');
       });
       if (modeIndex != -1) {
