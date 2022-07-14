@@ -18,6 +18,7 @@ import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data/app_settings.dart';
 import 'package:wtbgassistant/data/orgb_data_class.dart';
+import 'package:wtbgassistant/screens/widgets/chat.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 import 'package:wtbgassistant/screens/widgets/rgb_settings.dart';
@@ -54,9 +55,7 @@ class HomeState extends ConsumerState<Home>
     if (!mounted) return;
     if (!ref.read(provider.premiumUserProvider)) return;
     if (ias != null) {
-      if (ias! >= ref
-          .read(provider.gearLimitProvider.notifier)
-          .state && gear! > 30) {
+      if (ias! >= ref.read(provider.gearLimitProvider.notifier).state && gear! > 30) {
         await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       }
     }
@@ -297,22 +296,12 @@ class HomeState extends ConsumerState<Home>
       if (!mounted) return;
       final exePath = await AppUtil.getOpenRGBExecutablePath(context, false);
       await Process.run(exePath, ['--server', '--noautoconnect']);
-      ref
-          .read(provider.rgbSettingProvider.notifier)
-          .state = fromDisk ?? const OpenRGBSettings();
-      if (ref
-          .read(provider.rgbSettingProvider)
-          .autoStart) {
-        ref
-            .read(provider.orgbClientProvider.notifier)
-            .state = await OpenRGBClient.connect();
-        if (ref
-            .read(provider.orgbClientProvider.notifier)
-            .state != null) {
-          ref
-              .read(provider.orgbControllersProvider.notifier)
-              .state =
-          await ref.read(provider.orgbClientProvider)!.getAllControllers();
+      ref.read(provider.rgbSettingProvider.notifier).state = fromDisk ?? const OpenRGBSettings();
+      if (ref.read(provider.rgbSettingProvider).autoStart) {
+        ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
+        if (ref.read(provider.orgbClientProvider.notifier).state != null) {
+          ref.read(provider.orgbControllersProvider.notifier).state =
+              await ref.read(provider.orgbClientProvider)!.getAllControllers();
         }
       }
     });
@@ -365,9 +354,7 @@ class HomeState extends ConsumerState<Home>
       if (!appSettings.fullNotif) return;
       userRedLineGear();
       if (pullUp() && ref.read(provider.premiumUserProvider)) {
-        final setting = ref
-            .read(provider.appSettingsProvider)
-            .pullUpSetting;
+        final setting = ref.read(provider.appSettingsProvider).pullUpSetting;
         if (!setting.enabled) return;
         await audio2.play(DeviceFileSource(setting.path), volume: setting.volume / 100, mode: PlayerMode.lowLatency);
       }
@@ -381,9 +368,7 @@ class HomeState extends ConsumerState<Home>
       csvNames = await File(namesPath).readAsString();
 
       Map<String, String> namesMap = convertNamesToMap(csvNames);
-      fmData = await FmData.setObject(namesMap[ref
-          .read(provider.vehicleNameProvider.state)
-          .state] ?? '');
+      fmData = await FmData.setObject(namesMap[ref.read(provider.vehicleNameProvider.state).state] ?? '');
     });
   }
 
@@ -403,10 +388,7 @@ class HomeState extends ConsumerState<Home>
   StreamSubscription? startListening() {
     FirebaseDatabase db = FirebaseDatabase(app: app, databaseURL: dataBaseUrl);
     db.goOnline();
-    return db
-        .reference()
-        .onValue
-        .listen((event) async {
+    return db.reference().onValue.listen((event) async {
       final data = event.snapshot.value;
       if (data != null &&
           data['title'] != null &&
@@ -468,9 +450,7 @@ class HomeState extends ConsumerState<Home>
         Map<String, String> namesMap = convertNamesToMap(csvNames);
         fmData = await FmData.setObject(namesMap[next] ?? '');
         if (fmData != null) {
-          ref
-              .read(provider.gearLimitProvider.notifier)
-              .state = fmData!.critGearSpd;
+          ref.read(provider.gearLimitProvider.notifier).state = fmData!.critGearSpd;
         }
       }
     });
@@ -524,7 +504,7 @@ class HomeState extends ConsumerState<Home>
   List<Damage> damages = [];
   String csvNames = '';
   String namesPath =
-  p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_names_db.csv']);
+      p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_names_db.csv']);
 
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
@@ -576,12 +556,10 @@ class HomeState extends ConsumerState<Home>
                     }
                     if (isNew) {
                       return HoverButton(
-                        builder: (context, set) =>
-                            Text(
-                              '$data available',
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
-                            ),
+                        builder: (context, set) => Text(
+                          '$data available',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
+                        ),
                       );
                     } else {
                       return Text(
@@ -616,9 +594,7 @@ class HomeState extends ConsumerState<Home>
           actions: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              if (ref
-                  .watch(provider.orgbClientProvider)
-                  .hasValue)
+              if (ref.watch(provider.orgbClientProvider).hasValue)
                 IconButton(
                     icon: const Icon(
                       FluentIcons.test_add,
@@ -636,9 +612,7 @@ class HomeState extends ConsumerState<Home>
                                 extended: true,
                               ),
                               duration: const Duration(seconds: 5));
-                          OpenRGBSettings settings = ref
-                              .read(provider.rgbSettingProvider.notifier)
-                              .state;
+                          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider.notifier).state;
                           await OpenRGBSettings.setDeathEffect(client, data, [255, 255]);
                           await settings.setAllOverHeat(client, data);
                           await Future.delayed(const Duration(seconds: 1));
@@ -678,31 +652,20 @@ class HomeState extends ConsumerState<Home>
                               onPressed: () async {
                                 await ref.read(provider.orgbClientProvider)?.disconnect();
                                 await Process.run('taskkill', ['/IM', 'OpenRGB.exe']);
-                                ref
-                                    .read(provider.orgbClientProvider.notifier)
-                                    .state = null;
+                                ref.read(provider.orgbClientProvider.notifier).state = null;
                                 if (!mounted) return;
                                 Navigator.pop(context);
                               },
                             ),
                             TextButton(
                               child: Text(
-                                  'Auto start: ${ref
-                                      .watch(provider.rgbSettingProvider)
-                                      .autoStart ? 'On' : 'Off'}'),
+                                  'Auto start: ${ref.watch(provider.rgbSettingProvider).autoStart ? 'On' : 'Off'}'),
                               onPressed: () async {
-                                ref
-                                    .read(provider.rgbSettingProvider.notifier)
-                                    .state = ref
+                                ref.read(provider.rgbSettingProvider.notifier).state = ref
                                     .read(provider.rgbSettingProvider)
-                                    .copyWith(autoStart: !ref
-                                    .read(provider.rgbSettingProvider)
-                                    .autoStart);
+                                    .copyWith(autoStart: !ref.read(provider.rgbSettingProvider).autoStart);
                                 setState(() {});
-                                await ref
-                                    .read(provider.rgbSettingProvider.notifier)
-                                    .state
-                                    .save();
+                                await ref.read(provider.rgbSettingProvider.notifier).state.save();
                               },
                             ),
                             TextButton(
@@ -717,17 +680,10 @@ class HomeState extends ConsumerState<Home>
                                     message: 'Starting...');
                                 if (!mounted) return;
                                 try {
-                                  ref
-                                      .read(provider.orgbClientProvider.notifier)
-                                      .state = await showLoading(
+                                  ref.read(provider.orgbClientProvider.notifier).state = await showLoading(
                                       context: context, future: OpenRGBClient.connect(), message: 'Connecting...');
-                                  ref
-                                      .read(provider.orgbControllersProvider.notifier)
-                                      .state =
-                                  await ref
-                                      .read(provider.orgbClientProvider.notifier)
-                                      .state!
-                                      .getAllControllers();
+                                  ref.read(provider.orgbControllersProvider.notifier).state =
+                                      await ref.read(provider.orgbClientProvider.notifier).state!.getAllControllers();
                                   await showLoading(
                                       context: context,
                                       future: Future.delayed(const Duration(milliseconds: 600)),
@@ -791,6 +747,7 @@ class HomeState extends ConsumerState<Home>
           items: [
             PaneItem(icon: const Icon(FluentIcons.home), title: const Text('Home')),
             PaneItem(icon: const Icon(FluentIcons.nav2_d_map_view), title: const Text('Game Map')),
+            PaneItem(icon: const Icon(FluentIcons.chat), title: const Text('Game Chat')),
             PaneItem(
               icon: const Icon(FluentIcons.settings),
               title: const Text('Settings'),
@@ -806,15 +763,9 @@ class HomeState extends ConsumerState<Home>
                   error: (e, st) => null,
                   loading: () => null),
             ),
-            if (ref
-                .watch(provider.orgbClientProvider)
-                .notNull &&
-                ref
-                    .watch(provider.orgbControllersProvider)
-                    .notNull &&
-                ref
-                    .watch(provider.orgbControllersProvider)
-                    .isNotEmpty)
+            if (ref.watch(provider.orgbClientProvider).notNull &&
+                ref.watch(provider.orgbControllersProvider).notNull &&
+                ref.watch(provider.orgbControllersProvider).isNotEmpty)
               PaneItem(
                   icon: Icon(
                     FluentIcons.settings,
@@ -827,276 +778,265 @@ class HomeState extends ConsumerState<Home>
         children: [
           ScaffoldPage(
               content: Flex(
-                direction: Axis.horizontal,
-                children: [
-                  Expanded(
-                    child: StreamBuilder<StateData?>(
-                        stream: stateStream,
-                        builder: (context, AsyncSnapshot<StateData?> shot) {
-                          if (shot.hasData) {
-                            ias = shot.data!.ias;
-                            gear = shot.data!.gear;
-                            flap = shot.data!.flaps;
-                            altitude = shot.data!.altitude;
-                            oil = shot.data!.oilTemp1C;
-                            water = shot.data!.waterTemp1C;
-                            aoa = shot.data!.aoa;
-                            load = shot.data!.load;
-                            fuelMass = shot.data!.fuel;
-                            if ((shot.data!.altitude == 32 || shot.data!.altitude == 31) &&
-                                shot.data!.gear == 100 &&
-                                shot.data!.ias == 0) {
-                              inHangar = true;
-                            } else {
-                              inHangar = false;
-                            }
-                            double fuel = shot.data!.fuel / shot.data!.maxFuel * 100;
-                            if (inHangar) {
-                              return Flex(
-                                direction: Axis.vertical,
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.only(left: 20),
-                                      alignment: Alignment.center,
-                                      child: RichText(
-                                        text: const TextSpan(
-                                            style:
+            direction: Axis.horizontal,
+            children: [
+              Expanded(
+                child: StreamBuilder<StateData?>(
+                    stream: stateStream,
+                    builder: (context, AsyncSnapshot<StateData?> shot) {
+                      if (shot.hasData) {
+                        ias = shot.data!.ias;
+                        gear = shot.data!.gear;
+                        flap = shot.data!.flaps;
+                        altitude = shot.data!.altitude;
+                        oil = shot.data!.oilTemp1C;
+                        water = shot.data!.waterTemp1C;
+                        aoa = shot.data!.aoa;
+                        load = shot.data!.load;
+                        fuelMass = shot.data!.fuel;
+                        if ((shot.data!.altitude == 32 || shot.data!.altitude == 31) &&
+                            shot.data!.gear == 100 &&
+                            shot.data!.ias == 0) {
+                          inHangar = true;
+                        } else {
+                          inHangar = false;
+                        }
+                        double fuel = shot.data!.fuel / shot.data!.maxFuel * 100;
+                        if (inHangar) {
+                          return Flex(
+                            direction: Axis.vertical,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.center,
+                                  child: RichText(
+                                    text: const TextSpan(
+                                        style:
                                             TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                            text: 'In Hangar'),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }
-                            return Flex(
-                              direction: Axis.vertical,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                            text: 'Throttle= ${shot.data!.throttle1} %')
-                                      ]),
-                                    ),
+                                        text: 'In Hangar'),
                                   ),
                                 ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                            text: 'IAS= ${shot.data!.ias} km/h')
-                                      ]),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      'Altitude= ${shot.data!.altitude} m',
-                                      style:
-                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      'Climb= ${shot.data!.climb} m/s',
-                                      style:
-                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                      padding: const EdgeInsets.only(left: 20),
-                                      alignment: Alignment.topLeft,
-                                      child: fuel <= 13
-                                          ? BlinkText(
-                                        'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
-                                        style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                        endColor: Colors.red,
-                                      )
-                                          : Text(
-                                        'Fuel= ${fuel.toStringAsFixed(1)} %',
-                                        style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                      )),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    alignment: Alignment.topLeft,
-                                    padding: const EdgeInsets.only(left: 20),
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                            text: 'Oil Temp= ${shot.data!.oilTemp1C}°c')
-                                      ]),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                            text: 'Water Temp= ${shot.data!.waterTemp1C}°c')
-                                      ]),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      'AoA= ${shot.data!.aoa}°',
-                                      style:
-                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          } else if (shot.hasError) {
-                            return Center(
-                                child: BlinkText(
-                                  'ERROR: NO DATA',
-                                  endColor: Colors.red,
-                                  style: const TextStyle(color: Colors.white, fontSize: 40),
-                                ));
-                          } else {
-                            return const Center(
-                                child: SizedBox(
-                                  height: 100,
-                                  width: 100,
-                                  child: ProgressRing(),
-                                ));
-                          }
-                        }),
-                  ),
-                  Expanded(
-                    child: StreamBuilder<IndicatorData?>(
-                        stream: indicatorStream,
-                        builder: (context, AsyncSnapshot<IndicatorData?> shot) {
-                          if (shot.hasData) {
-                            inHangar = false;
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              ref
-                                  .read(provider.vehicleNameProvider.notifier)
-                                  .state = shot.data!.type;
-                              vertical = shot.data!.vertical;
-                            });
-
-                            if (shot.data!.mach == null) shot.data!.mach = 0;
-                            return Flex(
-                              direction: Axis.vertical,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(right: 20),
-                                    alignment: Alignment.center,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                            text: 'Compass= ${shot.data!.compass?.toStringAsFixed(0) ?? ''}°')
-                                      ]),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(right: 20),
-                                    alignment: Alignment.center,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                            text: 'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
-                                      ]),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                          if (shot.hasError) {
-                            inHangar = true;
-
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              ref
-                                  .read(provider.vehicleNameProvider.notifier)
-                                  .state = '';
-                            });
-                            log('Error: ${shot.error}');
-                            return Center(
+                              ),
+                            ],
+                          );
+                        }
+                        return Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            Expanded(
                               child: Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: BlinkText(
-                                    'ERROR: NO DATA',
-                                    endColor: Colors.red,
-                                    style: const TextStyle(color: Colors.white, fontSize: 40),
-                                  )),
-                            );
-                          } else {
-                            inHangar = true;
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              ref
-                                  .read(provider.vehicleNameProvider.notifier)
-                                  .state = '';
-                            });
-                            return const Center(
-                                child: SizedBox(
-                                  height: 100,
-                                  width: 100,
-                                  child: ProgressRing(),
-                                ));
-                          }
-                        }),
-                  )
-                ],
-              )),
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                        text: 'Throttle= ${shot.data!.throttle1} %')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                        text: 'IAS= ${shot.data!.ias} km/h')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: Text(
+                                  'Altitude= ${shot.data!.altitude} m',
+                                  style:
+                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: Text(
+                                  'Climb= ${shot.data!.climb} m/s',
+                                  style:
+                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: fuel <= 13
+                                      ? BlinkText(
+                                          'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
+                                          style: const TextStyle(
+                                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                          endColor: Colors.red,
+                                        )
+                                      : Text(
+                                          'Fuel= ${fuel.toStringAsFixed(1)} %',
+                                          style: const TextStyle(
+                                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                        )),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.topLeft,
+                                padding: const EdgeInsets.only(left: 20),
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                        text: 'Oil Temp= ${shot.data!.oilTemp1C}°c')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                        text: 'Water Temp= ${shot.data!.waterTemp1C}°c')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(left: 20),
+                                alignment: Alignment.topLeft,
+                                child: Text(
+                                  'AoA= ${shot.data!.aoa}°',
+                                  style:
+                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      } else if (shot.hasError) {
+                        return Center(
+                            child: BlinkText(
+                          'ERROR: NO DATA',
+                          endColor: Colors.red,
+                          style: const TextStyle(color: Colors.white, fontSize: 40),
+                        ));
+                      } else {
+                        return const Center(
+                            child: SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: ProgressRing(),
+                        ));
+                      }
+                    }),
+              ),
+              Expanded(
+                child: StreamBuilder<IndicatorData?>(
+                    stream: indicatorStream,
+                    builder: (context, AsyncSnapshot<IndicatorData?> shot) {
+                      if (shot.hasData) {
+                        inHangar = false;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          ref.read(provider.vehicleNameProvider.notifier).state = shot.data!.type;
+                          vertical = shot.data!.vertical;
+                        });
+
+                        if (shot.data!.mach == null) shot.data!.mach = 0;
+                        return Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(right: 20),
+                                alignment: Alignment.center,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                        text: 'Compass= ${shot.data!.compass?.toStringAsFixed(0) ?? ''}°')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(right: 20),
+                                alignment: Alignment.center,
+                                child: RichText(
+                                  text: TextSpan(children: [
+                                    TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                        text: 'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
+                                  ]),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      if (shot.hasError) {
+                        inHangar = true;
+
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          ref.read(provider.vehicleNameProvider.notifier).state = '';
+                        });
+                        log('Error: ${shot.error}');
+                        return Center(
+                          child: Container(
+                              padding: const EdgeInsets.all(8.0),
+                              child: BlinkText(
+                                'ERROR: NO DATA',
+                                endColor: Colors.red,
+                                style: const TextStyle(color: Colors.white, fontSize: 40),
+                              )),
+                        );
+                      } else {
+                        inHangar = true;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          ref.read(provider.vehicleNameProvider.notifier).state = '';
+                        });
+                        return const Center(
+                            child: SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: ProgressRing(),
+                        ));
+                      }
+                    }),
+              )
+            ],
+          )),
           InteractiveViewer(
             child: GameMap(
               inHangar: inHangar,
             ),
           ),
+          const Chat(),
           const Settings(),
-          if (ref
-              .watch(provider.orgbClientProvider)
-              .notNull &&
-              ref
-                  .watch(provider.orgbControllersProvider)
-                  .notNull &&
-              ref
-                  .watch(provider.orgbControllersProvider)
-                  .isNotEmpty)
+          if (ref.watch(provider.orgbClientProvider).notNull &&
+              ref.watch(provider.orgbControllersProvider).notNull &&
+              ref.watch(provider.orgbControllersProvider).isNotEmpty)
             const RGBSettings(),
         ],
       ),

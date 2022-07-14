@@ -470,6 +470,28 @@ class SettingsState extends ConsumerState<Settings> {
               },
             ),
             SettingsTile.switchTile(
+              initialValue: appSettings.proximitySetting.enabled,
+              onToggle: (value) async {
+                appSettingsNotifier.update(
+                    appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(enabled: value)));
+                appSettingsNotifier.save();
+              },
+              title: const Text('Proximity Sound'),
+              description: const Text('Click to change file'),
+              leading: SizedBox(height: 55, child: _buildSliderProxy(appSettings)),
+              onPressed: (context) async {
+                final file = await FilePicker.platform
+                    .pickFiles(dialogTitle: 'Select audio file for enemy proximity warning', type: FileType.audio);
+                if (file != null) {
+                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+
+                  appSettingsNotifier.update(
+                      appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(path: docFilePath)));
+                  appSettingsNotifier.save();
+                }
+              },
+            ),
+            SettingsTile.switchTile(
               initialValue: ref.watch(provider.needPremiumProvider),
               onToggle: (value) async {
                 ref.read(provider.needPremiumProvider.notifier).state = value;
@@ -594,6 +616,35 @@ class SettingsState extends ConsumerState<Settings> {
           onPressed: () async {
             await audio1.play(DeviceFileSource(appSettings.pullUpSetting.path),
                 volume: appSettings.pullUpSetting.volume / 100, mode: PlayerMode.lowLatency);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSliderProxy(AppSettings appSettings) {
+    return Row(
+      children: [
+        Slider(
+          value: appSettings.proximitySetting.volume,
+          min: 0,
+          max: 100,
+          divisions: 100,
+          label: '${appSettings.proximitySetting.volume.toInt()} %',
+          onChanged: (value) {
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .update(appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(volume: value)));
+            ref.read(provider.appSettingsProvider.notifier).save();
+          },
+          vertical: true,
+        ),
+        const SizedBox(width: 10),
+        IconButton(
+          icon: const Icon(FluentIcons.play),
+          onPressed: () async {
+            await audio1.play(DeviceFileSource(appSettings.proximitySetting.path),
+                volume: appSettings.proximitySetting.volume / 100, mode: PlayerMode.lowLatency);
           },
         ),
       ],

@@ -1,16 +1,20 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pinging_point/pinging_point.dart';
+import 'package:system_windows/system_windows.dart';
 import 'package:wtbgassistant/data_receivers/map.dart';
 import 'package:wtbgassistant/data_receivers/map_info.dart';
 import 'package:wtbgassistant/services/extensions.dart';
-import 'package:wtbgassistant/services/helpers.dart';
 
-class GameMap extends StatefulWidget {
+import '../../main.dart';
+
+class GameMap extends ConsumerStatefulWidget {
   final bool inHangar;
 
   const GameMap({Key? key, required this.inHangar}) : super(key: key);
@@ -19,7 +23,9 @@ class GameMap extends StatefulWidget {
   GameMapState createState() => GameMapState();
 }
 
-class GameMapState extends State<GameMap> {
+class GameMapState extends ConsumerState<GameMap> {
+  var systemWindows = SystemWindows();
+
   @override
   void initState() {
     super.initState();
@@ -29,20 +35,9 @@ class GameMapState extends State<GameMap> {
       if (mounted) {
         _getSizes();
         future = MapObj.mapObj();
-        List<MapObj> mapObjects = await future;
-        List<MapObj> enemyFighters = getEnemyFighters(mapObjects);
-        player = getPlayer(mapObjects);
-        MapInfo mapInfo = await MapInfo.getMapInfo();
-        for (MapObj enemyFighter in enemyFighters) {
-          if (enemyFighter.iconBg == 'FighterTarget') {
-            if (enemyFighter.x != null && enemyFighter.y != null && player?.x != null && player?.y != null) {
-              Coord coord = getObjectCoords(player!.x!, player!.y!, mapInfo.mapMax * 2);
-              Coord coord2 = getObjectCoords(enemyFighter.x!, enemyFighter.y!, mapInfo.mapMax * 2);
-              double distance = coordDistance(coord.lat, coord.lon, coord2.lat, coord2.lon);
-              print(distance);
-            }
-          }
-        }
+        mapSize = (await MapInfo.getMapInfo()).mapMax * 2;
+        windows = await systemWindows.getActiveApps();
+        wtFocused = windows.firstWhere((element) => element.title.contains('War Thunder')).isActive;
         setState(() {});
       } else {
         timer.cancel();
@@ -61,16 +56,7 @@ class GameMapState extends State<GameMap> {
   double getLinearDistanceBetween(Offset offset1, Offset offset2, {required double mapSize}) {
     final Offset delta = (offset1 - offset2) * mapSize;
     final distance = delta.distance;
-    return double.parse(distance.abs().toStringAsFixed(2));
-  }
-
-  double getAngleBetweenPoints(double x, double y, {required double mapSize}) {
-    final angle = math.atan2(x, y);
-    return degrees(angle);
-  }
-
-  List<MapObj> getEnemyFighters(List<MapObj> mapObjects) {
-    return mapObjects.where((MapObj mapObj) => mapObj.icon == 'Fighter').toList();
+    return double.parse(distance.abs().toStringAsFixed(0));
   }
 
   MapObj getPlayer(List<MapObj> objects) {
@@ -79,26 +65,80 @@ class GameMapState extends State<GameMap> {
   }
 
   MapObj? player;
-
+  double? mapSize;
   double widgetWidth = 0;
-
   double widgetHeight = 0;
+  List<SystemWindow> windows = [];
+  bool wtFocused = false;
   GlobalKey key = GlobalKey();
-  final List<String> enemyHexColor = ['#f40C00', '#ff0D00', '#ff0000'];
+  final List<String> enemyHexColor = ['#f40C00', '#ff0D00', '#ff0000', '#f00C00'];
 
   late Future<ui.Image> myFuture;
 
   FutureBuilder<ui.Image> imageBuilder(MapObj e) {
+    double? distance;
+    bool? flag;
+    if (player != null && e.icon == 'Fighter' && e.x != null && e.y != null) {
+      distance = getLinearDistanceBetween(
+        Offset(e.x!, e.y!),
+        Offset(player!.x!, player!.y!),
+        mapSize: mapSize ?? 0,
+      );
+      flag = enemyHexColor.contains(e.color) && e.icon == 'Fighter' && distance < 850;
+    }
     return FutureBuilder<ui.Image>(
         future: myFuture,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            if (flag ?? false) {
+              if (!wtFocused) {
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  final settings = ref.watch(provider.appSettingsProvider).proximitySetting;
+                  await audio2.play(
+                    DeviceFileSource(settings.path),
+                    volume: settings.volume,
+                    mode: PlayerMode.lowLatency,
+                  );
+                });
+              }
+              if (e.type == 'aircraft') {
+                return PingingPoint.pingingPoint(
+                  x: e.x!,
+                  y: e.y!,
+                  pointColor: HexColor.fromHex(e.color),
+                  pointSize: 8,
+                  height: widgetHeight,
+                  width: widgetWidth,
+                );
+              } else if (e.type == 'ground_model') {
+                return CustomPaint(
+                    painter: ObjectPainter(
+                  x: e.x!,
+                  y: e.y!,
+                  height: widgetHeight,
+                  width: widgetWidth,
+                  image: snapshot.data!,
+                  colorHex: e.color,
+                ));
+              } else if (e.type == 'airfield') {
+                return CustomPaint(
+                    painter: ObjectPainter(
+                  x: e.x!,
+                  y: e.y!,
+                  height: widgetHeight,
+                  width: widgetWidth,
+                  image: snapshot.data!,
+                  colorHex: e.color,
+                ));
+              } else {
+                return const Text('NOPE');
+              }
+            }
             if (e.type == 'aircraft') {
               return CustomPaint(
                   painter: ObjectPainter(
                 x: e.x!,
                 y: e.y!,
-                context: context,
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
@@ -109,7 +149,6 @@ class GameMapState extends State<GameMap> {
                   painter: ObjectPainter(
                 x: e.x!,
                 y: e.y!,
-                context: context,
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
@@ -120,7 +159,6 @@ class GameMapState extends State<GameMap> {
                   painter: ObjectPainter(
                 x: e.sx!,
                 y: e.sy!,
-                context: context,
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
@@ -158,6 +196,7 @@ class GameMapState extends State<GameMap> {
                   future: future,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
+                      player = getPlayer(snapshot.data!);
                       List<Widget> columnChildren = snapshot.data!.map((e) {
                         switch (e.icon.toLowerCase()) {
                           case 'airdefence':
@@ -228,7 +267,6 @@ class ObjectPainter extends CustomPainter {
   final double x;
   final double? height;
   final double? width;
-  final BuildContext context;
   final ui.Image image;
   final String colorHex;
 
@@ -248,14 +286,14 @@ class ObjectPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
 
-  const ObjectPainter(
-      {required this.y,
-      required this.x,
-      required this.context,
-      required this.width,
-      required this.height,
-      required this.image,
-      required this.colorHex});
+  const ObjectPainter({
+    required this.y,
+    required this.x,
+    this.width,
+    this.height,
+    required this.image,
+    required this.colorHex,
+  });
 
   static Future<ui.Image> getUiImage(String imageAssetPath) async {
     final ByteData assetImageByteData = await rootBundle.load(imageAssetPath);

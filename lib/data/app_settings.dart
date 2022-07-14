@@ -11,6 +11,7 @@ class AppSettings {
   final EngineSetting engineWarning;
   final OverGSetting overGWarning;
   final PullUpSetting pullUpSetting;
+  final ProximitySetting proximitySetting;
   final bool fullNotif;
 
   AppSettings copyWith({
@@ -19,6 +20,7 @@ class AppSettings {
     OverGSetting? overGWarning,
     bool? fullNotif,
     PullUpSetting? pullUpSetting,
+    ProximitySetting? proximitySetting,
   }) {
     return AppSettings(
       overHeatWarning: overHeatWarning ?? this.overHeatWarning,
@@ -26,6 +28,7 @@ class AppSettings {
       overGWarning: overGWarning ?? this.overGWarning,
       fullNotif: fullNotif ?? this.fullNotif,
       pullUpSetting: pullUpSetting ?? this.pullUpSetting,
+      proximitySetting: proximitySetting ?? this.proximitySetting,
     );
   }
 
@@ -35,6 +38,7 @@ class AppSettings {
       'engineWarning': engineWarning.toMap(),
       'overGWarning': overGWarning.toMap(),
       'pullUpSetting': pullUpSetting.toMap(),
+      'proximitySetting': proximitySetting.toMap(),
       'fullNotif': fullNotif,
     };
   }
@@ -45,6 +49,9 @@ class AppSettings {
       engineWarning: EngineSetting.fromMap(map['engineWarning']),
       overGWarning: OverGSetting.fromMap(map['overGWarning']),
       pullUpSetting: PullUpSetting.fromMap(map['pullUpSetting']),
+      proximitySetting: map.containsKey('proximitySetting')
+          ? ProximitySetting.fromMap(map['proximitySetting'])
+          : ProximitySetting(enabled: true, path: defaultPullProxyPath, volume: 0.22),
       fullNotif: map['fullNotif'],
     );
   }
@@ -55,6 +62,7 @@ class AppSettings {
     required this.overGWarning,
     required this.fullNotif,
     required this.pullUpSetting,
+    required this.proximitySetting,
   });
 }
 
@@ -62,6 +70,8 @@ final defaultBeepPath =
     p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\beep.wav']);
 final defaultPullUpPath =
     p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\pullup.mp3']);
+final defaultPullProxyPath =
+    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\proxy.wav']);
 
 class SettingsNotifier extends StateNotifier<AppSettings> {
   SettingsNotifier()
@@ -70,6 +80,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
           engineWarning: EngineSetting(enabled: true, path: defaultBeepPath, volume: 0.22),
           overGWarning: OverGSetting(path: defaultBeepPath, enabled: true, volume: 0.22),
           pullUpSetting: PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 0.22),
+          proximitySetting: ProximitySetting(enabled: true, path: defaultPullProxyPath, volume: 0.22),
           fullNotif: true,
         ));
 
@@ -263,6 +274,51 @@ class PullUpSetting {
       volume: volume ?? this.volume,
       path: path ?? this.path,
     );
+  }
+}
+
+class ProximitySetting {
+  final String path;
+  final bool enabled;
+  final double volume;
+
+  const ProximitySetting({
+    required this.path,
+    required this.enabled,
+    required this.volume,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'path': path,
+      'enabled': enabled,
+      'volume': volume,
+    };
+  }
+
+  factory ProximitySetting.fromMap(Map<String, dynamic> map) {
+    return ProximitySetting(
+      path: map['path'] as String,
+      enabled: map['enabled'] as bool,
+      volume: map['volume'] as double,
+    );
+  }
+
+  ProximitySetting copyWith({
+    String? path,
+    bool? enabled,
+    double? volume,
+  }) {
+    return ProximitySetting(
+      path: path ?? this.path,
+      enabled: enabled ?? this.enabled,
+      volume: volume ?? this.volume,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'ProximitySetting{path: $path, enabled: $enabled, volume: $volume}';
   }
 }
 

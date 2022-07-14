@@ -62,7 +62,9 @@ dependencies:
   color: 3.0.0
   file_picker: ^4.6.1
   angles: ^2.1.1
-
+  pinging_point:
+    path: ../pinging_point
+  system_windows: ^0.3.1
 
 
   # The following adds the Cupertino Icons font to your application.

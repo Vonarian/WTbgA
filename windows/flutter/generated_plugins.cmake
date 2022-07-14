@@ -10,6 +10,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   network_info_plus_windows
   screen_retriever
   system_theme
+  system_windows
   tray_manager
   url_launcher_windows
   win_toast
