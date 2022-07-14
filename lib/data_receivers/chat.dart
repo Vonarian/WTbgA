@@ -19,7 +19,7 @@ class GameChat {
     try {
       final response = await dio.get('http://localhost:8111/gamechat?lastId=$lastId');
       return GameChat.fromMap(response.data.last);
-    } catch (e, st) {
+    } catch (e) {
       rethrow;
     }
   }
