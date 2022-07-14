@@ -8,9 +8,9 @@
 import 'dart:developer' as dev;
 import 'dart:math';
 
-import 'package:angles/angles.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:wtbgassistant/main.dart';
+import 'package:wtbgassistant/services/helpers.dart';
 
 const double earthRadiusKM = 6378.137;
 
@@ -80,7 +80,7 @@ double coordBearing(double lat1, double lon1, double lat2, double lon2) {
   final double lat2Rad = radians(lat2).toDouble();
   final double y = sin(dLon) * cos(lat2Rad);
   final double x = cos(lat1Rad) * sin(lat2Rad) - sin(lat1Rad) * cos(lat2Rad) * cos(dLon);
-  double bearing = Angle.degrees(atan2(x, y)).degrees;
+  double bearing = degrees(atan2(x, y));
   return (bearing + 360) % 360;
 }
 
@@ -108,7 +108,7 @@ Coord coordCoord(double lat, double lon, double distance, double bearing) {
   final lon2 = lonRad +
       atan2(sin(bearingRad) * sin(distance / earthRadiusKM) * cos(latRad),
           cos(distance / earthRadiusKM) - sin(latRad) * sin(lat2));
-  return Coord(Angle.degrees(lat2).degrees, Angle.degrees(lon2).degrees, bearing: bearing, distance: distance);
+  return Coord(degrees(lat2), degrees(lon2), bearing: bearing, distance: distance);
 }
 
 Coord getObjectCoords(double x, double y, double mapSize) {
@@ -116,7 +116,7 @@ Coord getObjectCoords(double x, double y, double mapSize) {
   final double xDistance = x * mapSize;
   final double yDistance = y * mapSize;
   final double distance = hypotenuse(xDistance, yDistance);
-  double bearing = Angle.degrees(atan2(xDistance, yDistance)).degrees + 90;
+  double bearing = degrees(atan2(xDistance, yDistance)) + 90;
   if (bearing < 0) {
     bearing += 360;
   }
@@ -130,4 +130,9 @@ class Coord {
   final double? bearing;
 
   const Coord(this.lat, this.lon, {this.distance, this.bearing});
+
+  @override
+  String toString() {
+    return 'Coord{lat: $lat, lon: $lon, distance: $distance, bearing: $bearing}';
+  }
 }

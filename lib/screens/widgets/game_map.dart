@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:fluent_ui/fluent_ui.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:wtbgassistant/data_receivers/map.dart';
 import 'package:wtbgassistant/data_receivers/map_info.dart';
 import 'package:wtbgassistant/services/extensions.dart';
+import 'package:wtbgassistant/services/helpers.dart';
 
 class GameMap extends StatefulWidget {
   final bool inHangar;
@@ -32,11 +34,13 @@ class GameMapState extends State<GameMap> {
         player = getPlayer(mapObjects);
         MapInfo mapInfo = await MapInfo.getMapInfo();
         for (MapObj enemyFighter in enemyFighters) {
-          //Check if enemy fighter is near player
-          if (enemyFighter.x != null && enemyFighter.y != null && player?.x != null && player?.y != null) {
-            final Coord coord = getObjectCoords(player!.x!, player!.y!, mapInfo.mapMax);
-            print(coord.bearing);
-            print(coord.lat);
+          if (enemyFighter.iconBg == 'FighterTarget') {
+            if (enemyFighter.x != null && enemyFighter.y != null && player?.x != null && player?.y != null) {
+              Coord coord = getObjectCoords(player!.x!, player!.y!, mapInfo.mapMax * 2);
+              Coord coord2 = getObjectCoords(enemyFighter.x!, enemyFighter.y!, mapInfo.mapMax * 2);
+              double distance = coordDistance(coord.lat, coord.lon, coord2.lat, coord2.lon);
+              print(distance);
+            }
           }
         }
         setState(() {});
@@ -54,6 +58,17 @@ class GameMapState extends State<GameMap> {
     }
   }
 
+  double getLinearDistanceBetween(Offset offset1, Offset offset2, {required double mapSize}) {
+    final Offset delta = (offset1 - offset2) * mapSize;
+    final distance = delta.distance;
+    return double.parse(distance.abs().toStringAsFixed(2));
+  }
+
+  double getAngleBetweenPoints(double x, double y, {required double mapSize}) {
+    final angle = math.atan2(x, y);
+    return degrees(angle);
+  }
+
   List<MapObj> getEnemyFighters(List<MapObj> mapObjects) {
     return mapObjects.where((MapObj mapObj) => mapObj.icon == 'Fighter').toList();
   }
@@ -64,8 +79,6 @@ class GameMapState extends State<GameMap> {
   }
 
   MapObj? player;
-
-  final double earthRadiusKM = 6378.137;
 
   double widgetWidth = 0;
 
