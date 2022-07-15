@@ -65,7 +65,7 @@ dependencies:
   pinging_point:
     path: ../pinging_point
   system_windows: ^0.3.1
-
+  win32: ^2.7.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -80,7 +80,8 @@ dev_dependencies:
 
 dependency_overrides:
   async: ^2.9.0
-
+  win32: ^2.7.0
+  ffi: ^2.0.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

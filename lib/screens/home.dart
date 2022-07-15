@@ -524,6 +524,7 @@ class HomeState extends ConsumerState<Home>
   @override
   Widget build(BuildContext context) {
     startListeners();
+
     final theme = FluentTheme.of(context);
     final fireBaseVersion = ref.watch(provider.versionFBProvider);
     final developer = ref.watch(provider.developerMessageProvider);

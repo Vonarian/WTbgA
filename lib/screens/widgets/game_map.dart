@@ -8,11 +8,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pinging_point/pinging_point.dart';
 import 'package:system_windows/system_windows.dart';
+import 'package:wtbgassistant/data_receivers/indicator_receiver.dart';
 import 'package:wtbgassistant/data_receivers/map.dart';
 import 'package:wtbgassistant/data_receivers/map_info.dart';
 import 'package:wtbgassistant/services/extensions.dart';
 
 import '../../main.dart';
+import '../../services/helpers.dart';
 
 class GameMap extends ConsumerStatefulWidget {
   final bool inHangar;
@@ -23,7 +25,7 @@ class GameMap extends ConsumerStatefulWidget {
   GameMapState createState() => GameMapState();
 }
 
-class GameMapState extends ConsumerState<GameMap> {
+class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderStateMixin {
   var systemWindows = SystemWindows();
 
   @override
@@ -31,12 +33,16 @@ class GameMapState extends ConsumerState<GameMap> {
     super.initState();
     _getSizes();
     future = MapObj.mapObj();
+    IndicatorData.getIndicator().listen((data) {
+      compass = data?.compass ?? 0;
+    });
     Timer.periodic(const Duration(milliseconds: 1200), (timer) async {
       if (mounted) {
         _getSizes();
         future = MapObj.mapObj();
         mapSize = (await MapInfo.getMapInfo()).mapMax * 2;
         windows = await systemWindows.getActiveApps();
+
         wtFocused = windows.firstWhere((element) => element.title.contains('War Thunder')).isActive;
         setState(() {});
       } else {
@@ -53,17 +59,12 @@ class GameMapState extends ConsumerState<GameMap> {
     }
   }
 
-  double getLinearDistanceBetween(Offset offset1, Offset offset2, {required double mapSize}) {
-    final Offset delta = (offset1 - offset2) * mapSize;
-    final distance = delta.distance;
-    return double.parse(distance.abs().toStringAsFixed(0));
-  }
-
   MapObj getPlayer(List<MapObj> objects) {
     MapObj player = objects.firstWhere((MapObj obj) => obj.icon == 'Player');
     return player;
   }
 
+  double compass = 0;
   MapObj? player;
   double? mapSize;
   double widgetWidth = 0;
@@ -77,28 +78,31 @@ class GameMapState extends ConsumerState<GameMap> {
 
   FutureBuilder<ui.Image> imageBuilder(MapObj e) {
     double? distance;
-    bool? flag;
+    bool flag = false;
     if (player != null && e.icon == 'Fighter' && e.x != null && e.y != null) {
       distance = getLinearDistanceBetween(
         Offset(e.x!, e.y!),
         Offset(player!.x!, player!.y!),
         mapSize: mapSize ?? 0,
       );
+
       flag = enemyHexColor.contains(e.color) && e.icon == 'Fighter' && distance < 850;
     }
     return FutureBuilder<ui.Image>(
         future: myFuture,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            if (flag ?? false) {
+            if (flag) {
               if (!wtFocused) {
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
                   final settings = ref.watch(provider.appSettingsProvider).proximitySetting;
-                  await audio2.play(
-                    DeviceFileSource(settings.path),
-                    volume: settings.volume,
-                    mode: PlayerMode.lowLatency,
-                  );
+                  if (settings.enabled) {
+                    await audio2.play(
+                      DeviceFileSource(settings.path),
+                      volume: settings.volume,
+                      mode: PlayerMode.lowLatency,
+                    );
+                  }
                 });
               }
               if (e.type == 'aircraft') {
@@ -135,15 +139,21 @@ class GameMapState extends ConsumerState<GameMap> {
               }
             }
             if (e.type == 'aircraft') {
-              return CustomPaint(
-                  painter: ObjectPainter(
-                x: e.x!,
-                y: e.y!,
-                height: widgetHeight,
-                width: widgetWidth,
-                image: snapshot.data!,
-                colorHex: e.color,
-              ));
+              return Transform.rotate(
+                alignment: FractionalOffset.center,
+                angle: -compass + 90,
+                origin: Offset(widgetHeight / 2, widgetWidth / 2),
+                child: CustomPaint(
+                    painter: ObjectPainter(
+                  x: e.x!,
+                  y: e.y!,
+                  height: widgetHeight,
+                  width: widgetWidth,
+                  image: snapshot.data!,
+                  colorHex: e.color,
+                  compass: e.icon == 'Player' ? compass : 0,
+                )),
+              );
             } else if (e.type == 'ground_model') {
               return CustomPaint(
                   painter: ObjectPainter(
@@ -269,6 +279,7 @@ class ObjectPainter extends CustomPainter {
   final double? width;
   final ui.Image image;
   final String colorHex;
+  final double compass;
 
   @override
   Future<void> paint(Canvas canvas, Size size) async {
@@ -293,6 +304,7 @@ class ObjectPainter extends CustomPainter {
     this.height,
     required this.image,
     required this.colorHex,
+    this.compass = 0,
   });
 
   static Future<ui.Image> getUiImage(String imageAssetPath) async {
