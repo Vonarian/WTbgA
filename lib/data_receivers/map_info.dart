@@ -4,8 +4,7 @@
 // "map_generation" : 19,
 // "map_max" : [ 32768.0, 32768.0 ],
 // "map_min" : [ -32768.0, -32768.0 ]
-// }
-import 'dart:developer' as dev;
+// }s dev;
 
 import 'package:wtbgassistant/main.dart';
 
@@ -29,8 +28,7 @@ class MapInfo {
         mapMax: map['map_max'][0] as double,
         mapMin: map['map_min'][0] as double,
       );
-    } catch (e, st) {
-      dev.log('ERROR: $e', stackTrace: st);
+    } catch (e) {
       rethrow;
     }
   }

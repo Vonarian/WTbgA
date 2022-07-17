@@ -49,8 +49,8 @@ class Message {
     if (prefs.getString('userName') == null || prefs.getString('userName') == '') {
       try {
         showDialog(context: context, builder: (context) => dialogBuilderUserName(context, data));
-      } catch (e, st) {
-        log(e.toString(), stackTrace: st);
+      } catch (e) {
+        return;
       }
     }
   }

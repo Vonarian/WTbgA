@@ -35,18 +35,15 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
     _getSizes();
     future = MapObj.mapObj();
     subscription = IndicatorData.getIndicator().listen((data) {
-      setState(() {
-        compass = data?.compass ?? 0;
-      });
+      compass = data?.compass ?? 0;
     });
-    Timer.periodic(const Duration(milliseconds: 200), (timer) async {
+    Timer.periodic(const Duration(milliseconds: 500), (timer) async {
       if (mounted) {
         _getSizes();
         future = MapObj.mapObj();
         mapSize = (await MapInfo.getMapInfo()).mapMax * 2;
         windows = await systemWindows.getActiveApps();
-
-        wtFocused = windows.firstWhere((element) => element.title.contains('War Thunder')).isActive;
+        setState(() {});
       } else {
         timer.cancel();
       }
@@ -302,7 +299,7 @@ class ObjectPainter extends CustomPainter {
     );
     var paintAirfieldLine = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeWidth = 3.9;
     paintAirfieldLine.colorFilter = ColorFilter.mode(HexColor.fromHex(colorHex), BlendMode.srcATop);
 
     if (height != null && width != null && !airfield) {
