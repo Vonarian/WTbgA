@@ -307,6 +307,24 @@ class HomeState extends ConsumerState<Home>
       }
     });
 
+    subscriptionForIndicators = IndicatorData.getIndicator().listen((event) {
+      if (event == null) return;
+      ref.read(provider.vehicleNameProvider.notifier).state = event.type;
+      vertical = event.vertical;
+    });
+    subscriptionForState = StateData.getState().listen((event) {
+      if (event == null) return;
+      ias = event.ias;
+      gear = event.gear;
+      flap = event.flaps;
+      altitude = event.altitude;
+      oil = event.oilTemp1C;
+      water = event.waterTemp1C;
+      aoa = event.aoa;
+      load = event.load;
+      fuelMass = event.fuel;
+      climb = event.climb.toInt();
+    });
     Future.delayed(Duration.zero, () async {
       await PresenceService().configureUserPresence(
           (await deviceInfo.windowsInfo).computerName, File(AppUtil.versionPath).readAsStringSync());
@@ -317,11 +335,7 @@ class HomeState extends ConsumerState<Home>
     Timer.periodic(dur, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       await updateMsgId();
-      subscriptionForIndicators = IndicatorData.getIndicator().listen((event) {
-        if (event == null) return;
-        ref.read(provider.vehicleNameProvider.notifier).state = event.type;
-        vertical = event.vertical;
-      });
+
       if (index != 0) {
         if (subscriptionForIndicators != null && subscriptionForIndicators!.isPaused) {
           subscriptionForIndicators!.resume();
@@ -331,19 +345,7 @@ class HomeState extends ConsumerState<Home>
           subscriptionForIndicators!.pause();
         }
       }
-      subscriptionForState = StateData.getState().listen((event) {
-        if (event == null) return;
-        ias = event.ias;
-        gear = event.gear;
-        flap = event.flaps;
-        altitude = event.altitude;
-        oil = event.oilTemp1C;
-        water = event.waterTemp1C;
-        aoa = event.aoa;
-        load = event.load;
-        fuelMass = event.fuel;
-        climb = event.climb.toInt();
-      });
+
       if (index != 0) {
         if (subscriptionForState != null && subscriptionForState!.isPaused) {
           subscriptionForState!.resume();
