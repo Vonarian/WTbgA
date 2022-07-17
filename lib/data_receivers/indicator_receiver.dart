@@ -27,18 +27,16 @@ class IndicatorData {
       required this.valid});
 
   static Stream<IndicatorData?> getIndicator() async* {
-    final stream =
-        Stream.periodic(const Duration(milliseconds: 200), (_) async {
+    final stream = Stream.periodic(const Duration(milliseconds: 200), (_) async {
       try {
-        Response? response = await dio
-            .get('http://localhost:8111/indicators')
-            .timeout(const Duration(seconds: 2));
+        Response? response =
+            await dio.get('http://localhost:8111/indicators').timeout(const Duration(milliseconds: 200));
         IndicatorData toolDataState = IndicatorData.fromMap(response.data);
         return toolDataState;
       } catch (e) {
         return null;
       }
-    });
+    }).asBroadcastStream();
     await for (var value in stream) {
       yield await value;
     }

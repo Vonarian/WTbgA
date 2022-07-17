@@ -49,9 +49,7 @@ class AppSettings {
       engineWarning: EngineSetting.fromMap(map['engineWarning']),
       overGWarning: OverGSetting.fromMap(map['overGWarning']),
       pullUpSetting: PullUpSetting.fromMap(map['pullUpSetting']),
-      proximitySetting: map.containsKey('proximitySetting')
-          ? ProximitySetting.fromMap(map['proximitySetting'])
-          : ProximitySetting(enabled: true, path: defaultPullProxyPath, volume: 0.22),
+      proximitySetting: ProximitySetting.fromMap(map['proximitySetting']),
       fullNotif: map['fullNotif'],
     );
   }
@@ -70,17 +68,20 @@ final defaultBeepPath =
     p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\beep.wav']);
 final defaultPullUpPath =
     p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\pullup.mp3']);
-final defaultPullProxyPath =
+final defaultProxyPath =
     p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\proxy.wav']);
+
+final defaultOverGPath =
+    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\overg.wav']);
 
 class SettingsNotifier extends StateNotifier<AppSettings> {
   SettingsNotifier()
       : super(AppSettings(
-          overHeatWarning: OverHeatSetting(enabled: true, path: defaultBeepPath, volume: 0.22),
-          engineWarning: EngineSetting(enabled: true, path: defaultBeepPath, volume: 0.22),
-          overGWarning: OverGSetting(path: defaultBeepPath, enabled: true, volume: 0.22),
-          pullUpSetting: PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 0.22),
-          proximitySetting: ProximitySetting(enabled: true, path: defaultPullProxyPath, volume: 0.22),
+          overHeatWarning: OverHeatSetting(enabled: true, path: defaultBeepPath, volume: 22),
+          engineWarning: EngineSetting(enabled: true, path: defaultBeepPath, volume: 22),
+          overGWarning: OverGSetting(path: defaultOverGPath, enabled: true, volume: 22),
+          pullUpSetting: PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 22),
+          proximitySetting: ProximitySetting(enabled: true, path: defaultProxyPath, volume: 22, distance: 850),
           fullNotif: true,
         ));
 
@@ -281,11 +282,13 @@ class ProximitySetting {
   final String path;
   final bool enabled;
   final double volume;
+  final int distance;
 
   const ProximitySetting({
     required this.path,
     required this.enabled,
     required this.volume,
+    required this.distance,
   });
 
   Map<String, dynamic> toMap() {
@@ -293,14 +296,16 @@ class ProximitySetting {
       'path': path,
       'enabled': enabled,
       'volume': volume,
+      'distance': distance,
     };
   }
 
   factory ProximitySetting.fromMap(Map<String, dynamic> map) {
     return ProximitySetting(
-      path: map['path'] as String,
-      enabled: map['enabled'] as bool,
-      volume: map['volume'] as double,
+      path: map['path'] ?? defaultProxyPath,
+      enabled: map['enabled'] ?? false,
+      volume: map['volume'] ?? 22,
+      distance: map['distance'] ?? 850,
     );
   }
 
@@ -308,17 +313,19 @@ class ProximitySetting {
     String? path,
     bool? enabled,
     double? volume,
+    int? distance,
   }) {
     return ProximitySetting(
       path: path ?? this.path,
       enabled: enabled ?? this.enabled,
       volume: volume ?? this.volume,
+      distance: distance ?? this.distance,
     );
   }
 
   @override
   String toString() {
-    return 'ProximitySetting{path: $path, enabled: $enabled, volume: $volume}';
+    return 'ProximitySetting{path: $path, enabled: $enabled, volume: $volume, distance: $distance}';
   }
 }
 

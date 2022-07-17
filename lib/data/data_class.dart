@@ -54,6 +54,14 @@ class Message {
       }
     }
   }
+
+  static Future<void> getUserNameCustom(BuildContext context, data) async {
+    try {
+      showDialog(context: context, builder: (context) => dialogBuilderUserName(context, data));
+    } catch (e, st) {
+      log(e.toString(), stackTrace: st);
+    }
+  }
 }
 
 ContentDialog dialogBuilderUserName(BuildContext context, data) {
@@ -85,7 +93,9 @@ ContentDialog dialogBuilderUserName(BuildContext context, data) {
             await prefs.setString('userName', userNameController.text);
             await PresenceService().configureUserPresence(
                 (await deviceInfo.windowsInfo).computerName, await File(AppUtil.versionPath).readAsString());
-            await prefs.setInt('id', data['id']);
+            if (data != null) {
+              await prefs.setInt('id', data['id']);
+            }
           },
           child: const Text('Save'))
     ],

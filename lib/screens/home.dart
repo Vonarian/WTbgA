@@ -18,6 +18,7 @@ import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data/app_settings.dart';
 import 'package:wtbgassistant/data/orgb_data_class.dart';
+import 'package:wtbgassistant/data/pullup_data.dart';
 import 'package:wtbgassistant/screens/widgets/chat.dart';
 import 'package:wtbgassistant/screens/widgets/game_map.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
@@ -47,10 +48,12 @@ class HomeState extends ConsumerState<Home>
     with WindowListener, TrayListener, TickerProviderStateMixin, WidgetsBindingObserver {
   StreamSubscription? subscription;
   StreamSubscription? subscriptionForPresence;
+  StreamSubscription? subscriptionForIndicators;
+  StreamSubscription? subscriptionForState;
   int times = 0;
 
   Future<void> userRedLineGear() async {
-    if (!isInGame.value) return;
+    if (!ref.read(provider.inMatchProvider)) return;
 
     if (!mounted) return;
     if (!ref.read(provider.premiumUserProvider)) return;
@@ -62,13 +65,13 @@ class HomeState extends ConsumerState<Home>
   }
 
   bool loadChecker() {
-    if (!isInGame.value) return false;
+    if (!ref.read(provider.inMatchProvider)) return false;
 
     if (!mounted) return false;
     if (fmData != null) {
-      double? maxLoad = (fmData!.critWingOverload2 / ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
+      final double maxLoad = (fmData!.critWingOverload2 / ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
       if (load == null) return false;
-      if ((load)! >= (maxLoad - (0.15 * maxLoad))) {
+      if ((load)! >= (maxLoad - (0.09 * maxLoad))) {
         return true;
       } else {
         return false;
@@ -78,15 +81,13 @@ class HomeState extends ConsumerState<Home>
     }
   }
 
-  final isInGame = ValueNotifier<bool>(false);
-
   bool notInGame() {
     String name = windowName.toLowerCase();
     return (name.contains('loading') || name.contains('waiting')) || name == 'war thunder';
   }
 
   Future<void> vehicleStateCheck() async {
-    if (!isInGame.value) return;
+    if (!ref.read(provider.inMatchProvider)) return;
     if (!mounted) return;
     final appSettings = ref.read(provider.appSettingsProvider);
     final settings = ref.read(provider.rgbSettingProvider);
@@ -183,14 +184,14 @@ class HomeState extends ConsumerState<Home>
   ValueNotifier<int> idData = ValueNotifier<int>(0);
 
   Future<void> updateMsgId() async {
-    if (!isInGame.value) return;
+    if (!ref.read(provider.inMatchProvider)) return;
     damages = (await Damage.getDamages((idData.value))).toList();
     if (!mounted) return;
     idData.value = damages.isNotEmpty ? damages.last.id : idData.value;
   }
 
   Future<void> flapChecker() async {
-    if (!isInGame.value) return;
+    if (!ref.read(provider.inMatchProvider)) return;
     if (damages.isEmpty) return;
     if (!ref.read(provider.premiumUserProvider)) return;
     if (damages.last.msg == 'Asymmetric flap extension') {
@@ -199,7 +200,7 @@ class HomeState extends ConsumerState<Home>
   }
 
   bool critAoaChecker() {
-    if (!isInGame.value) return false;
+    if (!ref.read(provider.inMatchProvider)) return false;
     if (aoa == null || gear == null || vertical == null || flap == null) {
       return false;
     }
@@ -272,15 +273,15 @@ class HomeState extends ConsumerState<Home>
     await ref.read(provider.appSettingsProvider.notifier).load();
   }
 
-  bool pullUp() {
-    if (!isInGame.value) return false;
-    if (aoa == null || gear == null || vertical == null || flap == null || ias == null || altitude == null) {
-      return false;
+  Future<void> pullUp() async {
+    if (!ref.read(provider.inMatchProvider)) return;
+    if (aoa == null || gear == null || vertical == null || ias == null || altitude == null) {
+      return;
     }
-    if (vertical! * -1 <= -25 && ias! >= 550 && gear! == 0 && altitude! <= 300) {
-      return true;
+    if (climb.isNegative && (vertical! * -1) <= -15) {
+      await PullUpData.checkAndPlayWarning(altitude!, climb.toDouble(), ref.read(provider.appSettingsProvider));
     }
-    return false;
+    return;
   }
 
   @override
@@ -305,16 +306,53 @@ class HomeState extends ConsumerState<Home>
         }
       }
     });
+
     Future.delayed(Duration.zero, () async {
       await PresenceService().configureUserPresence(
           (await deviceInfo.windowsInfo).computerName, File(AppUtil.versionPath).readAsStringSync());
       await Future.delayed(const Duration(seconds: 50));
       subscriptionForPresence = startListening();
     });
-    const oneSec = Duration(milliseconds: 999);
-    Timer.periodic(oneSec, (Timer t) async {
+    const dur = Duration(milliseconds: 800);
+    Timer.periodic(dur, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       await updateMsgId();
+      subscriptionForIndicators = IndicatorData.getIndicator().listen((event) {
+        if (event == null) return;
+        ref.read(provider.vehicleNameProvider.notifier).state = event.type;
+        vertical = event.vertical;
+      });
+      if (index != 0) {
+        if (subscriptionForIndicators != null && subscriptionForIndicators!.isPaused) {
+          subscriptionForIndicators!.resume();
+        }
+      } else if (index == 0) {
+        if (subscriptionForIndicators != null && !subscriptionForIndicators!.isPaused) {
+          subscriptionForIndicators!.pause();
+        }
+      }
+      subscriptionForState = StateData.getState().listen((event) {
+        if (event == null) return;
+        ias = event.ias;
+        gear = event.gear;
+        flap = event.flaps;
+        altitude = event.altitude;
+        oil = event.oilTemp1C;
+        water = event.waterTemp1C;
+        aoa = event.aoa;
+        load = event.load;
+        fuelMass = event.fuel;
+        climb = event.climb.toInt();
+      });
+      if (index != 0) {
+        if (subscriptionForState != null && subscriptionForState!.isPaused) {
+          subscriptionForState!.resume();
+        }
+      } else if (index == 0) {
+        if (subscriptionForState != null && !subscriptionForState!.isPaused) {
+          subscriptionForState!.pause();
+        }
+      }
     });
     idData.addListener(() async {
       if (lastId != idData.value) {
@@ -326,42 +364,23 @@ class HomeState extends ConsumerState<Home>
     AppUtil.getWindow().listen((stringValue) {
       windowName = stringValue ?? '';
       if (windowName != '') {
-        if (isInGame.value != !notInGame()) {
-          isInGame.value = !notInGame();
-        }
-      }
-    });
-    isInGame.addListener(() async {
-      final client = ref.watch(provider.orgbClientProvider);
-      final data = await client?.getAllControllers();
-      OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
-      if (isInGame.value) {
-        if (client != null && data != null) {
-          await OpenRGBSettings.setJoinBattleEffect(client, data, settings.loadingColor);
-          await OpenRGBSettings.setAllOff(client, data);
-        }
-      } else {
-        if (client != null && data != null) {
-          await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
+        if (ref.read(provider.inMatchProvider) != !notInGame()) {
+          ref.read(provider.inMatchProvider.notifier).state = !notInGame();
         }
       }
     });
 
     var appSettings = ref.read(provider.appSettingsProvider);
-    const redLineTimer = Duration(milliseconds: 400);
+    const redLineTimer = Duration(milliseconds: 200);
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
       if (!appSettings.fullNotif) return;
       userRedLineGear();
-      if (pullUp() && ref.read(provider.premiumUserProvider)) {
-        final setting = ref.read(provider.appSettingsProvider).pullUpSetting;
-        if (!setting.enabled) return;
-        await audio2.play(DeviceFileSource(setting.path), volume: setting.volume / 100, mode: PlayerMode.lowLatency);
-      }
-      checkCritAoa();
+      pullUp();
       if (!ref.read(provider.premiumUserProvider)) return;
       if (loadChecker()) {
-        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
+        final settings = ref.read(provider.appSettingsProvider).overGWarning;
+        await audio.play(DeviceFileSource(settings.path), volume: settings.volume / 100, mode: PlayerMode.lowLatency);
       }
     });
     Future.delayed(Duration.zero, () async {
@@ -381,6 +400,9 @@ class HomeState extends ConsumerState<Home>
     isStopped = true;
     WidgetsBinding.instance.removeObserver(this);
     subscription!.cancel();
+    subscriptionForPresence!.cancel();
+    subscriptionForState!.cancel();
+    subscriptionForIndicators!.cancel();
     audio.release();
     audio.dispose();
   }
@@ -454,10 +476,40 @@ class HomeState extends ConsumerState<Home>
         }
       }
     });
+    ref.listen<bool>(provider.gameRunningProvider, (previous, next) {
+      if (previous != null) {
+        if (previous != next) {
+          if (!next) {
+            WinToast.instance().showToast(
+                type: ToastType.text04, title: 'Game is not Running.', subtitle: 'WTbgA will suspend its activity.');
+          }
+        }
+      }
+    });
+    ref.listen<bool>(provider.inMatchProvider, (previous, next) async {
+      if (previous != next) {
+        if (next) {
+          final client = ref.watch(provider.orgbClientProvider);
+          final data = await client?.getAllControllers();
+          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
+          if (client != null && data != null) {
+            await OpenRGBSettings.setJoinBattleEffect(client, data, settings.loadingColor);
+            await OpenRGBSettings.setAllOff(client, data);
+          }
+        } else {
+          final client = ref.watch(provider.orgbClientProvider);
+          final data = await client?.getAllControllers();
+          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
+          if (client != null && data != null) {
+            await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
+          }
+        }
+      }
+    });
   }
 
   Future<void> checkCritAoa() async {
-    if (!isInGame.value) return;
+    if (!ref.read(provider.inMatchProvider)) return;
     if (fmData != null && vertical.notNull) {
       if (flap == null) return;
       if (flap! <= 10 && !vertical!.isNegative) {
@@ -508,7 +560,6 @@ class HomeState extends ConsumerState<Home>
 
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
-
   bool isStopped = false;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
@@ -516,18 +567,17 @@ class HomeState extends ConsumerState<Home>
   int fuelMass = 500;
   String windowName = '';
   int index = 0;
+  int climb = 0;
   Color textColor = Colors.white;
-  bool inHangar = false;
   late final stateStream = StateData.getState().asBroadcastStream();
   late final Stream<IndicatorData?> indicatorStream = IndicatorData.getIndicator().asBroadcastStream();
 
   @override
   Widget build(BuildContext context) {
     startListeners();
-
     final theme = FluentTheme.of(context);
     final fireBaseVersion = ref.watch(provider.versionFBProvider);
-    final developer = ref.watch(provider.developerMessageProvider);
+    final developerMessage = ref.watch(provider.developerMessageProvider);
     return NavigationView(
       appBar: NavigationAppBar(
           title: Column(
@@ -575,7 +625,7 @@ class HomeState extends ConsumerState<Home>
                   }),
                 ],
               ),
-              developer.when(data: (data) {
+              developerMessage.when(data: (data) {
                 if (data != null) {
                   return Text(
                     'Developer\'s message: $data',
@@ -626,7 +676,7 @@ class HomeState extends ConsumerState<Home>
                           showSnackbar(
                               context,
                               const Snackbar(
-                                content: Text('No data found'),
+                                content: Text('No data found, please retry connection'),
                                 extended: true,
                               ),
                               duration: const Duration(seconds: 5));
@@ -795,15 +845,9 @@ class HomeState extends ConsumerState<Home>
                         aoa = shot.data!.aoa;
                         load = shot.data!.load;
                         fuelMass = shot.data!.fuel;
-                        if ((shot.data!.altitude == 32 || shot.data!.altitude == 31) &&
-                            shot.data!.gear == 100 &&
-                            shot.data!.ias == 0) {
-                          inHangar = true;
-                        } else {
-                          inHangar = false;
-                        }
+                        climb = shot.data!.climb.toInt();
                         double fuel = shot.data!.fuel / shot.data!.maxFuel * 100;
-                        if (inHangar) {
+                        if (!ref.watch(provider.inMatchProvider)) {
                           return Flex(
                             direction: Axis.vertical,
                             children: [
@@ -811,11 +855,9 @@ class HomeState extends ConsumerState<Home>
                                 child: Container(
                                   padding: const EdgeInsets.only(left: 20),
                                   alignment: Alignment.center,
-                                  child: RichText(
-                                    text: const TextSpan(
-                                        style:
-                                            TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                        text: 'In Hangar'),
+                                  child: const Text(
+                                    'Not In Match',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
                                   ),
                                 ),
                               ),
@@ -955,13 +997,28 @@ class HomeState extends ConsumerState<Home>
                     stream: indicatorStream,
                     builder: (context, AsyncSnapshot<IndicatorData?> shot) {
                       if (shot.hasData) {
-                        inHangar = false;
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           ref.read(provider.vehicleNameProvider.notifier).state = shot.data!.type;
                           vertical = shot.data!.vertical;
                         });
-
-                        if (shot.data!.mach == null) shot.data!.mach = 0;
+                        shot.data?.mach ??= 0;
+                        if (!ref.watch(provider.inMatchProvider)) {
+                          return Flex(
+                            direction: Axis.vertical,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    'Not In Match',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
                         return Flex(
                           direction: Axis.vertical,
                           children: [
@@ -997,8 +1054,6 @@ class HomeState extends ConsumerState<Home>
                         );
                       }
                       if (shot.hasError) {
-                        inHangar = true;
-
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           ref.read(provider.vehicleNameProvider.notifier).state = '';
                         });
@@ -1013,7 +1068,6 @@ class HomeState extends ConsumerState<Home>
                               )),
                         );
                       } else {
-                        inHangar = true;
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           ref.read(provider.vehicleNameProvider.notifier).state = '';
                         });
@@ -1030,7 +1084,7 @@ class HomeState extends ConsumerState<Home>
           )),
           InteractiveViewer(
             child: GameMap(
-              inHangar: inHangar,
+              isInMatch: ref.read(provider.inMatchProvider),
             ),
           ),
           const Chat(),

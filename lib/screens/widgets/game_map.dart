@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:collection/collection.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -17,26 +18,28 @@ import '../../main.dart';
 import '../../services/helpers.dart';
 
 class GameMap extends ConsumerStatefulWidget {
-  final bool inHangar;
+  final bool isInMatch;
 
-  const GameMap({Key? key, required this.inHangar}) : super(key: key);
+  const GameMap({Key? key, required this.isInMatch}) : super(key: key);
 
   @override
   GameMapState createState() => GameMapState();
 }
 
 class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderStateMixin {
-  var systemWindows = SystemWindows();
+  late final StreamSubscription subscription;
 
   @override
   void initState() {
     super.initState();
     _getSizes();
     future = MapObj.mapObj();
-    IndicatorData.getIndicator().listen((data) {
-      compass = data?.compass ?? 0;
+    subscription = IndicatorData.getIndicator().listen((data) {
+      setState(() {
+        compass = data?.compass ?? 0;
+      });
     });
-    Timer.periodic(const Duration(milliseconds: 1200), (timer) async {
+    Timer.periodic(const Duration(milliseconds: 200), (timer) async {
       if (mounted) {
         _getSizes();
         future = MapObj.mapObj();
@@ -44,11 +47,16 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
         windows = await systemWindows.getActiveApps();
 
         wtFocused = windows.firstWhere((element) => element.title.contains('War Thunder')).isActive;
-        setState(() {});
       } else {
         timer.cancel();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
   }
 
   void _getSizes() {
@@ -59,8 +67,10 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
     }
   }
 
-  MapObj getPlayer(List<MapObj> objects) {
-    MapObj player = objects.firstWhere((MapObj obj) => obj.icon == 'Player');
+  MapObj? getPlayer(List<MapObj> objects) {
+    MapObj? player = objects.firstWhereOrNull(
+      (MapObj? obj) => obj?.icon == 'Player',
+    );
     return player;
   }
 
@@ -77,16 +87,18 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
   late Future<ui.Image> myFuture;
 
   FutureBuilder<ui.Image> imageBuilder(MapObj e) {
+    final settings = ref.watch(provider.appSettingsProvider).proximitySetting;
     double? distance;
     bool flag = false;
-    if (player != null && e.icon == 'Fighter' && e.x != null && e.y != null) {
+    if (player != null && (e.icon == 'Fighter' || e.icon == 'Assault') && e.x != null && e.y != null) {
       distance = getLinearDistanceBetween(
         Offset(e.x!, e.y!),
         Offset(player!.x!, player!.y!),
         mapSize: mapSize ?? 0,
       );
-
-      flag = enemyHexColor.contains(e.color) && e.icon == 'Fighter' && distance < 850;
+      flag = enemyHexColor.contains(e.color) &&
+          (e.icon == 'Fighter' || e.icon == 'Assault') &&
+          distance < settings.distance;
     }
     return FutureBuilder<ui.Image>(
         future: myFuture,
@@ -95,7 +107,6 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
             if (flag) {
               if (!wtFocused) {
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
-                  final settings = ref.watch(provider.appSettingsProvider).proximitySetting;
                   if (settings.enabled) {
                     await audio2.play(
                       DeviceFileSource(settings.path),
@@ -139,21 +150,16 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
               }
             }
             if (e.type == 'aircraft') {
-              return Transform.rotate(
-                alignment: FractionalOffset.center,
-                angle: -compass + 90,
-                origin: Offset(widgetHeight / 2, widgetWidth / 2),
-                child: CustomPaint(
-                    painter: ObjectPainter(
-                  x: e.x!,
-                  y: e.y!,
-                  height: widgetHeight,
-                  width: widgetWidth,
-                  image: snapshot.data!,
-                  colorHex: e.color,
-                  compass: e.icon == 'Player' ? compass : 0,
-                )),
-              );
+              return CustomPaint(
+                  painter: ObjectPainter(
+                x: e.x!,
+                y: e.y!,
+                height: widgetHeight,
+                width: widgetWidth,
+                image: snapshot.data!,
+                colorHex: e.icon == 'Player' ? '#FFFFFF' : e.color,
+                compass: compass,
+              ));
             } else if (e.type == 'ground_model') {
               return CustomPaint(
                   painter: ObjectPainter(
@@ -173,6 +179,9 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
                 width: widgetWidth,
                 image: snapshot.data!,
                 colorHex: e.color,
+                airfield: true,
+                startOffset: Offset(widgetWidth * e.sx!, widgetHeight * e.sy!),
+                endOffset: Offset(widgetWidth * e.ex!, widgetHeight * e.ey!),
               ));
             } else {
               return const Text('NOPE');
@@ -192,7 +201,7 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    return !widget.inHangar
+    return widget.isInMatch
         ? Stack(
             children: [
               Image.network(
@@ -275,10 +284,13 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
 class ObjectPainter extends CustomPainter {
   final double y;
   final double x;
+  final Offset startOffset;
+  final Offset endOffset;
   final double? height;
   final double? width;
   final ui.Image image;
   final String colorHex;
+  final bool airfield;
   final double compass;
 
   @override
@@ -288,9 +300,15 @@ class ObjectPainter extends CustomPainter {
       HexColor.fromHex(colorHex),
       BlendMode.srcATop,
     );
+    var paintAirfieldLine = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    paintAirfieldLine.colorFilter = ColorFilter.mode(HexColor.fromHex(colorHex), BlendMode.srcATop);
 
-    if (height != null && width != null) {
+    if (height != null && width != null && !airfield) {
       canvas.drawImage(image, Offset((width! * x), height! * y), paint1);
+    } else if (height != null && width != null && airfield) {
+      canvas.drawLine(startOffset, endOffset, paintAirfieldLine);
     }
   }
 
@@ -304,6 +322,9 @@ class ObjectPainter extends CustomPainter {
     this.height,
     required this.image,
     required this.colorHex,
+    this.airfield = false,
+    this.startOffset = const Offset(0, 0),
+    this.endOffset = const Offset(0, 0),
     this.compass = 0,
   });
 

@@ -22,6 +22,7 @@ import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
 import 'package:wtbgassistant/services/presence.dart';
 
+import '../../data/data_class.dart';
 import '../../main.dart';
 import '../../services/utility.dart';
 import '../loading.dart';
@@ -476,7 +477,7 @@ class SettingsState extends ConsumerState<Settings> {
                     appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(enabled: value)));
                 appSettingsNotifier.save();
               },
-              title: const Text('Proximity Sound'),
+              title: const Text('Enemy Proximity Sound'),
               description: const Text('Click to change file'),
               leading: SizedBox(height: 55, child: _buildSliderProxy(appSettings)),
               onPressed: (context) async {
@@ -490,7 +491,16 @@ class SettingsState extends ConsumerState<Settings> {
                   appSettingsNotifier.save();
                 }
               },
+              trailing: Row(
+                children: [
+                  distance(context, appSettings),
+                  const SizedBox(width: 8),
+                  Text('${appSettings.proximitySetting.distance}m'),
+                ],
+              ),
             ),
+          ]),
+          SettingsSection(title: const Text('Misc'), tiles: [
             SettingsTile.switchTile(
               initialValue: ref.watch(provider.needPremiumProvider),
               onToggle: (value) async {
@@ -501,6 +511,12 @@ class SettingsState extends ConsumerState<Settings> {
               title: const Text('Gib Premium!'),
               description: const Text(
                   'This is a way to notify me (Vonarian) if you need premium features and you can\'t get one :)'),
+            ),
+            SettingsTile(
+              title: const Text('Set a Username'),
+              onPressed: (context) async {
+                await Message.getUserNameCustom(context, null);
+              },
             ),
           ]),
         ]);
@@ -647,6 +663,29 @@ class SettingsState extends ConsumerState<Settings> {
                 volume: appSettings.proximitySetting.volume / 100, mode: PlayerMode.lowLatency);
           },
         ),
+      ],
+    );
+  }
+
+  Widget distance(BuildContext context, AppSettings appSettings) {
+    return Column(
+      children: [
+        IconButton(
+            icon: const Icon(FluentIcons.add),
+            onPressed: () async {
+              ref.read(provider.appSettingsProvider.notifier).update(appSettings.copyWith(
+                  proximitySetting:
+                      appSettings.proximitySetting.copyWith(distance: appSettings.proximitySetting.distance + 100)));
+              await ref.read(provider.appSettingsProvider.notifier).save();
+            }),
+        IconButton(
+            icon: const Icon(FluentIcons.remove),
+            onPressed: () async {
+              ref.read(provider.appSettingsProvider.notifier).update(appSettings.copyWith(
+                  proximitySetting:
+                      appSettings.proximitySetting.copyWith(distance: appSettings.proximitySetting.distance - 100)));
+              await ref.read(provider.appSettingsProvider.notifier).save();
+            }),
       ],
     );
   }

@@ -116,7 +116,8 @@ class MapObj {
 
   static Future<List<MapObj>> mapObj() async {
     try {
-      Response response = await dio.get('http://localhost:8111/map_obj.json');
+      Response response =
+          await dio.get('http://localhost:8111/map_obj.json').timeout(const Duration(milliseconds: 250));
 
       List<MapObj> mapObjList = [];
       if (response.data.isNotEmpty) {

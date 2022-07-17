@@ -47,4 +47,7 @@ class MyProvider {
       }
     },
   );
+
+  final gameRunningProvider = StateProvider<bool>((ref) => false);
+  final inMatchProvider = StateProvider<bool>((ref) => false);
 }

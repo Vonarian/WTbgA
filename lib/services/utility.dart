@@ -4,10 +4,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:collection/collection.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:system_windows/system_windows.dart';
 import 'package:win32/win32.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
@@ -133,5 +135,28 @@ class AppUtil {
     }
     final File file = File(filePath);
     return (await file.copy('${directory.path}\\${p.basename(filePath)}')).path;
+  }
+
+  static Stream<SystemWindow?> getWTWindow() async* {
+    final stream = Stream.periodic(const Duration(milliseconds: 1500), (_) async {
+      try {
+        final list = await systemWindows.getActiveApps();
+        List<String> isWarThunder = [
+          'War Thunder',
+          'War Thunder - In battle',
+          'War Thunder - Loading',
+          'War Thunder - Test Flight'
+        ];
+        final wtWindow = list.firstWhereOrNull((e) {
+          return isWarThunder.contains(e.title);
+        });
+        return wtWindow;
+      } catch (e) {
+        return null;
+      }
+    });
+    await for (var e in stream) {
+      yield await e;
+    }
   }
 }

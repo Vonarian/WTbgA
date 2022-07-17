@@ -11,6 +11,7 @@ import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_info2/system_info2.dart';
+import 'package:system_windows/system_windows.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/providers.dart';
 import 'package:wtbgassistant/screens/loading.dart';
@@ -29,6 +30,7 @@ final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
 late final String appVersion;
+final systemWindows = SystemWindows();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +50,7 @@ Future<void> main() async {
     await windowManager.show();
   });
   appVersion = await File(AppUtil.versionPath).readAsString();
+
   prefs = await SharedPreferences.getInstance();
   bool? autoStart = prefs.get('autoStart') as bool?;
   if (autoStart ?? false) {

@@ -10,6 +10,7 @@ import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/screens/downloader.dart';
 import 'package:wtbgassistant/services/presence.dart';
+import 'package:wtbgassistant/services/utility.dart';
 
 import '../../data/orgb_data_class.dart';
 import '../../main.dart';
@@ -75,6 +76,13 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
             Navigator.of(context).pushReplacement(FluentPageRoute(builder: (context) => const Downloader()));
           }
         });
+      }
+    });
+    AppUtil.getWTWindow().listen((event) {
+      if (event == null) {
+        ref.read(provider.gameRunningProvider.notifier).state = false;
+      } else {
+        ref.read(provider.gameRunningProvider.notifier).state = true;
       }
     });
   }

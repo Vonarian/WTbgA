@@ -58,9 +58,9 @@ double hypotenuse(double a, double b) {
 }
 
 double angleToTarget(double x, double y, double x2, double y2) {
-  final double deltaX = x2 - x;
-  final double deltaY = y2 - y;
-  final double distance = hypotenuse(deltaX, deltaY);
-  final double angle = math.asin(deltaY / distance);
-  return degrees(angle);
+  double vpe = degrees(math.atan(((x - x2) / (y - y2))));
+  if (vpe < 0) {
+    vpe += 360;
+  }
+  return vpe;
 }
