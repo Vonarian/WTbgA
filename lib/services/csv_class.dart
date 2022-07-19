@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../main.dart';
+
 String fmPath = p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_data_db.csv']);
 
 class FmData {
@@ -59,7 +61,6 @@ class FmData {
   });
 
   static Future<FmData?> setObject(String name) async {
-    final List<String> rowList = convertFmToList(await csvString());
     FmData? fmData;
     for (var element in rowList.skip(1)) {
       if (element.split(';')[0] == name) {
@@ -97,12 +98,12 @@ class FmData {
 }
 
 Future<String> csvString() async {
-  String csvStr = await File(fmPath).readAsString();
+  final String csvStr = await File(fmPath).readAsString();
   return csvStr;
 }
 
 List<String> convertFmToList(String csvString) {
-  List<String> rowList = [];
+  final List<String> rowList = [];
   for (final rows in LineSplitter.split(csvString)) {
     rowList.add(rows);
   }

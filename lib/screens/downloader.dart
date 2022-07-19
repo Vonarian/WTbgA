@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -116,7 +115,6 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
             ),
           ));
       windowManager.setSize(const Size(600, 600));
-      log(e.toString(), stackTrace: st);
       error = true;
       text = 'ERROR!';
       setState(() {});

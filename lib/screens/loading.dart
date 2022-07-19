@@ -52,11 +52,11 @@ class LoadingState extends State<Loading> {
                   }),
             ));
 
-        Future.delayed(const Duration(seconds: 4), () async {
-          Navigator.of(context).pushReplacement(FluentPageRoute(builder: (context) {
-            return const Downloader();
-          }));
-        });
+        await Future.delayed(const Duration(seconds: 4), () async {});
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(FluentPageRoute(builder: (context) {
+          return const Downloader();
+        }));
       } else {
         if (!mounted) return;
 
@@ -66,12 +66,10 @@ class LoadingState extends State<Loading> {
               content: Text('Version: $version ___ Status: Up-to-date!'),
               extended: true,
             ));
-        Future.delayed(const Duration(microseconds: 500), () async {
-          Navigator.pushReplacement(
-            context,
-            FluentPageRoute(builder: (context) => const Home()),
-          );
-        });
+        Navigator.pushReplacement(
+          context,
+          FluentPageRoute(builder: (context) => const Home()),
+        );
       }
     } catch (e, st) {
       showSnackbar(

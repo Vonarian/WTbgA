@@ -1,7 +1,4 @@
-import 'dart:developer';
-
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:wtbgassistant/main.dart';
 
 class MapObj {
@@ -126,10 +123,7 @@ class MapObj {
         }
       }
       return mapObjList;
-    } catch (e, st) {
-      if (kDebugMode) {
-        log('ERROR: $e', stackTrace: st);
-      }
+    } catch (e) {
       rethrow;
     }
   }

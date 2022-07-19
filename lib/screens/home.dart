@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -12,10 +11,8 @@ import 'package:openrgb/client/client.dart';
 import 'package:openrgb/data/rgb_controller.dart';
 import 'package:openrgb/helpers/extensions.dart';
 import 'package:path/path.dart' as p;
-import 'package:tray_manager/tray_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:win_toast/win_toast.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data/app_settings.dart';
 import 'package:wtbgassistant/data/orgb_data_class.dart';
 import 'package:wtbgassistant/data/pullup_data.dart';
@@ -44,9 +41,7 @@ class Home extends ConsumerStatefulWidget {
   HomeState createState() => HomeState();
 }
 
-class HomeState extends ConsumerState<Home>
-    with WindowListener, TrayListener, TickerProviderStateMixin, WidgetsBindingObserver {
-  StreamSubscription? subscription;
+class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   StreamSubscription? subscriptionForPresence;
   StreamSubscription? subscriptionForIndicators;
   StreamSubscription? subscriptionForState;
@@ -58,7 +53,7 @@ class HomeState extends ConsumerState<Home>
     if (!mounted) return;
     if (!ref.read(provider.premiumUserProvider)) return;
     if (ias != null) {
-      if (ias! >= ref.read(provider.gearLimitProvider.notifier).state && gear! > 30) {
+      if (ias! >= ref.read(provider.gearLimitProvider) && gear! > 20) {
         await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
       }
     }
@@ -81,78 +76,73 @@ class HomeState extends ConsumerState<Home>
     }
   }
 
-  bool notInGame() {
-    String name = windowName.toLowerCase();
-    return (name.contains('loading') || name.contains('waiting')) || name == 'war thunder';
-  }
-
   Future<void> vehicleStateCheck() async {
     if (!ref.read(provider.inMatchProvider)) return;
     if (!mounted) return;
     final appSettings = ref.read(provider.appSettingsProvider);
     final settings = ref.read(provider.rgbSettingProvider);
     if (!appSettings.fullNotif) return;
-    if (damages.isEmpty) return;
-    if (appSettings.engineWarning.enabled && oil != 15 && damages.last.msg == 'Engine died: no fuel') {
+    if (damage == defaultDamage) return;
+    if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: no fuel') {
       tripleWarning(AppSettingsEnum.engineSetting);
     }
-    if (appSettings.overHeatWarning.enabled && oil != 15 && damages.last.msg == 'Engine overheated') {
+    if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Engine overheated') {
       var client = ref.read(provider.orgbClientProvider);
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
-        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        final controllersProvider = ref.read(provider.orgbControllersProvider);
         await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
       }
     }
-    if (appSettings.overHeatWarning.enabled && oil != 15 && damages.last.msg == 'Oil overheated') {
+    if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Oil overheated') {
       var client = ref.read(provider.orgbClientProvider);
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
-        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        final controllersProvider = ref.read(provider.orgbControllersProvider);
         await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
       }
     }
-    if (appSettings.overHeatWarning.enabled && water != 15 && damages.last.msg == 'Water overheated') {
+    if (appSettings.overHeatWarning.enabled && water != 15 && damage.msg == 'Water overheated') {
       var client = ref.read(provider.orgbClientProvider);
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
-        final controllersProvider = ref.watch(provider.orgbControllersProvider);
+        final controllersProvider = ref.read(provider.orgbControllersProvider);
         await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
       }
     }
-    if (appSettings.engineWarning.enabled && oil != 15 && damages.last.msg == 'Engine died: overheating') {
+    if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: overheating') {
       tripleWarning(AppSettingsEnum.engineSetting);
     }
-    if (appSettings.engineWarning.enabled && oil != 15 && damages.last.msg == 'Engine died: propeller broken') {
+    if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: propeller broken') {
       tripleWarning(AppSettingsEnum.engineSetting);
     }
-    if (oil != 15 && damages.last.msg.contains('set afire')) {
-      List<String> split = damages.last.msg.split('set afire');
+    if (oil != 15 && damage.msg.contains('set afire')) {
+      final List<String> split = damage.msg.split('set afire');
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
         var client = ref.read(provider.orgbClientProvider);
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
-          final controllersProvider = ref.watch(provider.orgbControllersProvider);
+          final controllersProvider = ref.read(provider.orgbControllersProvider);
           await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
         }
       }
-    } else if (oil != 15 && damages.last.msg.contains('shot down')) {
-      List<String> split = damages.last.msg.split('shot down');
+    } else if (oil != 15 && damage.msg.contains('shot down')) {
+      final List<String> split = damage.msg.split('shot down');
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
         var client = ref.read(provider.orgbClientProvider);
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
-          final data = ref.watch(provider.orgbControllersProvider);
+          final data = ref.read(provider.orgbControllersProvider);
           await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
         }
       }
-    } else if (oil != 15 && damages.last.msg.contains('destroyed')) {
-      List<String> split = damages.last.msg.split('destroyed');
+    } else if (oil != 15 && damage.msg.contains('destroyed')) {
+      final List<String> split = damage.msg.split('destroyed');
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
         var client = ref.read(provider.orgbClientProvider);
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
-          final data = ref.watch(provider.orgbControllersProvider);
+          final data = ref.read(provider.orgbControllersProvider);
           await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
         }
       }
@@ -178,23 +168,23 @@ class HomeState extends ConsumerState<Home>
     }
   }
 
-  int emptyInt = 0;
-  String? emptyString = 'No Data';
-  bool? emptyBool;
-  ValueNotifier<int> idData = ValueNotifier<int>(0);
+  final ValueNotifier<int> idData = ValueNotifier<int>(0);
+  final defaultDamage = const Damage(id: 0, msg: '');
 
   Future<void> updateMsgId() async {
     if (!ref.read(provider.inMatchProvider)) return;
-    damages = (await Damage.getDamages((idData.value))).toList();
-    if (!mounted) return;
-    idData.value = damages.isNotEmpty ? damages.last.id : idData.value;
+    final value = await Damage.getDamages((idData.value));
+    if (damage != value && damage != defaultDamage) {
+      damage = value;
+    }
+    idData.value = damage.id;
   }
 
   Future<void> flapChecker() async {
     if (!ref.read(provider.inMatchProvider)) return;
-    if (damages.isEmpty) return;
+    if (damage == defaultDamage) return;
     if (!ref.read(provider.premiumUserProvider)) return;
-    if (damages.last.msg == 'Asymmetric flap extension') {
+    if (damage.msg == 'Asymmetric flap extension') {
       await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
     }
   }
@@ -288,8 +278,6 @@ class HomeState extends ConsumerState<Home>
   void initState() {
     super.initState();
     receiveDiskValues();
-    TrayManager.instance.addListener(this);
-    windowManager.addListener(this);
     updateMsgId();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -307,12 +295,12 @@ class HomeState extends ConsumerState<Home>
       }
     });
 
-    subscriptionForIndicators = IndicatorData.getIndicator().listen((event) {
+    subscriptionForIndicators = indicatorStream.listen((event) {
       if (event == null) return;
       ref.read(provider.vehicleNameProvider.notifier).state = event.type;
       vertical = event.vertical;
     });
-    subscriptionForState = StateData.getState().listen((event) {
+    subscriptionForState = stateStream.listen((event) {
       if (event == null) return;
       ias = event.ias;
       gear = event.gear;
@@ -339,20 +327,16 @@ class HomeState extends ConsumerState<Home>
       if (index != 0) {
         if (subscriptionForIndicators != null && subscriptionForIndicators!.isPaused) {
           subscriptionForIndicators!.resume();
+          if (subscriptionForState != null && subscriptionForState!.isPaused) {
+            subscriptionForState!.resume();
+          }
         }
-      } else if (index == 0) {
+      } else {
         if (subscriptionForIndicators != null && !subscriptionForIndicators!.isPaused) {
           subscriptionForIndicators!.pause();
-        }
-      }
-
-      if (index != 0) {
-        if (subscriptionForState != null && subscriptionForState!.isPaused) {
-          subscriptionForState!.resume();
-        }
-      } else if (index == 0) {
-        if (subscriptionForState != null && !subscriptionForState!.isPaused) {
-          subscriptionForState!.pause();
+          if (subscriptionForState != null && !subscriptionForState!.isPaused) {
+            subscriptionForState!.pause();
+          }
         }
       }
     });
@@ -363,15 +347,6 @@ class HomeState extends ConsumerState<Home>
       }
       lastId = idData.value;
     });
-    AppUtil.getWindow().listen((stringValue) {
-      windowName = stringValue ?? '';
-      if (windowName != '') {
-        if (ref.read(provider.inMatchProvider) != !notInGame()) {
-          ref.read(provider.inMatchProvider.notifier).state = !notInGame();
-        }
-      }
-    });
-
     var appSettings = ref.read(provider.appSettingsProvider);
     const redLineTimer = Duration(milliseconds: 200);
     Timer.periodic(redLineTimer, (Timer t) async {
@@ -388,7 +363,7 @@ class HomeState extends ConsumerState<Home>
     Future.delayed(Duration.zero, () async {
       csvNames = await File(namesPath).readAsString();
 
-      Map<String, String> namesMap = convertNamesToMap(csvNames);
+      namesMap = convertNamesToMap(csvNames);
       fmData = await FmData.setObject(namesMap[ref.read(provider.vehicleNameProvider.state).state] ?? '');
     });
   }
@@ -396,17 +371,15 @@ class HomeState extends ConsumerState<Home>
   @override
   Future<void> dispose() async {
     super.dispose();
-    TrayManager.instance.removeListener(this);
-    windowManager.removeListener(this);
     idData.removeListener((vehicleStateCheck));
     isStopped = true;
     WidgetsBinding.instance.removeObserver(this);
-    subscription!.cancel();
     subscriptionForPresence!.cancel();
     subscriptionForState!.cancel();
     subscriptionForIndicators!.cancel();
-    audio.release();
     audio.dispose();
+    audio1.dispose();
+    audio2.dispose();
   }
 
   StreamSubscription? startListening() {
@@ -471,7 +444,6 @@ class HomeState extends ConsumerState<Home>
   Future<void> startListeners() async {
     ref.listen<String?>(provider.vehicleNameProvider, (previous, next) async {
       if (next.notNull && next != '') {
-        Map<String, String> namesMap = convertNamesToMap(csvNames);
         fmData = await FmData.setObject(namesMap[next] ?? '');
         if (fmData != null) {
           ref.read(provider.gearLimitProvider.notifier).state = fmData!.critGearSpd;
@@ -529,6 +501,8 @@ class HomeState extends ConsumerState<Home>
     }
   }
 
+  late final Map<String, String> namesMap;
+
   Map<String, String> convertNamesToMap(String csvStringNames) {
     Map<String, String> map = {};
 
@@ -539,7 +513,6 @@ class HomeState extends ConsumerState<Home>
     return map;
   }
 
-  bool wasLoading = false;
   int? gear;
   double? aoa;
   double critAoa = 10000;
@@ -555,7 +528,10 @@ class HomeState extends ConsumerState<Home>
   int? oil;
   int? water;
   FmData? fmData;
-  List<Damage> damages = [];
+  Damage damage = const Damage(
+    id: 0,
+    msg: '',
+  );
   String csvNames = '';
   String namesPath =
       p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_names_db.csv']);
@@ -567,10 +543,8 @@ class HomeState extends ConsumerState<Home>
   bool isUserIasGearNew = false;
   bool isDamageMsgNew = false;
   int fuelMass = 500;
-  String windowName = '';
   int index = 0;
   int climb = 0;
-  Color textColor = Colors.white;
   late final stateStream = StateData.getState().asBroadcastStream();
   late final Stream<IndicatorData?> indicatorStream = IndicatorData.getIndicator().asBroadcastStream();
 
@@ -838,17 +812,6 @@ class HomeState extends ConsumerState<Home>
                     stream: stateStream,
                     builder: (context, AsyncSnapshot<StateData?> shot) {
                       if (shot.hasData) {
-                        ias = shot.data!.ias;
-                        gear = shot.data!.gear;
-                        flap = shot.data!.flaps;
-                        altitude = shot.data!.altitude;
-                        oil = shot.data!.oilTemp1C;
-                        water = shot.data!.waterTemp1C;
-                        aoa = shot.data!.aoa;
-                        load = shot.data!.load;
-                        fuelMass = shot.data!.fuel;
-                        climb = shot.data!.climb.toInt();
-                        double fuel = shot.data!.fuel / shot.data!.maxFuel * 100;
                         if (!ref.watch(provider.inMatchProvider)) {
                           return Flex(
                             direction: Axis.vertical,
@@ -866,6 +829,17 @@ class HomeState extends ConsumerState<Home>
                             ],
                           );
                         }
+                        ias = shot.data!.ias;
+                        gear = shot.data!.gear;
+                        flap = shot.data!.flaps;
+                        altitude = shot.data!.altitude;
+                        oil = shot.data!.oilTemp1C;
+                        water = shot.data!.waterTemp1C;
+                        aoa = shot.data!.aoa;
+                        load = shot.data!.load;
+                        fuelMass = shot.data!.fuel;
+                        climb = shot.data!.climb.toInt();
+                        double fuel = shot.data!.fuel / shot.data!.maxFuel * 100;
                         return Flex(
                           direction: Axis.vertical,
                           children: [
@@ -1003,7 +977,7 @@ class HomeState extends ConsumerState<Home>
                           ref.read(provider.vehicleNameProvider.notifier).state = shot.data!.type;
                           vertical = shot.data!.vertical;
                         });
-                        shot.data?.mach ??= 0;
+                        final double mach = shot.data?.mach ?? 0;
                         if (!ref.watch(provider.inMatchProvider)) {
                           return Flex(
                             direction: Axis.vertical,
@@ -1047,7 +1021,7 @@ class HomeState extends ConsumerState<Home>
                                     TextSpan(
                                         style: const TextStyle(
                                             color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                        text: 'Mach= ${shot.data!.mach!.toStringAsFixed(1)} M')
+                                        text: 'Mach= ${mach.toStringAsFixed(1)} M')
                                   ]),
                                 ),
                               ),
@@ -1059,7 +1033,6 @@ class HomeState extends ConsumerState<Home>
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           ref.read(provider.vehicleNameProvider.notifier).state = '';
                         });
-                        log('Error: ${shot.error}');
                         return Center(
                           child: Container(
                               padding: const EdgeInsets.all(8.0),

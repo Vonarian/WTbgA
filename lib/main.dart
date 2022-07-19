@@ -16,6 +16,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/providers.dart';
 import 'package:wtbgassistant/screens/loading.dart';
 import 'package:wtbgassistant/screens/widgets/top_widget.dart';
+import 'package:wtbgassistant/services/csv_class.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
 import 'data/firebase.dart';
@@ -31,6 +32,7 @@ final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
 late final String appVersion;
 final systemWindows = SystemWindows();
+late final List<String> rowList;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,7 +52,7 @@ Future<void> main() async {
     await windowManager.show();
   });
   appVersion = await File(AppUtil.versionPath).readAsString();
-
+  rowList = convertFmToList(await csvString());
   prefs = await SharedPreferences.getInstance();
   bool? autoStart = prefs.get('autoStart') as bool?;
   if (autoStart ?? false) {
@@ -64,4 +66,13 @@ Future<void> main() async {
       child: App(child: Loading()),
     ),
   );
+}
+
+class TestApp extends StatelessWidget {
+  const TestApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
 }

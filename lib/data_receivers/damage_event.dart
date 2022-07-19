@@ -1,21 +1,23 @@
 import '../main.dart';
 
 class Damage {
-  int id;
-  String msg;
+  final int id;
+  final String msg;
 
-  static Future<List<Damage>> getDamages(int lastDmg) async {
+  static Future<Damage> getDamages(int lastDmg) async {
     try {
       final response = await dio.get('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=$lastDmg');
-      final damageEvents = response.data['damage'].map<Damage>((model) => Damage.fromMap(model)).toList();
-      return damageEvents;
+      final damageEvents =
+          response.data['damage'].map<Damage>((model) => Damage.fromMap(model)).toList() as List<Damage>;
+      final damage = damageEvents.isNotEmpty ? damageEvents.last : const Damage(id: 0, msg: '');
+      return damage;
     } catch (e) {
       // log('Encountered error: $e', stackTrace: stackTrace);
       rethrow;
     }
   }
 
-  Damage({
+  const Damage({
     required this.id,
     required this.msg,
   });
@@ -53,7 +55,7 @@ class Damage {
   factory Damage.fromMap(Map<String, dynamic> map) {
     return Damage(
       id: map['id'],
-      msg: map['msg'].toString(),
+      msg: map['msg'],
     );
   }
 }

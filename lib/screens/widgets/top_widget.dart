@@ -3,17 +3,17 @@ import 'dart:async';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openrgb/openrgb.dart';
+import 'package:openrgb/client/client.dart';
 import 'package:system_theme/system_theme.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/screens/downloader.dart';
-import 'package:wtbgassistant/services/presence.dart';
-import 'package:wtbgassistant/services/utility.dart';
 
 import '../../data/orgb_data_class.dart';
 import '../../main.dart';
+import '../../services/presence.dart';
+import '../../services/utility.dart';
+import '../downloader.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key, required this.child});
@@ -83,8 +83,16 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         ref.read(provider.gameRunningProvider.notifier).state = false;
       } else {
         ref.read(provider.gameRunningProvider.notifier).state = true;
+        if (ref.read(provider.inMatchProvider) != !notInGame(event.title)) {
+          ref.read(provider.inMatchProvider.notifier).state = !notInGame(event.title);
+        }
       }
     });
+  }
+
+  bool notInGame(String value) {
+    String name = value.toLowerCase();
+    return (name.contains('loading') || name.contains('waiting')) || name == 'war thunder';
   }
 
   @override

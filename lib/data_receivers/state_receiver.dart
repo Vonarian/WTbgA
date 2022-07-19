@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import '../main.dart';
 
 class StateData {
-  StateData({
+  const StateData({
     required this.valid,
     required this.aileron,
     required this.elevator,
@@ -76,8 +76,8 @@ class StateData {
   static Stream<StateData?> getState() async* {
     final stream = Stream.periodic(const Duration(milliseconds: 200), (count) async {
       try {
-        Response? response = await dio.get('http://localhost:8111/state').timeout(const Duration(seconds: 2));
-        StateData toolDataState = StateData.fromJson(response.data);
+        final Response response = await dio.get('http://localhost:8111/state').timeout(const Duration(seconds: 2));
+        final StateData toolDataState = StateData.fromJson(response.data);
         return toolDataState;
       } catch (e) {
         return null;

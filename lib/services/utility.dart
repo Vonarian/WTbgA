@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -13,6 +12,13 @@ import 'package:system_windows/system_windows.dart';
 import 'package:win32/win32.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
+
+final List<String> isWarThunder = [
+  'War Thunder',
+  'War Thunder - In battle',
+  'War Thunder - Loading',
+  'War Thunder - Test Flight'
+];
 
 class AppUtil {
   static final versionPath =
@@ -35,7 +41,6 @@ class AppUtil {
         return appDocDirNewFolder.path;
       }
     } catch (e) {
-      log(e.toString());
       rethrow;
     }
   }
@@ -117,16 +122,6 @@ class AppUtil {
     return openRGBExecutablePath;
   }
 
-  static Stream<String?> getWindow() async* {
-    final stream = Stream.periodic(const Duration(milliseconds: 350), (_) async {
-      String windowName = await AppUtil.runPowerShellScript(windowPath, ['-ExecutionPolicy', 'Bypass']);
-      return windowName;
-    });
-    await for (var name in stream) {
-      yield (await name).trim().replaceAll('\n', '');
-    }
-  }
-
   static Future<String> saveInDocs(String filePath) async {
     final String docPath = await AppUtil.getAppDocsPath();
     final Directory directory = Directory('$docPath\\Settings\\');
@@ -141,12 +136,6 @@ class AppUtil {
     final stream = Stream.periodic(const Duration(milliseconds: 1500), (_) async {
       try {
         final list = await systemWindows.getActiveApps();
-        List<String> isWarThunder = [
-          'War Thunder',
-          'War Thunder - In battle',
-          'War Thunder - Loading',
-          'War Thunder - Test Flight'
-        ];
         final wtWindow = list.firstWhereOrNull((e) {
           return isWarThunder.contains(e.title);
         });

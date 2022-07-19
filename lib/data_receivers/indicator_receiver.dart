@@ -5,17 +5,17 @@ import 'package:dio/dio.dart';
 import '../main.dart';
 
 class IndicatorData {
-  String? type;
-  double? throttle;
-  double? mach;
-  double? compass;
-  double? engine;
-  double? flap1;
-  double? flap2;
-  double? vertical;
-  bool valid;
+  final String? type;
+  final double? throttle;
+  final double? mach;
+  final double? compass;
+  final double? engine;
+  final double? flap1;
+  final double? flap2;
+  final double? vertical;
+  final bool valid;
 
-  IndicatorData(
+  const IndicatorData(
       {required this.type,
       required this.throttle,
       required this.mach,
@@ -29,9 +29,9 @@ class IndicatorData {
   static Stream<IndicatorData?> getIndicator() async* {
     final stream = Stream.periodic(const Duration(milliseconds: 200), (_) async {
       try {
-        Response? response =
+        final Response response =
             await dio.get('http://localhost:8111/indicators').timeout(const Duration(milliseconds: 200));
-        IndicatorData toolDataState = IndicatorData.fromMap(response.data);
+        final IndicatorData toolDataState = IndicatorData.fromMap(response.data);
         return toolDataState;
       } catch (e) {
         return null;

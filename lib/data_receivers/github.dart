@@ -8,7 +8,7 @@ Data networkFromJson(String str) => Data.fromJson(json.decode(str));
 String networkToJson(Data data) => json.encode(data.toJson());
 
 class Data {
-  Data({
+  const Data({
     required this.url,
     required this.assetsUrl,
     required this.uploadUrl,
@@ -91,8 +91,7 @@ class Data {
 
   static Future<Data> getData() async {
     try {
-      Response response = await dio
-          .get('https://api.github.com/repos/Vonarian/WTbgA/releases/latest');
+      Response response = await dio.get('https://api.github.com/repos/Vonarian/WTbgA/releases/latest');
       return Data.fromJson(response.data);
     } catch (e) {
       rethrow;
@@ -101,7 +100,7 @@ class Data {
 }
 
 class Asset {
-  Asset({
+  const Asset({
     required this.url,
     required this.id,
     required this.nodeId,
@@ -165,7 +164,7 @@ class Asset {
 }
 
 class Author {
-  Author({
+  const Author({
     required this.login,
     required this.id,
     required this.nodeId,
