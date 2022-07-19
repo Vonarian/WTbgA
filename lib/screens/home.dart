@@ -297,7 +297,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
     subscriptionForIndicators = indicatorStream.listen((event) {
       if (event == null) return;
-      ref.read(provider.vehicleNameProvider.notifier).state = event.type;
+      if (ref.read(provider.vehicleNameProvider) != event.type) {
+        ref.read(provider.vehicleNameProvider.notifier).state = event.type;
+      }
       vertical = event.vertical;
     });
     subscriptionForState = stateStream.listen((event) {
@@ -974,9 +976,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                     builder: (context, AsyncSnapshot<IndicatorData?> shot) {
                       if (shot.hasData) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
-                          ref.read(provider.vehicleNameProvider.notifier).state = shot.data!.type;
-                          vertical = shot.data!.vertical;
+                          if (ref.read(provider.vehicleNameProvider) != shot.data!.type) {
+                            ref.read(provider.vehicleNameProvider.notifier).state = shot.data!.type;
+                          }
                         });
+                        vertical = shot.data!.vertical;
                         final double mach = shot.data?.mach ?? 0;
                         if (!ref.watch(provider.inMatchProvider)) {
                           return Flex(
