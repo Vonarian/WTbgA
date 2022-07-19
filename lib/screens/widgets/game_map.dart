@@ -81,9 +81,7 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
   GlobalKey key = GlobalKey();
   final List<String> enemyHexColor = ['#f40C00', '#ff0D00', '#ff0000', '#f00C00'];
 
-  late Future<ui.Image> myFuture;
-
-  FutureBuilder<ui.Image> imageBuilder(MapObj e) {
+  FutureBuilder<ui.Image> imageBuilder(MapObj e, Future<ui.Image> future) {
     final settings = ref.watch(provider.appSettingsProvider).proximitySetting;
     double? distance;
     bool flag = false;
@@ -98,7 +96,7 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
           distance < settings.distance;
     }
     return FutureBuilder<ui.Image>(
-        future: myFuture,
+        future: future,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (flag) {
@@ -238,19 +236,18 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
                             break;
                         }
                         if (e.type == 'aircraft') {
-                          myFuture = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
-                          return imageBuilder(e);
+                          final future = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
+                          return imageBuilder(e, future);
                         } else if (e.type == 'ground_model') {
-                          myFuture = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
-                          return imageBuilder(e);
+                          final future = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
+                          return imageBuilder(e, future);
                         } else if (e.type == 'airfield') {
-                          myFuture = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
-                          return imageBuilder(e);
+                          final future = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
+                          return imageBuilder(e, future);
                         } else {
                           return const SizedBox();
                         }
                       }).toList();
-
                       return Stack(
                         children: columnChildren,
                       );
