@@ -83,14 +83,14 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         ref.read(provider.gameRunningProvider.notifier).state = false;
       } else {
         ref.read(provider.gameRunningProvider.notifier).state = true;
-        if (ref.read(provider.inMatchProvider) != !notInGame(event.title)) {
-          ref.read(provider.inMatchProvider.notifier).state = !notInGame(event.title);
+        if (ref.read(provider.inMatchProvider) != !notInMatch(event.title)) {
+          ref.read(provider.inMatchProvider.notifier).state = !notInMatch(event.title);
         }
       }
     });
   }
 
-  bool notInGame(String value) {
+  bool notInMatch(String value) {
     String name = value.toLowerCase();
     return (name.contains('loading') || name.contains('waiting')) || name == 'war thunder';
   }

@@ -24,7 +24,6 @@ import 'package:wtbgassistant/screens/widgets/settings.dart';
 import 'package:wtbgassistant/services/csv_class.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
-import '../data/app_settings.dart';
 import '../data/data_class.dart';
 import '../data/firebase.dart';
 import '../data_receivers/damage_event.dart';
@@ -452,11 +451,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         }
       }
     });
-    ref.listen<bool>(provider.gameRunningProvider, (previous, next) {
+    ref.listen<bool>(provider.gameRunningProvider, (previous, next) async {
       if (previous != null) {
         if (previous != next) {
           if (!next) {
-            WinToast.instance().showToast(
+            await WinToast.instance().showToast(
                 type: ToastType.text04, title: 'Game is not Running.', subtitle: 'WTbgA will suspend its activity.');
           }
         }
@@ -465,14 +464,19 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     ref.listen<bool>(provider.inMatchProvider, (previous, next) async {
       if (previous != next) {
         if (next) {
+          Future.delayed(const Duration(seconds: 4))
+              .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe());
           final client = ref.watch(provider.orgbClientProvider);
           final data = await client?.getAllControllers();
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
-          if (client != null && data != null) {
-            await OpenRGBSettings.setJoinBattleEffect(client, data, settings.loadingColor);
+          if (data != null) {
+            await OpenRGBSettings.setJoinBattleEffect(client!, data, settings.loadingColor);
             await OpenRGBSettings.setAllOff(client, data);
           }
         } else {
+          Future.delayed(const Duration(seconds: 4))
+              .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe());
+
           final client = ref.watch(provider.orgbClientProvider);
           final data = await client?.getAllControllers();
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
@@ -607,7 +611,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                 if (data != null) {
                   return Text(
                     'Developer\'s message: $data',
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                   );
                 } else {
                   return const SizedBox();

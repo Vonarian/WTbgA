@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:win32_registry/win32_registry.dart';
 
 import '../main.dart';
 
@@ -12,6 +15,7 @@ class AppSettings {
   final OverGSetting overGWarning;
   final PullUpSetting pullUpSetting;
   final ProximitySetting proximitySetting;
+  final WindscribeSettings windscribeSettings;
   final bool fullNotif;
 
   AppSettings copyWith({
@@ -21,6 +25,7 @@ class AppSettings {
     bool? fullNotif,
     PullUpSetting? pullUpSetting,
     ProximitySetting? proximitySetting,
+    WindscribeSettings? windscribeSettings,
   }) {
     return AppSettings(
       overHeatWarning: overHeatWarning ?? this.overHeatWarning,
@@ -29,6 +34,7 @@ class AppSettings {
       fullNotif: fullNotif ?? this.fullNotif,
       pullUpSetting: pullUpSetting ?? this.pullUpSetting,
       proximitySetting: proximitySetting ?? this.proximitySetting,
+      windscribeSettings: windscribeSettings ?? this.windscribeSettings,
     );
   }
 
@@ -39,6 +45,7 @@ class AppSettings {
       'overGWarning': overGWarning.toMap(),
       'pullUpSetting': pullUpSetting.toMap(),
       'proximitySetting': proximitySetting.toMap(),
+      'windscribeSettings': windscribeSettings.toMap(),
       'fullNotif': fullNotif,
     };
   }
@@ -50,6 +57,7 @@ class AppSettings {
       overGWarning: OverGSetting.fromMap(map['overGWarning']),
       pullUpSetting: PullUpSetting.fromMap(map['pullUpSetting']),
       proximitySetting: ProximitySetting.fromMap(map['proximitySetting']),
+      windscribeSettings: WindscribeSettings.fromMap(map['windscribeSettings']),
       fullNotif: map['fullNotif'],
     );
   }
@@ -61,6 +69,7 @@ class AppSettings {
     required this.fullNotif,
     required this.pullUpSetting,
     required this.proximitySetting,
+    required this.windscribeSettings,
   });
 }
 
@@ -73,6 +82,8 @@ final defaultProxyPath =
 
 final defaultOverGPath =
     p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\overg.wav']);
+final defaultPingPath =
+    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\ping.mp3']);
 
 class SettingsNotifier extends StateNotifier<AppSettings> {
   SettingsNotifier()
@@ -82,11 +93,44 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
           overGWarning: OverGSetting(path: defaultOverGPath, enabled: true, volume: 22),
           pullUpSetting: PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 22),
           proximitySetting: ProximitySetting(enabled: true, path: defaultProxyPath, volume: 22, distance: 850),
+          windscribeSettings: WindscribeSettings(notifPath: defaultPingPath),
           fullNotif: true,
         ));
 
   void update(AppSettings settings) {
     state = settings;
+  }
+
+  Future<String?> setupWindscribePath() async {
+    RegistryKey? key;
+    RegistryKey? key2;
+    RegistryKey? key3;
+    try {
+      key = Registry.openPath(RegistryHive.currentUser, path: r'Software\Windscribe\Installer');
+    } catch (e, st) {
+      log(e.toString(), stackTrace: st);
+    }
+    try {
+      key2 = Registry.openPath(RegistryHive.localMachine, path: r'Software\Windscribe\Installer');
+    } catch (e, st) {
+      log(e.toString(), stackTrace: st);
+    }
+    try {
+      key3 = Registry.openPath(RegistryHive.allUsers, path: r'Software\Windscribe\Installer');
+    } catch (e, st) {
+      log(e.toString(), stackTrace: st);
+    }
+    final value = key?.getValueAsString('applicationPath') ??
+        key2?.getValueAsString('applicationPath') ??
+        key3?.getValueAsString('applicationPath');
+    if (value != null) {
+      state = state.copyWith(windscribeSettings: state.windscribeSettings.copyWith(path: '$value\\windscribe-cli.exe'));
+      return '$value\\windscribe-cli.exe';
+    }
+    key?.close();
+    key2?.close();
+    key3?.close();
+    return null;
   }
 
   Future<void> save() async {
@@ -101,20 +145,60 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     }
   }
 
-  void setOverHeatWarning(String path, bool enabled, double volume) {
-    state = state.copyWith(overHeatWarning: OverHeatSetting(path: path, enabled: enabled, volume: volume));
+  void setFullNotif(bool? value) {
+    state = state.copyWith(fullNotif: value);
   }
 
-  void setEngineWarning(String path, bool enabled, double volume) {
-    state = state.copyWith(engineWarning: EngineSetting(path: path, enabled: enabled, volume: volume));
+  void setOverHeatWarning({String? path, bool? enabled, double? volume}) {
+    state = state.copyWith(
+        overHeatWarning: state.overHeatWarning.copyWith(
+      volume: volume,
+      enabled: enabled,
+      path: path,
+    ));
   }
 
-  void setOverGWarning(String path, bool enabled, double volume) {
-    state = state.copyWith(overGWarning: OverGSetting(path: path, enabled: enabled, volume: volume));
+  void setEngineWarning({String? path, bool? enabled, double? volume}) {
+    state = state.copyWith(
+        engineWarning: state.engineWarning.copyWith(
+      volume: volume,
+      enabled: enabled,
+      path: path,
+    ));
   }
 
-  void setPullUpSetting(String path, bool enabled, double volume) {
-    state = state.copyWith(pullUpSetting: PullUpSetting(path: path, enabled: enabled, volume: volume));
+  void setOverGWarning({String? path, bool? enabled, double? volume}) {
+    state = state.copyWith(
+        overGWarning: state.overGWarning.copyWith(
+      volume: volume,
+      enabled: enabled,
+      path: path,
+    ));
+  }
+
+  void setPullUpSetting({String? path, bool? enabled, double? volume}) {
+    state = state.copyWith(
+        pullUpSetting: state.pullUpSetting.copyWith(
+      volume: volume,
+      enabled: enabled,
+      path: path,
+    ));
+  }
+
+  void setProximitySetting({String? path, bool? enabled, double? volume, int? distance}) {
+    state = state.copyWith(
+        proximitySetting: state.proximitySetting.copyWith(
+      volume: volume,
+      enabled: enabled,
+      path: path,
+      distance: distance,
+    ));
+  }
+
+  void setWindscribe({String? notifPath, bool? autoSwitch, double? volume, String? path}) {
+    state = state.copyWith(
+        windscribeSettings: state.windscribeSettings
+            .copyWith(volume: volume, autoSwitch: autoSwitch, notifPath: notifPath, path: path));
   }
 }
 
@@ -137,11 +221,11 @@ class OverHeatSetting {
     };
   }
 
-  factory OverHeatSetting.fromMap(Map<String, dynamic> map) {
+  factory OverHeatSetting.fromMap(Map<String, dynamic>? map) {
     return OverHeatSetting(
-      path: map['path'] as String,
-      enabled: map['enabled'] as bool,
-      volume: map['volume'] as double,
+      path: map?['path'] ?? defaultBeepPath,
+      enabled: map?['enabled'] ?? true,
+      volume: map?['volume'] ?? 22,
     );
   }
 
@@ -177,11 +261,11 @@ class OverGSetting {
     };
   }
 
-  factory OverGSetting.fromMap(Map<String, dynamic> map) {
+  factory OverGSetting.fromMap(Map<String, dynamic>? map) {
     return OverGSetting(
-      path: map['path'] as String,
-      enabled: map['enabled'] as bool,
-      volume: map['volume'] as double,
+      path: map?['path'] ?? defaultOverGPath,
+      enabled: map?['enabled'] ?? true,
+      volume: map?['volume'] ?? 22,
     );
   }
 
@@ -217,11 +301,11 @@ class EngineSetting {
     };
   }
 
-  factory EngineSetting.fromMap(Map<String, dynamic> map) {
+  factory EngineSetting.fromMap(Map<String, dynamic>? map) {
     return EngineSetting(
-      path: map['path'] as String,
-      enabled: map['enabled'] as bool,
-      volume: map['volume'] as double,
+      path: map?['path'] ?? defaultBeepPath,
+      enabled: map?['enabled'] ?? true,
+      volume: map?['volume'] ?? 22,
     );
   }
 
@@ -257,11 +341,11 @@ class PullUpSetting {
     };
   }
 
-  factory PullUpSetting.fromMap(Map<String, dynamic> map) {
+  factory PullUpSetting.fromMap(Map<String, dynamic>? map) {
     return PullUpSetting(
-      enabled: map['enabled'] as bool,
-      volume: map['volume'] as double,
-      path: map['path'] as String,
+      enabled: map?['enabled'] ?? true,
+      volume: map?['volume'] ?? 22,
+      path: map?['path'] ?? defaultPullUpPath,
     );
   }
 
@@ -300,12 +384,12 @@ class ProximitySetting {
     };
   }
 
-  factory ProximitySetting.fromMap(Map<String, dynamic> map) {
+  factory ProximitySetting.fromMap(Map<String, dynamic>? map) {
     return ProximitySetting(
-      path: map['path'] ?? defaultProxyPath,
-      enabled: map['enabled'] ?? false,
-      volume: map['volume'] ?? 22,
-      distance: map['distance'] ?? 850,
+      path: map?['path'] ?? defaultProxyPath,
+      enabled: map?['enabled'] ?? false,
+      volume: map?['volume'] ?? 22,
+      distance: map?['distance'] ?? 850,
     );
   }
 
@@ -326,6 +410,71 @@ class ProximitySetting {
   @override
   String toString() {
     return 'ProximitySetting{path: $path, enabled: $enabled, volume: $volume, distance: $distance}';
+  }
+}
+
+class WindscribeSettings {
+  final bool autoSwitch;
+  final String notifPath;
+  final double volume;
+  final String? path;
+  final bool connected;
+
+  const WindscribeSettings({
+    this.autoSwitch = false,
+    required this.notifPath,
+    this.volume = 22,
+    this.connected = false,
+    this.path,
+  });
+
+  Future<void> connectWindscribe() async {
+    if (path == null || connected) return;
+    final process = await Process.start(path!, ['connect']);
+    await for (var e in process.stdout) {}
+    await audio2.play(DeviceFileSource(notifPath), volume: volume / 100, mode: PlayerMode.lowLatency);
+  }
+
+  Future<void> disconnectWindscribe() async {
+    if (path == null || !connected) return;
+    final process = await Process.start(path!, ['disconnect']);
+    await for (var e in process.stdout) {}
+    await audio2.play(DeviceFileSource(notifPath), volume: volume / 100, mode: PlayerMode.lowLatency);
+  }
+
+  Map<String, dynamic> toMap() {
+    return {'autoSwitch': autoSwitch, 'notifPath': notifPath, 'volume': volume, 'path': path, 'connected': connected};
+  }
+
+  factory WindscribeSettings.fromMap(Map<String, dynamic>? map) {
+    return WindscribeSettings(
+      autoSwitch: map?['autoSwitch'] ?? false,
+      notifPath: map?['notifPath'] ?? defaultPingPath,
+      volume: map?['volume'] ?? 22,
+      path: map?['path'],
+      connected: map?['connected'] ?? false,
+    );
+  }
+
+  WindscribeSettings copyWith({
+    bool? autoSwitch,
+    String? notifPath,
+    double? volume,
+    String? path,
+    bool? connected,
+  }) {
+    return WindscribeSettings(
+      autoSwitch: autoSwitch ?? this.autoSwitch,
+      notifPath: notifPath ?? this.notifPath,
+      volume: volume ?? this.volume,
+      path: path ?? this.path,
+      connected: connected ?? this.connected,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'WindscribeSettings{autoSwitch: $autoSwitch, notifPath: $notifPath, volume: $volume, path: $path, connected: $connected}';
   }
 }
 

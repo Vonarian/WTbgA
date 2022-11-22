@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -161,17 +160,15 @@ class SettingsState extends ConsumerState<Settings> {
               SettingsTile.switchTile(
                 initialValue: appSettings.fullNotif,
                 title: const Text('Toggle All Notifications'),
-                onToggle: (bool value) {
+                onToggle: (bool value) async {
                   appSettingsNotifier.update(appSettings.copyWith(fullNotif: value));
-                  if (!value) {
-                    appSettingsNotifier.update(
-                        appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(enabled: value)));
-                    appSettingsNotifier.update(
-                        appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(enabled: value)));
-                    appSettingsNotifier
-                        .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(enabled: value)));
-                  }
-                  appSettingsNotifier.save();
+                  appSettingsNotifier.setFullNotif(value);
+                  appSettingsNotifier.setEngineWarning(enabled: value);
+                  appSettingsNotifier.setOverHeatWarning(enabled: value);
+                  appSettingsNotifier.setOverGWarning(enabled: value);
+                  appSettingsNotifier.setPullUpSetting(enabled: value);
+                  appSettingsNotifier.setProximitySetting(enabled: value);
+                  await appSettingsNotifier.save();
                 },
               ),
               firebaseVersion.when(data: (data) {
@@ -266,6 +263,66 @@ class SettingsState extends ConsumerState<Settings> {
                   },
                 );
               }),
+              SettingsTile.switchTile(
+                leading: Image.asset(
+                  'assets/icons/iran.png',
+                  height: 20,
+                  width: 20,
+                ),
+                description: Row(
+                  children: [
+                    const Text('Feature developed for '),
+                    GradientText('IRANIAN',
+                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                        gradient: LinearGradient(colors: [Colors.green, Colors.white, Colors.red])),
+                    const Text(' users :)'),
+                  ],
+                ),
+                initialValue: appSettings.windscribeSettings.autoSwitch,
+                title: Text(
+                    'Toggle Windscribe auto-switch (${appSettings.windscribeSettings.path == null ? 'Click to initiate' : 'Initiated'})'),
+                onToggle: (bool value) async {
+                  appSettingsNotifier.setWindscribe(autoSwitch: value);
+                  await appSettingsNotifier.save();
+                },
+                onPressed: appSettings.windscribeSettings.autoSwitch
+                    ? (context) async {
+                        final value = await appSettingsNotifier.setupWindscribePath();
+                        if (value == null && mounted) {
+                          showSnackbar(
+                            context,
+                            Snackbar(
+                                extended: true,
+                                action: Button(
+                                    child: const Text('Select Manually'),
+                                    onPressed: () async {
+                                      final path = await FilePicker.platform
+                                          .getDirectoryPath(dialogTitle: 'Pick Windscribe\'s installation folder.');
+                                      if (path != null && await File('$path\\windscribe-cli.exe').exists()) {
+                                        appSettingsNotifier.setWindscribe(path: '$path\\windscribe-cli.exe');
+                                        await appSettingsNotifier.save();
+                                        showDialog(
+                                            context: context,
+                                            builder: (context) => ContentDialog(
+                                                  content: const Text('Windscribe path has been updated.'),
+                                                  actions: [
+                                                    Button(
+                                                        child: const Text('Understood.'),
+                                                        onPressed: () => Navigator.of(context).pop()),
+                                                  ],
+                                                ));
+                                      }
+                                    }),
+                                content: const Text(
+                                    'Unable to find Windscribe\'s location click on the "Select Manually" to select the folder of Windscribe.')),
+                            duration: const Duration(seconds: 10),
+                          );
+                        } else {
+                          await appSettingsNotifier.save();
+                        }
+                      }
+                    : null,
+              ),
               SettingsTile(
                 title: const Text('Start Streaming Mode'),
                 onPressed: (ctx) async {
@@ -387,7 +444,7 @@ class SettingsState extends ConsumerState<Settings> {
               onToggle: (bool value) async {
                 appSettingsNotifier
                     .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(enabled: value)));
-                appSettingsNotifier.save();
+                await appSettingsNotifier.save();
               },
               title: const Text('Engine Sound'),
               description: const Text('Click to change file'),
@@ -400,7 +457,7 @@ class SettingsState extends ConsumerState<Settings> {
 
                   appSettingsNotifier.update(
                       appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(path: docFilePath)));
-                  appSettingsNotifier.save();
+                  await appSettingsNotifier.save();
                 }
               },
             ),
@@ -409,7 +466,7 @@ class SettingsState extends ConsumerState<Settings> {
               onToggle: (bool value) async {
                 appSettingsNotifier.update(
                     appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(enabled: value)));
-                appSettingsNotifier.save();
+                await appSettingsNotifier.save();
               },
               title: const Text('Overheat Sound'),
               description: const Text('Click to change file'),
@@ -422,7 +479,7 @@ class SettingsState extends ConsumerState<Settings> {
 
                   appSettingsNotifier.update(
                       appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(path: docFilePath)));
-                  appSettingsNotifier.save();
+                  await appSettingsNotifier.save();
                 }
               },
             ),
@@ -431,7 +488,7 @@ class SettingsState extends ConsumerState<Settings> {
               onToggle: (value) async {
                 appSettingsNotifier
                     .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(enabled: value)));
-                appSettingsNotifier.save();
+                await appSettingsNotifier.save();
               },
               title: const Text('OverG Sound'),
               description: const Text('Click to change file'),
@@ -444,7 +501,7 @@ class SettingsState extends ConsumerState<Settings> {
 
                   appSettingsNotifier
                       .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(path: docFilePath)));
-                  appSettingsNotifier.save();
+                  await appSettingsNotifier.save();
                 }
               },
             ),
@@ -453,7 +510,7 @@ class SettingsState extends ConsumerState<Settings> {
               onToggle: (value) async {
                 appSettingsNotifier
                     .update(appSettings.copyWith(pullUpSetting: appSettings.pullUpSetting.copyWith(enabled: value)));
-                appSettingsNotifier.save();
+                await appSettingsNotifier.save();
               },
               title: const Text('Pull up Sound'),
               description: const Text('Click to change file'),
@@ -466,7 +523,7 @@ class SettingsState extends ConsumerState<Settings> {
 
                   appSettingsNotifier.update(
                       appSettings.copyWith(pullUpSetting: appSettings.pullUpSetting.copyWith(path: docFilePath)));
-                  appSettingsNotifier.save();
+                  await appSettingsNotifier.save();
                 }
               },
             ),
@@ -475,7 +532,7 @@ class SettingsState extends ConsumerState<Settings> {
               onToggle: (value) async {
                 appSettingsNotifier.update(
                     appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(enabled: value)));
-                appSettingsNotifier.save();
+                await appSettingsNotifier.save();
               },
               title: const Text('Enemy Proximity Sound'),
               description: const Text('Click to change file'),
@@ -488,7 +545,7 @@ class SettingsState extends ConsumerState<Settings> {
 
                   appSettingsNotifier.update(
                       appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(path: docFilePath)));
-                  appSettingsNotifier.save();
+                  await appSettingsNotifier.save();
                 }
               },
               trailing: Row(
@@ -732,6 +789,30 @@ class SettingsState extends ConsumerState<Settings> {
           const SizedBox(height: 10),
         ],
       ),
+    );
+  }
+}
+
+class GradientText extends StatelessWidget {
+  const GradientText(
+    this.text, {
+    super.key,
+    required this.gradient,
+    this.style,
+  });
+
+  final String text;
+  final TextStyle? style;
+  final Gradient gradient;
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) => gradient.createShader(
+        Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+      ),
+      child: Text(text, style: style),
     );
   }
 }
