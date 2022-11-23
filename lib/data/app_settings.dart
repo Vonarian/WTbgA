@@ -418,32 +418,40 @@ class WindscribeSettings {
   final String notifPath;
   final double volume;
   final String? path;
-  final bool connected;
 
   const WindscribeSettings({
     this.autoSwitch = false,
     required this.notifPath,
     this.volume = 22,
-    this.connected = false,
     this.path,
   });
 
   Future<void> connectWindscribe() async {
-    if (path == null || connected) return;
+    if (path == null) return;
     final process = await Process.start(path!, ['connect']);
-    await for (var e in process.stdout) {}
+    await for (var e in process.stdout.transform(utf8.decoder)) {
+      log(e);
+    }
     await audio2.play(DeviceFileSource(notifPath), volume: volume / 100, mode: PlayerMode.lowLatency);
   }
 
   Future<void> disconnectWindscribe() async {
-    if (path == null || !connected) return;
+    if (path == null) return;
     final process = await Process.start(path!, ['disconnect']);
-    await for (var e in process.stdout) {}
+    await for (var e in process.stdout.transform(utf8.decoder)) {
+      log(e);
+    }
+    await Process.run('taskkill', ['/F', '/IM', 'wstunnel.exe']);
     await audio2.play(DeviceFileSource(notifPath), volume: volume / 100, mode: PlayerMode.lowLatency);
   }
 
   Map<String, dynamic> toMap() {
-    return {'autoSwitch': autoSwitch, 'notifPath': notifPath, 'volume': volume, 'path': path, 'connected': connected};
+    return {
+      'autoSwitch': autoSwitch,
+      'notifPath': notifPath,
+      'volume': volume,
+      'path': path,
+    };
   }
 
   factory WindscribeSettings.fromMap(Map<String, dynamic>? map) {
@@ -452,7 +460,6 @@ class WindscribeSettings {
       notifPath: map?['notifPath'] ?? defaultPingPath,
       volume: map?['volume'] ?? 22,
       path: map?['path'],
-      connected: map?['connected'] ?? false,
     );
   }
 
@@ -461,20 +468,18 @@ class WindscribeSettings {
     String? notifPath,
     double? volume,
     String? path,
-    bool? connected,
   }) {
     return WindscribeSettings(
       autoSwitch: autoSwitch ?? this.autoSwitch,
       notifPath: notifPath ?? this.notifPath,
       volume: volume ?? this.volume,
       path: path ?? this.path,
-      connected: connected ?? this.connected,
     );
   }
 
   @override
   String toString() {
-    return 'WindscribeSettings{autoSwitch: $autoSwitch, notifPath: $notifPath, volume: $volume, path: $path, connected: $connected}';
+    return 'WindscribeSettings{autoSwitch: $autoSwitch, notifPath: $notifPath, volume: $volume, path: $path}';
   }
 }
 

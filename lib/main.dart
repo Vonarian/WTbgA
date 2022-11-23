@@ -9,6 +9,7 @@ import 'package:firebase_dart_flutter/firebase_dart_flutter.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_info2/system_info2.dart';
 import 'package:system_windows/system_windows.dart';
@@ -49,6 +50,7 @@ Future<void> main() async {
     } else {
       await Window.setEffect(effect: WindowEffect.aero, color: const Color(0xCC222222), dark: true);
     }
+    await hotKeyManager.unregisterAll();
     await windowManager.show();
   });
   appVersion = await File(AppUtil.versionPath).readAsString();
@@ -66,13 +68,4 @@ Future<void> main() async {
       child: App(child: Loading()),
     ),
   );
-}
-
-class TestApp extends StatelessWidget {
-  const TestApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
 }

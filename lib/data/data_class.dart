@@ -101,3 +101,36 @@ ContentDialog dialogBuilderUserName(BuildContext context, data) {
     ],
   );
 }
+
+class Performance {
+  final double memory;
+
+  final double engine3D;
+
+  final double engineCopy;
+
+  const Performance({
+    required this.memory,
+    required this.engine3D,
+    required this.engineCopy,
+  });
+
+  factory Performance.fromMap(Map<String, dynamic> map) {
+    return Performance(
+      memory: map['memory'] ?? 0,
+      engine3D: map['engine3D'] ?? 0,
+      engineCopy: map['engineCopy'] ?? 0,
+    );
+  }
+
+  static Future<Performance> getPerformance() async {
+    try {
+      final output = await AppUtil.runPowerShellScript(AppUtil.getPerformancePath, ['-ExecutionPolicy', 'Bypass']);
+      final performance = Performance.fromMap(output.trim() as Map<String, dynamic>);
+      return performance;
+    } catch (e, st) {
+      log(e.toString(), stackTrace: st);
+      rethrow;
+    }
+  }
+}

@@ -7,6 +7,7 @@ import 'package:blinking_text/blinking_text.dart';
 import 'package:firebase_dart/database.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:openrgb/client/client.dart';
 import 'package:openrgb/data/rgb_controller.dart';
 import 'package:openrgb/helpers/extensions.dart';
@@ -273,10 +274,29 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     return;
   }
 
+  final HotKey _hotKey = HotKey(
+    KeyCode.keyW,
+    modifiers: [KeyModifier.control, KeyModifier.shift],
+    scope: HotKeyScope.system,
+  );
+
   @override
   void initState() {
     super.initState();
-    receiveDiskValues();
+    receiveDiskValues().then((_) async {
+      await hotKeyManager.register(
+        _hotKey,
+        keyDownHandler: (hotKey) async {
+          if (ref.read(provider.appSettingsProvider).windscribeSettings.path != null) {
+            if (ref.read(provider.wstunnelRunning)) {
+              await ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe();
+            } else {
+              await ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe();
+            }
+          }
+        },
+      );
+    });
     updateMsgId();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -373,6 +393,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Future<void> dispose() async {
     super.dispose();
     idData.removeListener((vehicleStateCheck));
+    hotKeyManager.unregisterAll();
     isStopped = true;
     WidgetsBinding.instance.removeObserver(this);
     subscriptionForPresence!.cancel();
@@ -464,8 +485,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     ref.listen<bool>(provider.inMatchProvider, (previous, next) async {
       if (previous != next) {
         if (next) {
-          Future.delayed(const Duration(seconds: 4))
-              .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe());
+          if (ref.read(provider.wstunnelRunning)) {
+            Future.delayed(const Duration(seconds: 4))
+                .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe());
+          }
           final client = ref.watch(provider.orgbClientProvider);
           final data = await client?.getAllControllers();
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
@@ -474,9 +497,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             await OpenRGBSettings.setAllOff(client, data);
           }
         } else {
-          Future.delayed(const Duration(seconds: 4))
-              .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe());
-
+          if (!ref.read(provider.wstunnelRunning)) {
+            Future.delayed(const Duration(seconds: 3))
+                .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe());
+          }
           final client = ref.watch(provider.orgbClientProvider);
           final data = await client?.getAllControllers();
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);

@@ -88,6 +88,17 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         }
       }
     });
+    AppUtil.wstunnelRunning().listen((event) {
+      if (event != ref.read(provider.wstunnelRunning)) {
+        ref.read(provider.wstunnelRunning.notifier).state = event ?? false;
+      }
+    });
+    //TODO Implement performance monitoring.
+    // AppUtil.getPerformance().listen((value) {
+    //   if (value != null) {
+    //     if (ref.read(provider.inMatchProvider)) {}
+    //   }
+    // });
   }
 
   bool notInMatch(String value) {

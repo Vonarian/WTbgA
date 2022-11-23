@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:system_windows/system_windows.dart';
 import 'package:win32/win32.dart';
+import 'package:wtbgassistant/data/data_class.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 
@@ -29,6 +30,11 @@ class AppUtil {
       p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\deviceIP.ps1']);
   static final String windowPath =
       p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\getWindow.ps1']);
+  static final String checkWStunnel =
+      p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\checkWStunnel.ps1']);
+
+  static final String getPerformancePath = p
+      .joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'scripts\\getPerformance.ps1']);
 
   static Future<String> createFolderInAppDocDir(String path) async {
     final Directory appDocDirFolder = Directory(path);
@@ -96,10 +102,10 @@ class AppUtil {
   static Future<String> getOpenRGBExecutablePath(BuildContext? context, bool check) async {
     String openRGBPath = await AppUtil.getOpenRGBFolderPath();
     File openRGBExecutable = File('$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe');
-    if (!await openRGBExecutable.exists() && check) {
+    if (!(await openRGBExecutable.exists()) && check && context != null) {
       String docsPath = await AppUtil.getAppDocsPath();
       await showLoading(
-          context: context!,
+          context: context,
           future: dio.download(
               'https://github.com/Vonarian/WTbgA/releases/download/2.6.2.0/OpenRGB.zip', '$docsPath\\OpenRGB.zip'),
           message: 'Downloading OpenRGB...');
@@ -140,6 +146,35 @@ class AppUtil {
           return isWarThunder.contains(e.title);
         });
         return wtWindow;
+      } catch (e) {
+        return null;
+      }
+    });
+    await for (var e in stream) {
+      yield await e;
+    }
+  }
+
+  static Stream<bool?> wstunnelRunning() async* {
+    final stream = Stream.periodic(const Duration(milliseconds: 1500), (_) async {
+      try {
+        final bool running =
+            (await runPowerShellScript(checkWStunnel, ['-ExecutionPolicy', 'Bypass'])).contains('true') ? true : false;
+        return running;
+      } catch (e) {
+        return null;
+      }
+    });
+    await for (var e in stream) {
+      yield await e;
+    }
+  }
+
+  static Stream<Performance?> getPerformance() async* {
+    final stream = Stream.periodic(const Duration(milliseconds: 8000), (_) async {
+      try {
+        final value = await Performance.getPerformance();
+        return value;
       } catch (e) {
         return null;
       }
