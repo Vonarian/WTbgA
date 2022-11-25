@@ -530,8 +530,7 @@ class SettingsState extends ConsumerState<Settings> {
             SettingsTile.switchTile(
               initialValue: appSettings.proximitySetting.enabled,
               onToggle: (value) async {
-                appSettingsNotifier.update(
-                    appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(enabled: value)));
+                appSettingsNotifier.setProximitySetting(enabled: value);
                 await appSettingsNotifier.save();
               },
               title: const Text('Enemy Proximity Sound'),
@@ -543,8 +542,7 @@ class SettingsState extends ConsumerState<Settings> {
                 if (file != null) {
                   String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
 
-                  appSettingsNotifier.update(
-                      appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(path: docFilePath)));
+                  appSettingsNotifier.setProximitySetting(path: docFilePath);
                   await appSettingsNotifier.save();
                 }
               },
@@ -588,11 +586,9 @@ class SettingsState extends ConsumerState<Settings> {
           max: 100,
           divisions: 100,
           label: '${appSettings.engineWarning.volume.toInt()} %',
-          onChanged: (value) {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(volume: value)));
-            ref.read(provider.appSettingsProvider.notifier).save();
+          onChanged: (value) async {
+            ref.read(provider.appSettingsProvider.notifier).setEngineWarning(volume: value);
+            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -617,11 +613,9 @@ class SettingsState extends ConsumerState<Settings> {
           max: 100,
           divisions: 100,
           label: '${appSettings.overHeatWarning.volume.toInt()} %',
-          onChanged: (value) {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .update(appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(volume: value)));
-            ref.read(provider.appSettingsProvider.notifier).save();
+          onChanged: (value) async {
+            ref.read(provider.appSettingsProvider.notifier).setOverHeatWarning(volume: value);
+            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -646,11 +640,9 @@ class SettingsState extends ConsumerState<Settings> {
           max: 100,
           divisions: 100,
           label: '${appSettings.overGWarning.volume.toInt()} %',
-          onChanged: (value) {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(volume: value)));
-            ref.read(provider.appSettingsProvider.notifier).save();
+          onChanged: (value) async {
+            ref.read(provider.appSettingsProvider.notifier).setOverGWarning(volume: value);
+            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -675,11 +667,9 @@ class SettingsState extends ConsumerState<Settings> {
           max: 100,
           divisions: 100,
           label: '${appSettings.pullUpSetting.volume.toInt()} %',
-          onChanged: (value) {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .update(appSettings.copyWith(pullUpSetting: appSettings.pullUpSetting.copyWith(volume: value)));
-            ref.read(provider.appSettingsProvider.notifier).save();
+          onChanged: (value) async {
+            ref.read(provider.appSettingsProvider.notifier).setPullUpSetting(volume: value);
+            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -704,11 +694,9 @@ class SettingsState extends ConsumerState<Settings> {
           max: 100,
           divisions: 100,
           label: '${appSettings.proximitySetting.volume.toInt()} %',
-          onChanged: (value) {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .update(appSettings.copyWith(proximitySetting: appSettings.proximitySetting.copyWith(volume: value)));
-            ref.read(provider.appSettingsProvider.notifier).save();
+          onChanged: (value) async {
+            ref.read(provider.appSettingsProvider.notifier).setProximitySetting(volume: value);
+            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -730,17 +718,17 @@ class SettingsState extends ConsumerState<Settings> {
         IconButton(
             icon: const Icon(FluentIcons.add),
             onPressed: () async {
-              ref.read(provider.appSettingsProvider.notifier).update(appSettings.copyWith(
-                  proximitySetting:
-                      appSettings.proximitySetting.copyWith(distance: appSettings.proximitySetting.distance + 100)));
+              ref
+                  .read(provider.appSettingsProvider.notifier)
+                  .setProximitySetting(volume: ref.read(provider.appSettingsProvider).proximitySetting.distance + 100);
               await ref.read(provider.appSettingsProvider.notifier).save();
             }),
         IconButton(
             icon: const Icon(FluentIcons.remove),
             onPressed: () async {
-              ref.read(provider.appSettingsProvider.notifier).update(appSettings.copyWith(
-                  proximitySetting:
-                      appSettings.proximitySetting.copyWith(distance: appSettings.proximitySetting.distance - 100)));
+              ref
+                  .read(provider.appSettingsProvider.notifier)
+                  .setProximitySetting(volume: ref.read(provider.appSettingsProvider).proximitySetting.distance - 100);
               await ref.read(provider.appSettingsProvider.notifier).save();
             }),
       ],

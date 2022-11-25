@@ -51,4 +51,5 @@ class MyProvider {
   final wstunnelRunning = StateProvider<bool>((ref) => false);
   final gameRunningProvider = StateProvider<bool>((ref) => false);
   final inMatchProvider = StateProvider<bool>((ref) => false);
+  final wtFocusedProvider = StateProvider<bool>((ref) => false);
 }

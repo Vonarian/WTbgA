@@ -83,6 +83,9 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         ref.read(provider.gameRunningProvider.notifier).state = false;
       } else {
         ref.read(provider.gameRunningProvider.notifier).state = true;
+        if (ref.read(provider.wtFocusedProvider) != event.isActive) {
+          ref.read(provider.wtFocusedProvider.notifier).state = event.isActive;
+        }
         if (ref.read(provider.inMatchProvider) != !notInMatch(event.title)) {
           ref.read(provider.inMatchProvider.notifier).state = !notInMatch(event.title);
         }
@@ -102,7 +105,7 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
   }
 
   bool notInMatch(String value) {
-    String name = value.toLowerCase();
+    final String name = value.toLowerCase();
     return (name.contains('loading') || name.contains('waiting')) || name == 'war thunder';
   }
 

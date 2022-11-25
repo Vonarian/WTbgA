@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:collection/collection.dart';
@@ -8,8 +7,8 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:system_windows/system_windows.dart';
 import 'package:win32/win32.dart';
+import 'package:window_watcher/window_watcher.dart';
 import 'package:wtbgassistant/data/data_class.dart';
 import 'package:wtbgassistant/main.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
@@ -138,10 +137,10 @@ class AppUtil {
     return (await file.copy('${directory.path}\\${p.basename(filePath)}')).path;
   }
 
-  static Stream<SystemWindow?> getWTWindow() async* {
+  static Stream<Window?> getWTWindow() async* {
     final stream = Stream.periodic(const Duration(milliseconds: 1500), (_) async {
       try {
-        final list = await systemWindows.getActiveApps();
+        final list = await WindowWatcher.getWindows();
         final wtWindow = list.firstWhereOrNull((e) {
           return isWarThunder.contains(e.title);
         });

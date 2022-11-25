@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pinging_point/pinging_point.dart';
-import 'package:system_windows/system_windows.dart';
 import 'package:wtbgassistant/data_receivers/indicator_receiver.dart';
 import 'package:wtbgassistant/data_receivers/map.dart';
 import 'package:wtbgassistant/data_receivers/map_info.dart';
@@ -34,6 +33,12 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
     super.initState();
     _getSizes();
     future = MapObj.mapObj();
+    canPlay.addListener(() async {
+      if (!canPlay.value) {
+        await Future.delayed(const Duration(milliseconds: 3250));
+        canPlay.value = true;
+      }
+    });
     subscription = IndicatorData.getIndicator().listen((data) {
       compass = data?.compass ?? 0;
     });
@@ -42,7 +47,6 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
         _getSizes();
         future = MapObj.mapObj();
         mapSize = (await MapInfo.getMapInfo()).mapMax * 2;
-        windows = await systemWindows.getActiveApps();
         setState(() {});
       } else {
         timer.cancel();
@@ -53,6 +57,7 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
   @override
   void dispose() {
     subscription.cancel();
+    canPlay.removeListener(() {});
     super.dispose();
   }
 
@@ -76,13 +81,13 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
   double? mapSize;
   double widgetWidth = 0;
   double widgetHeight = 0;
-  List<SystemWindow> windows = [];
-  bool wtFocused = false;
+  final canPlay = ValueNotifier<bool>(true);
   GlobalKey key = GlobalKey();
   final List<String> enemyHexColor = ['#f40C00', '#ff0D00', '#ff0000', '#f00C00'];
 
   FutureBuilder<ui.Image> imageBuilder(MapObj e, Future<ui.Image> future) {
-    final settings = ref.watch(provider.appSettingsProvider).proximitySetting;
+    final settings = ref.watch(provider.appSettingsProvider);
+    final wtFocused = ref.watch(provider.wtFocusedProvider);
     double? distance;
     bool flag = false;
     if (player != null && (e.icon == 'Fighter' || e.icon == 'Assault') && e.x != null && e.y != null) {
@@ -93,21 +98,22 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
       );
       flag = enemyHexColor.contains(e.color) &&
           (e.icon == 'Fighter' || e.icon == 'Assault') &&
-          distance < settings.distance;
+          distance < settings.proximitySetting.distance;
     }
     return FutureBuilder<ui.Image>(
         future: future,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (flag) {
-              if (!wtFocused) {
+              if (!wtFocused && canPlay.value) {
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
-                  if (settings.enabled) {
+                  if (settings.proximitySetting.enabled) {
                     await audio2.play(
-                      DeviceFileSource(settings.path),
-                      volume: settings.volume,
+                      DeviceFileSource(settings.proximitySetting.path),
+                      volume: settings.proximitySetting.volume,
                       mode: PlayerMode.lowLatency,
                     );
+                    canPlay.value = false;
                   }
                 });
               }
