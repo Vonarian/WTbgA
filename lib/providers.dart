@@ -8,12 +8,12 @@ import 'package:wtbgassistant/services/presence.dart';
 import 'package:wtbgassistant/services/utility.dart';
 
 class MyProvider {
-  final StateProvider<bool> trayProvider = StateProvider((ref) => true);
-  final StateProvider<String?> vehicleNameProvider = StateProvider((ref) => null);
-  final StateProvider<int> gearLimitProvider = StateProvider((ref) => 1000);
+  final trayProvider = StateProvider<bool>((ref) => true);
+  final vehicleNameProvider = StateProvider<String?>((ref) => null);
+  final gearLimitProvider = StateProvider<int>((ref) => 1000);
 
-  final StateProvider<int> flapLimitProvider = StateProvider((ref) => 800);
-  final StateProvider<bool> downloadCompleteProvider = StateProvider((ref) => false);
+  final flapLimitProvider = StateProvider<int>((ref) => 800);
+  final downloadCompleteProvider = StateProvider<bool>((ref) => false);
   final deviceIPProvider = FutureProvider.autoDispose<String>(
     (ref) async {
       String ip = await AppUtil.runPowerShellScript(AppUtil.deviceIPPath, ['-ExecutionPolicy', 'Bypass']);

@@ -60,8 +60,9 @@ class FmData {
     required this.critAoa4,
   });
 
-  static Future<FmData?> setObject(String name) async {
+  static Future<FmData?> setFlightModel(String? name) async {
     FmData? fmData;
+    if (name == null) return null;
     for (var element in rowList.skip(1)) {
       if (element.split(';')[0] == name) {
         fmData = FmData(

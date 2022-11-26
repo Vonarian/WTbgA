@@ -283,23 +283,24 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    receiveDiskValues().then((_) async {
-      await hotKeyManager.register(
-        _hotKey,
-        keyDownHandler: (hotKey) async {
-          if (ref.read(provider.appSettingsProvider).windscribeSettings.path != null) {
-            if (ref.read(provider.wstunnelRunning)) {
-              await ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe();
-            } else {
-              await ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe();
-            }
-          }
-        },
-      );
-    });
+
     updateMsgId();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      receiveDiskValues().then((_) async {
+        await hotKeyManager.register(
+          _hotKey,
+          keyDownHandler: (hotKey) async {
+            if (ref.read(provider.appSettingsProvider).windscribeSettings.path != null) {
+              if (ref.read(provider.wstunnelRunning)) {
+                await ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe();
+              } else {
+                await ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe();
+              }
+            }
+          },
+        );
+      });
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!mounted) return;
       final exePath = await AppUtil.getOpenRGBExecutablePath(context, false);
@@ -385,7 +386,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       csvNames = await File(namesPath).readAsString();
 
       namesMap = convertNamesToMap(csvNames);
-      fmData = await FmData.setObject(namesMap[ref.read(provider.vehicleNameProvider.state).state] ?? '');
+      if (ref.read(provider.vehicleNameProvider) != null) {
+        fmData = await FmData.setFlightModel(namesMap?[ref.read(provider.vehicleNameProvider)!] ?? '');
+      }
     });
   }
 
@@ -464,29 +467,20 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   int number = 0;
 
   Future<void> startListeners() async {
+    final windscribeSettings = ref.watch(provider.appSettingsProvider).windscribeSettings;
     ref.listen<String?>(provider.vehicleNameProvider, (previous, next) async {
       if (next.notNull && next != '') {
-        fmData = await FmData.setObject(namesMap[next] ?? '');
+        fmData = await FmData.setFlightModel(namesMap?[next] ?? '');
         if (fmData != null) {
           ref.read(provider.gearLimitProvider.notifier).state = fmData!.critGearSpd;
-        }
-      }
-    });
-    ref.listen<bool>(provider.gameRunningProvider, (previous, next) async {
-      if (previous != null) {
-        if (previous != next) {
-          if (!next) {
-            await WinToast.instance().showToast(
-                type: ToastType.text04, title: 'Game is not Running.', subtitle: 'WTbgA will suspend its activity.');
-          }
         }
       }
     });
     ref.listen<bool>(provider.inMatchProvider, (previous, next) async {
       if (previous != next) {
         if (next) {
-          if (ref.read(provider.wstunnelRunning)) {
-            Future.delayed(const Duration(seconds: 4))
+          if (ref.read(provider.wstunnelRunning) && windscribeSettings.autoSwitch) {
+            Future.delayed(const Duration(milliseconds: 1200))
                 .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe());
           }
           final client = ref.watch(provider.orgbClientProvider);
@@ -497,8 +491,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             await OpenRGBSettings.setAllOff(client, data);
           }
         } else {
-          if (!ref.read(provider.wstunnelRunning)) {
-            Future.delayed(const Duration(seconds: 3))
+          if (!ref.read(provider.wstunnelRunning) && windscribeSettings.autoSwitch) {
+            Future.delayed(const Duration(milliseconds: 300))
                 .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe());
           }
           final client = ref.watch(provider.orgbClientProvider);
@@ -531,7 +525,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     }
   }
 
-  late final Map<String, String> namesMap;
+  Map<String, String>? namesMap;
 
   Map<String, String> convertNamesToMap(String csvStringNames) {
     Map<String, String> map = {};
@@ -584,6 +578,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     final theme = FluentTheme.of(context);
     final fireBaseVersion = ref.watch(provider.versionFBProvider);
     final developerMessage = ref.watch(provider.developerMessageProvider);
+    final isPremium = ref.watch(provider.premiumUserProvider);
     return NavigationView(
       appBar: NavigationAppBar(
           title: Column(
@@ -593,9 +588,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: [
-                      if (ref.watch(provider.premiumUserProvider))
-                        Icon(FluentIcons.starburst, color: Colors.yellow, size: 20),
-                      if (ref.watch(provider.premiumUserProvider)) const SizedBox(width: 5),
+                      if (isPremium) Icon(FluentIcons.starburst, color: Colors.yellow, size: 20),
+                      if (isPremium) const SizedBox(width: 5),
                       Text(
                         'War Thunder background Assistant',
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),

@@ -45,7 +45,7 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       ref.read(provider.needPremiumProvider.notifier).state = prefs.getBool('needPremium') ?? false;
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!mounted) return;
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 1));
       ref.read(provider.rgbSettingProvider.notifier).state = fromDisk ?? const OpenRGBSettings();
       if (ref.read(provider.rgbSettingProvider.notifier).state.autoStart) {
         ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
@@ -120,15 +120,16 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
 
   @override
   Widget build(BuildContext context) {
+    final systemColor = ref.watch(provider.systemColorProvider);
     return FluentApp(
         theme: ThemeData(
             brightness: ref.watch(provider.systemThemeProvider),
             visualDensity: VisualDensity.adaptivePlatformDensity,
-            accentColor: ref.watch(provider.systemColorProvider).toAccentColor(),
+            accentColor: systemColor.toAccentColor(),
             navigationPaneTheme: NavigationPaneThemeData(
                 animationDuration: const Duration(milliseconds: 600),
                 animationCurve: Curves.easeInOut,
-                highlightColor: ref.watch(provider.systemColorProvider),
+                highlightColor: systemColor,
                 iconPadding: const EdgeInsets.only(left: 6),
                 labelPadding: const EdgeInsets.only(left: 4),
                 backgroundColor: Colors.transparent)),

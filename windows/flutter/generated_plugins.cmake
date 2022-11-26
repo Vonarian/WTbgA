@@ -7,7 +7,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
   flutter_acrylic
   hotkey_manager
-  network_info_plus_windows
   screen_retriever
   system_theme
   tray_manager

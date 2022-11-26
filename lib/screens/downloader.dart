@@ -97,7 +97,7 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
         setState(() {});
         await Process.run(installer, [docWTbgA.path]);
       }).timeout(const Duration(minutes: 8));
-    } catch (e, st) {
+    } catch (e) {
       if (!mounted) return;
       showSnackbar(
           context,
