@@ -25,7 +25,8 @@ class Downloader extends StatefulWidget {
   DownloaderState createState() => DownloaderState();
 }
 
-class DownloaderState extends State<Downloader> with WindowListener, TrayListener {
+class DownloaderState extends State<Downloader>
+    with WindowListener, TrayListener {
   @override
   void initState() {
     super.initState();
@@ -45,7 +46,8 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
     await WinToast.instance().showToast(
         type: ToastType.text04,
         title: 'Updating WTbgA...',
-        subtitle: 'WTbgA is downloading update, please do not close the application');
+        subtitle:
+            'WTbgA is downloading update, please do not close the application');
     await windowManager.setMinimumSize(const Size(230, 300));
     await windowManager.setMaximumSize(const Size(600, 600));
     await windowManager.setSize(const Size(230, 300));
@@ -54,19 +56,22 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
       Data data = await Data.getData();
       Directory docDir = await getApplicationDocumentsDirectory();
       String docPath = docDir.path;
-      Directory docWTbgA = await Directory('$docPath\\WTbgA').create(recursive: true);
+      Directory docWTbgA =
+          await Directory('$docPath\\WTbgA').create(recursive: true);
       final deleteFolder = Directory(p.joinAll([docWTbgA.path, 'out']));
       if (await deleteFolder.exists()) {
         await deleteFolder.delete(recursive: true);
       }
       Dio dio = Dio();
-      await dio.download(data.assets.last.browserDownloadUrl, '${docWTbgA.path}\\update.zip',
+      await dio.download(
+          data.assets.last.browserDownloadUrl, '${docWTbgA.path}\\update.zip',
           onReceiveProgress: (downloaded, full) async {
         progress = downloaded / full * 100;
         setState(() {});
       }, deleteOnError: true).whenComplete(() async {
         final File filePath = File('${docWTbgA.path}\\update.zip');
-        final Uint8List bytes = await File('${docWTbgA.path}\\update.zip').readAsBytes();
+        final Uint8List bytes =
+            await File('${docWTbgA.path}\\update.zip').readAsBytes();
         final archive = ZipDecoder().decodeBytes(bytes);
         for (final file in archive) {
           final filename = file.name;
@@ -76,7 +81,8 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
               ..createSync(recursive: true)
               ..writeAsBytesSync(data);
           } else {
-            Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
+            Directory('${p.dirname(filePath.path)}\\out\\$filename')
+                .create(recursive: true);
           }
         }
 
@@ -92,7 +98,8 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
         await WinToast.instance().showToast(
             type: ToastType.text04,
             title: 'Update process starting in a moment',
-            subtitle: 'Do not close the application until the update process is finished');
+            subtitle:
+                'Do not close the application until the update process is finished');
         text = 'Installing';
         setState(() {});
         await Process.run(installer, [docWTbgA.path]);
@@ -109,7 +116,8 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
             ),
             action: SnackBarAction(
               onPressed: () {
-                Navigator.pushReplacement(context, FluentPageRoute(builder: (context) => const Downloader()));
+                Navigator.pushReplacement(context,
+                    FluentPageRoute(builder: (context) => const Downloader()));
               },
               label: 'Retry',
             ),
@@ -145,11 +153,13 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
                           children: [
                             Text(
                               text,
-                              style: const TextStyle(fontSize: 15, color: Colors.white),
+                              style: const TextStyle(
+                                  fontSize: 15, color: Colors.white),
                             ),
                             Text(
                               '${progress.toStringAsFixed(1)} %',
-                              style: const TextStyle(fontSize: 15, color: Colors.white),
+                              style: const TextStyle(
+                                  fontSize: 15, color: Colors.white),
                             ),
                           ],
                         )
@@ -168,10 +178,17 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
                     children: [
                       Center(
                         child: CustomLoadingAnimationWidget.inkDrop(
-                            color: Color.lerp(Colors.red, Colors.orange, 0.77) ?? Colors.red,
+                            color:
+                                Color.lerp(Colors.red, Colors.orange, 0.77) ??
+                                    Colors.red,
                             size: 150,
                             strokeWidth: 10,
-                            colors: [Colors.red, Colors.blue, Colors.green, Colors.orange]),
+                            colors: [
+                              Colors.red,
+                              Colors.blue,
+                              Colors.green,
+                              Colors.orange
+                            ]),
                       ),
                       Center(
                         child: Column(
@@ -179,11 +196,13 @@ class DownloaderState extends State<Downloader> with WindowListener, TrayListene
                           children: [
                             Text(
                               text,
-                              style: const TextStyle(fontSize: 15, color: Colors.white),
+                              style: const TextStyle(
+                                  fontSize: 15, color: Colors.white),
                             ),
                             Text(
                               '${progress.toStringAsFixed(1)} %',
-                              style: const TextStyle(fontSize: 15, color: Colors.white),
+                              style: const TextStyle(
+                                  fontSize: 15, color: Colors.white),
                             ),
                           ],
                         ),

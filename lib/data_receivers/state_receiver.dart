@@ -74,9 +74,12 @@ class StateData {
   final int? waterTemp1C;
 
   static Stream<StateData?> getState() async* {
-    final stream = Stream.periodic(const Duration(milliseconds: 200), (count) async {
+    final stream =
+        Stream.periodic(const Duration(milliseconds: 200), (count) async {
       try {
-        final Response response = await dio.get('http://localhost:8111/state').timeout(const Duration(seconds: 2));
+        final Response response = await dio
+            .get('http://localhost:8111/state')
+            .timeout(const Duration(seconds: 2));
         final StateData toolDataState = StateData.fromJson(response.data);
         return toolDataState;
       } catch (e) {

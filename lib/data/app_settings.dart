@@ -73,26 +73,46 @@ class AppSettings {
   });
 }
 
-final defaultBeepPath =
-    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\beep.wav']);
-final defaultPullUpPath =
-    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\pullup.mp3']);
-final defaultProxyPath =
-    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\proxy.wav']);
+final defaultBeepPath = p.joinAll([
+  p.dirname(Platform.resolvedExecutable),
+  'data\\flutter_assets\\assets',
+  'sounds\\beep.wav'
+]);
+final defaultPullUpPath = p.joinAll([
+  p.dirname(Platform.resolvedExecutable),
+  'data\\flutter_assets\\assets',
+  'sounds\\pullup.mp3'
+]);
+final defaultProxyPath = p.joinAll([
+  p.dirname(Platform.resolvedExecutable),
+  'data\\flutter_assets\\assets',
+  'sounds\\proxy.wav'
+]);
 
-final defaultOverGPath =
-    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\overg.wav']);
-final defaultPingPath =
-    p.joinAll([p.dirname(Platform.resolvedExecutable), 'data\\flutter_assets\\assets', 'sounds\\ping.mp3']);
+final defaultOverGPath = p.joinAll([
+  p.dirname(Platform.resolvedExecutable),
+  'data\\flutter_assets\\assets',
+  'sounds\\overg.wav'
+]);
+final defaultPingPath = p.joinAll([
+  p.dirname(Platform.resolvedExecutable),
+  'data\\flutter_assets\\assets',
+  'sounds\\ping.mp3'
+]);
 
 class SettingsNotifier extends StateNotifier<AppSettings> {
   SettingsNotifier()
       : super(AppSettings(
-          overHeatWarning: OverHeatSetting(enabled: true, path: defaultBeepPath, volume: 22),
-          engineWarning: EngineSetting(enabled: true, path: defaultBeepPath, volume: 22),
-          overGWarning: OverGSetting(path: defaultOverGPath, enabled: true, volume: 22),
-          pullUpSetting: PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 22),
-          proximitySetting: ProximitySetting(enabled: true, path: defaultProxyPath, volume: 22, distance: 850),
+          overHeatWarning:
+              OverHeatSetting(enabled: true, path: defaultBeepPath, volume: 22),
+          engineWarning:
+              EngineSetting(enabled: true, path: defaultBeepPath, volume: 22),
+          overGWarning:
+              OverGSetting(path: defaultOverGPath, enabled: true, volume: 22),
+          pullUpSetting:
+              PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 22),
+          proximitySetting: ProximitySetting(
+              enabled: true, path: defaultProxyPath, volume: 22, distance: 850),
           windscribeSettings: WindscribeSettings(notifPath: defaultPingPath),
           fullNotif: true,
         ));
@@ -106,17 +126,20 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     RegistryKey? key2;
     RegistryKey? key3;
     try {
-      key = Registry.openPath(RegistryHive.currentUser, path: r'Software\Windscribe\Installer');
+      key = Registry.openPath(RegistryHive.currentUser,
+          path: r'Software\Windscribe\Installer');
     } catch (e, st) {
       log(e.toString(), stackTrace: st);
     }
     try {
-      key2 = Registry.openPath(RegistryHive.localMachine, path: r'Software\Windscribe\Installer');
+      key2 = Registry.openPath(RegistryHive.localMachine,
+          path: r'Software\Windscribe\Installer');
     } catch (e, st) {
       log(e.toString(), stackTrace: st);
     }
     try {
-      key3 = Registry.openPath(RegistryHive.allUsers, path: r'Software\Windscribe\Installer');
+      key3 = Registry.openPath(RegistryHive.allUsers,
+          path: r'Software\Windscribe\Installer');
     } catch (e, st) {
       log(e.toString(), stackTrace: st);
     }
@@ -124,7 +147,9 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
         key2?.getValueAsString('applicationPath') ??
         key3?.getValueAsString('applicationPath');
     if (value != null) {
-      state = state.copyWith(windscribeSettings: state.windscribeSettings.copyWith(path: '$value\\windscribe-cli.exe'));
+      state = state.copyWith(
+          windscribeSettings: state.windscribeSettings
+              .copyWith(path: '$value\\windscribe-cli.exe'));
       return '$value\\windscribe-cli.exe';
     }
     key?.close();
@@ -185,7 +210,8 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     ));
   }
 
-  void setProximitySetting({String? path, bool? enabled, double? volume, int? distance}) {
+  void setProximitySetting(
+      {String? path, bool? enabled, double? volume, int? distance}) {
     state = state.copyWith(
         proximitySetting: state.proximitySetting.copyWith(
       volume: volume,
@@ -195,10 +221,14 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     ));
   }
 
-  void setWindscribe({String? notifPath, bool? autoSwitch, double? volume, String? path}) {
+  void setWindscribe(
+      {String? notifPath, bool? autoSwitch, double? volume, String? path}) {
     state = state.copyWith(
-        windscribeSettings: state.windscribeSettings
-            .copyWith(volume: volume, autoSwitch: autoSwitch, notifPath: notifPath, path: path));
+        windscribeSettings: state.windscribeSettings.copyWith(
+            volume: volume,
+            autoSwitch: autoSwitch,
+            notifPath: notifPath,
+            path: path));
   }
 }
 
@@ -432,7 +462,8 @@ class WindscribeSettings {
     await for (var e in process.stdout.transform(utf8.decoder)) {
       log(e);
     }
-    await audio2.play(DeviceFileSource(notifPath), volume: volume / 100, mode: PlayerMode.lowLatency);
+    await audio2.play(DeviceFileSource(notifPath),
+        volume: volume / 100, mode: PlayerMode.lowLatency);
   }
 
   Future<void> disconnectWindscribe() async {
@@ -442,7 +473,8 @@ class WindscribeSettings {
       log(e);
     }
     await Process.run('taskkill', ['/F', '/IM', 'wstunnel.exe']);
-    await audio2.play(DeviceFileSource(notifPath), volume: volume / 100, mode: PlayerMode.lowLatency);
+    await audio2.play(DeviceFileSource(notifPath),
+        volume: volume / 100, mode: PlayerMode.lowLatency);
   }
 
   Map<String, dynamic> toMap() {

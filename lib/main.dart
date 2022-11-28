@@ -44,9 +44,15 @@ Future<void> main() async {
     appDocPath = await AppUtil.getAppDocsPath();
 
     if (SysInfo.operatingSystemName.contains('Windows 11')) {
-      await Window.setEffect(effect: WindowEffect.acrylic, color: const Color(0xCC222222), dark: true);
+      await Window.setEffect(
+          effect: WindowEffect.acrylic,
+          color: const Color(0xCC222222),
+          dark: true);
     } else {
-      await Window.setEffect(effect: WindowEffect.aero, color: const Color(0xCC222222), dark: true);
+      await Window.setEffect(
+          effect: WindowEffect.aero,
+          color: const Color(0xCC222222),
+          dark: true);
     }
     await hotKeyManager.unregisterAll();
     await windowManager.show();
@@ -60,7 +66,8 @@ Future<void> main() async {
     Process.run(exePath, ['--server', '--noautoconnect']);
   }
   await FirebaseDartFlutter.setup();
-  app = await Firebase.initializeApp(options: FirebaseOptions.fromMap(firebaseConfig), name: 'wtbga-815e4');
+  app = await Firebase.initializeApp(
+      options: FirebaseOptions.fromMap(firebaseConfig), name: 'wtbga-815e4');
   runApp(
     const ProviderScope(
       child: App(child: Loading()),

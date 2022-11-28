@@ -6,10 +6,14 @@ class Damage {
 
   static Future<Damage> getDamages(int lastDmg) async {
     try {
-      final response = await dio.get('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=$lastDmg');
-      final damageEvents =
-          response.data['damage'].map<Damage>((model) => Damage.fromMap(model)).toList() as List<Damage>;
-      final damage = damageEvents.isNotEmpty ? damageEvents.last : const Damage(id: 0, msg: '');
+      final response = await dio
+          .get('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=$lastDmg');
+      final damageEvents = response.data['damage']
+          .map<Damage>((model) => Damage.fromMap(model))
+          .toList() as List<Damage>;
+      final damage = damageEvents.isNotEmpty
+          ? damageEvents.last
+          : const Damage(id: 0, msg: '');
       return damage;
     } catch (e) {
       // log('Encountered error: $e', stackTrace: stackTrace);
@@ -25,7 +29,10 @@ class Damage {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Damage && runtimeType == other.runtimeType && id == other.id && msg == other.msg);
+      (other is Damage &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          msg == other.msg);
 
   @override
   int get hashCode => id.hashCode ^ msg.hashCode;

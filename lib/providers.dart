@@ -16,7 +16,8 @@ class MyProvider {
   final downloadCompleteProvider = StateProvider<bool>((ref) => false);
   final deviceIPProvider = FutureProvider.autoDispose<String>(
     (ref) async {
-      String ip = await AppUtil.runPowerShellScript(AppUtil.deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
+      String ip = await AppUtil.runPowerShellScript(
+          AppUtil.deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
       return ip;
     },
   );
@@ -28,16 +29,20 @@ class MyProvider {
     },
   );
   final systemColorProvider = StateProvider<Color>((ref) => Colors.red);
-  final systemThemeProvider = StateProvider<Brightness>((ref) => Brightness.dark);
+  final systemThemeProvider =
+      StateProvider<Brightness>((ref) => Brightness.dark);
   final orgbClientProvider = StateProvider<OpenRGBClient?>(
     (ref) => null,
   );
   final orgbControllersProvider = StateProvider<List<RGBController>>(
     (ref) => [],
   );
-  final rgbSettingProvider = StateProvider<OpenRGBSettings>((ref) => const OpenRGBSettings());
+  final rgbSettingProvider =
+      StateProvider<OpenRGBSettings>((ref) => const OpenRGBSettings());
 
-  final appSettingsProvider = StateNotifierProvider<SettingsNotifier, AppSettings>((ref) => SettingsNotifier());
+  final appSettingsProvider =
+      StateNotifierProvider<SettingsNotifier, AppSettings>(
+          (ref) => SettingsNotifier());
   final premiumUserProvider = StateProvider<bool>((ref) => false);
   final needPremiumProvider = StateProvider<bool>((ref) => false);
   final developerMessageProvider = StreamProvider<String?>(

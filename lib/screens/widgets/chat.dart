@@ -1,49 +1,62 @@
 import 'dart:async';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wtbgassistant/main.dart';
 
 import '../../data_receivers/chat.dart';
 
-class Chat extends StatefulWidget {
+class Chat extends ConsumerStatefulWidget {
   const Chat({Key? key}) : super(key: key);
 
   @override
-  State<Chat> createState() => _ChatState();
+  ChatState createState() => ChatState();
 }
 
-class _ChatState extends State<Chat> {
+class ChatState extends ConsumerState<Chat> {
   @override
   void initState() {
     super.initState();
     Timer.periodic(const Duration(milliseconds: 300), (timer) async {
       if (!mounted) timer.cancel();
+      if (!ref.read(provider.inMatchProvider)) return;
       final data = await GameChat.getChat(id.value);
       id.value = data.id;
-      list.add(data);
-      list = list.toSet().toList();
+      _list.add(data);
+      _list = _list.toSet().toList();
       setState(() {});
     });
   }
 
   final id = ValueNotifier<int>(0);
-  List<GameChat> list = [];
+  List<GameChat> _list = [];
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldPage(
-      content: ListView.builder(
-          itemCount: list.length,
-          itemBuilder: (context, i) {
-            final data = list[i];
-            Color color = data.enemy ? Colors.red : Colors.blue;
-            return ListTile(
-              subtitle: Text(list[i].message,
+    return _list.isNotEmpty
+        ? ListView.builder(
+            itemCount: _list.length,
+            itemBuilder: (context, i) {
+              final data = _list[i];
+              Color color = data.enemy ? Colors.red : Colors.blue;
+              return ListTile(
+                subtitle: Text(_list[i].message,
+                    style: TextStyle(
+                      color: color,
+                    )),
+                title: Text(
+                  _list[i].sender,
                   style: TextStyle(
                     color: color,
-                  )),
-              title: Text(list[i].sender, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-            );
-          }),
-    );
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            })
+        : const Center(
+            child: Text(
+              'No Chat to Show!',
+            ),
+          );
   }
 }

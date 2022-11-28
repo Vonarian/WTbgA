@@ -33,8 +33,11 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
     Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (!focused) return;
       Color? systemColor = await DynamicColorPlugin.getAccentColor();
-      Brightness brightness = SystemTheme.isDarkMode ? Brightness.dark : Brightness.light;
-      if (ref.read(provider.systemColorProvider.notifier).state != systemColor && systemColor != null) {
+      Brightness brightness =
+          SystemTheme.isDarkMode ? Brightness.dark : Brightness.light;
+      if (ref.read(provider.systemColorProvider.notifier).state !=
+              systemColor &&
+          systemColor != null) {
         ref.read(provider.systemColorProvider.notifier).state = systemColor;
       }
       if (brightness != ref.read(provider.systemThemeProvider.notifier).state) {
@@ -42,21 +45,27 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ref.read(provider.needPremiumProvider.notifier).state = prefs.getBool('needPremium') ?? false;
+      ref.read(provider.needPremiumProvider.notifier).state =
+          prefs.getBool('needPremium') ?? false;
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!mounted) return;
       await Future.delayed(const Duration(seconds: 1));
-      ref.read(provider.rgbSettingProvider.notifier).state = fromDisk ?? const OpenRGBSettings();
+      ref.read(provider.rgbSettingProvider.notifier).state =
+          fromDisk ?? const OpenRGBSettings();
       if (ref.read(provider.rgbSettingProvider.notifier).state.autoStart) {
-        ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
+        ref.read(provider.orgbClientProvider.notifier).state =
+            await OpenRGBClient.connect();
         if (ref.read(provider.orgbClientProvider.notifier).state != null) {
           ref.read(provider.orgbControllersProvider.notifier).state =
               await ref.read(provider.orgbClientProvider)!.getAllControllers();
         }
       }
-      PresenceService().getPremium((await deviceInfo.windowsInfo).computerName).listen((event) {
+      PresenceService()
+          .getPremium((await deviceInfo.windowsInfo).computerName)
+          .listen((event) {
         if (!mounted) return;
-        ref.read(provider.premiumUserProvider.notifier).state = event.snapshot.value as bool;
+        ref.read(provider.premiumUserProvider.notifier).state =
+            event.snapshot.value as bool;
       });
     });
 
@@ -66,14 +75,16 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       if (int.parse(version) > int.parse(currentVersion)) {
         final toast = await WinToast.instance().showToast(
           title: 'New Version Available!',
-          subtitle: 'Click on this notification to download the latest version.',
+          subtitle:
+              'Click on this notification to download the latest version.',
           type: ToastType.text04,
         );
         toast?.eventStream.listen((event) async {
           if (event is ActivatedEvent) {
             await _handleClickRestore();
             if (!mounted) return;
-            Navigator.of(context).pushReplacement(FluentPageRoute(builder: (context) => const Downloader()));
+            Navigator.of(context).pushReplacement(
+                FluentPageRoute(builder: (context) => const Downloader()));
           }
         });
       }
@@ -86,8 +97,9 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         if (ref.read(provider.wtFocusedProvider) != event.isActive) {
           ref.read(provider.wtFocusedProvider.notifier).state = event.isActive;
         }
-        if (ref.read(provider.inMatchProvider) != !notInMatch(event.title)) {
-          ref.read(provider.inMatchProvider.notifier).state = !notInMatch(event.title);
+        if (ref.read(provider.inMatchProvider) != inMatch(event.title)) {
+          ref.read(provider.inMatchProvider.notifier).state =
+              inMatch(event.title);
         }
       }
     });
@@ -104,9 +116,9 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
     // });
   }
 
-  bool notInMatch(String value) {
+  bool inMatch(String value) {
     final String name = value.toLowerCase();
-    return (name.contains('loading') || name.contains('waiting')) || name == 'war thunder';
+    return name.trim() == 'war thunder - in battle';
   }
 
   @override

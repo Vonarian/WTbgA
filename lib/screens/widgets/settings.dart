@@ -40,19 +40,23 @@ class SettingsState extends ConsumerState<Settings> {
     await WinToast.instance().showToast(
         type: ToastType.text04,
         title: 'Downloading FFMPEG...',
-        subtitle: 'Do not close the application until the download process is finished');
+        subtitle:
+            'Do not close the application until the download process is finished');
     Directory docDir = await getApplicationDocumentsDirectory();
     String docPath = docDir.path;
-    Directory docWTbgA = await Directory('$docPath\\WTbgA\\stream').create(recursive: true);
+    Directory docWTbgA =
+        await Directory('$docPath\\WTbgA\\stream').create(recursive: true);
     if (ffmpegMissing && monaMissing) {
       try {
         await dio.download(
-            'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/ffmpeg.zip', '${docWTbgA.path}\\ffmpeg.zip',
+            'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/ffmpeg.zip',
+            '${docWTbgA.path}\\ffmpeg.zip',
             onReceiveProgress: (downloaded, full) {
           setState(() {});
         }, deleteOnError: true).whenComplete(() async {
           final File filePath = File('${docWTbgA.path}\\ffmpeg.zip');
-          final Uint8List bytes = await File('${docWTbgA.path}\\ffmpeg.zip').readAsBytes();
+          final Uint8List bytes =
+              await File('${docWTbgA.path}\\ffmpeg.zip').readAsBytes();
           final archive = ZipDecoder().decodeBytes(bytes);
           for (final file in archive) {
             final filename = file.name;
@@ -62,17 +66,20 @@ class SettingsState extends ConsumerState<Settings> {
                 ..createSync(recursive: true)
                 ..writeAsBytesSync(data);
             } else {
-              Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
+              Directory('${p.dirname(filePath.path)}\\out\\$filename')
+                  .create(recursive: true);
             }
           }
         });
         await dio
             .download(
-                'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/mona.zip', '${docWTbgA.path}\\mona.zip',
+                'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/mona.zip',
+                '${docWTbgA.path}\\mona.zip',
                 deleteOnError: true)
             .whenComplete(() async {
           final File filePath = File('${docWTbgA.path}\\mona.zip');
-          final Uint8List bytes = await File('${docWTbgA.path}\\mona.zip').readAsBytes();
+          final Uint8List bytes =
+              await File('${docWTbgA.path}\\mona.zip').readAsBytes();
           final archive = ZipDecoder().decodeBytes(bytes);
           for (final file in archive) {
             final filename = file.name;
@@ -82,7 +89,8 @@ class SettingsState extends ConsumerState<Settings> {
                 ..createSync(recursive: true)
                 ..writeAsBytesSync(data);
             } else {
-              Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
+              Directory('${p.dirname(filePath.path)}\\out\\$filename')
+                  .create(recursive: true);
             }
           }
         });
@@ -95,11 +103,13 @@ class SettingsState extends ConsumerState<Settings> {
     } else if (monaMissing && !ffmpegMissing) {
       await dio
           .download(
-              'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/mona.zip', '${docWTbgA.path}\\mona.zip',
+              'https://github.com/Vonarian/WTbgA/releases/download/2.4.0.0/mona.zip',
+              '${docWTbgA.path}\\mona.zip',
               deleteOnError: true)
           .whenComplete(() async {
         final File filePath = File('${docWTbgA.path}\\mona.zip');
-        final Uint8List bytes = await File('${docWTbgA.path}\\mona.zip').readAsBytes();
+        final Uint8List bytes =
+            await File('${docWTbgA.path}\\mona.zip').readAsBytes();
         final archive = ZipDecoder().decodeBytes(bytes);
         for (final file in archive) {
           final filename = file.name;
@@ -109,7 +119,8 @@ class SettingsState extends ConsumerState<Settings> {
               ..createSync(recursive: true)
               ..writeAsBytesSync(data);
           } else {
-            Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
+            Directory('${p.dirname(filePath.path)}\\out\\$filename')
+                .create(recursive: true);
           }
         }
       });
@@ -121,7 +132,8 @@ class SettingsState extends ConsumerState<Settings> {
       )
           .whenComplete(() async {
         final File filePath = File('${docWTbgA.path}\\ffmpeg.zip');
-        final Uint8List bytes = await File('${docWTbgA.path}\\ffmpeg.zip').readAsBytes();
+        final Uint8List bytes =
+            await File('${docWTbgA.path}\\ffmpeg.zip').readAsBytes();
         final archive = ZipDecoder().decodeBytes(bytes);
         for (final file in archive) {
           final filename = file.name;
@@ -131,7 +143,8 @@ class SettingsState extends ConsumerState<Settings> {
               ..createSync(recursive: true)
               ..writeAsBytesSync(data);
           } else {
-            Directory('${p.dirname(filePath.path)}\\out\\$filename').create(recursive: true);
+            Directory('${p.dirname(filePath.path)}\\out\\$filename')
+                .create(recursive: true);
           }
         }
       });
@@ -159,9 +172,10 @@ class SettingsState extends ConsumerState<Settings> {
             tiles: [
               SettingsTile.switchTile(
                 initialValue: appSettings.fullNotif,
-                title: const Text('Toggle All Notifications'),
+                title: const Text('All Notifications'),
                 onToggle: (bool value) async {
-                  appSettingsNotifier.update(appSettings.copyWith(fullNotif: value));
+                  appSettingsNotifier
+                      .update(appSettings.copyWith(fullNotif: value));
                   appSettingsNotifier.setFullNotif(value);
                   appSettingsNotifier.setEngineWarning(enabled: value);
                   appSettingsNotifier.setOverHeatWarning(enabled: value);
@@ -187,9 +201,13 @@ class SettingsState extends ConsumerState<Settings> {
                       ),
                       duration: const Duration(seconds: 2),
                     ),
-                    leading: Icon(FluentIcons.update_restore, color: theme.accentColor),
+                    leading: Icon(FluentIcons.update_restore,
+                        color: theme.accentColor),
                     onPressed: (ctx) {
-                      Navigator.pushReplacement(context, FluentPageRoute(builder: (context) => const Downloader()));
+                      Navigator.pushReplacement(
+                          context,
+                          FluentPageRoute(
+                              builder: (context) => const Downloader()));
                     },
                   );
                 } else {
@@ -199,13 +217,15 @@ class SettingsState extends ConsumerState<Settings> {
                       'Download & Install Update',
                       style: TextStyle(decoration: TextDecoration.lineThrough),
                     ),
-                    leading: Icon(FluentIcons.update_restore, color: theme.accentColor),
+                    leading: Icon(FluentIcons.update_restore,
+                        color: theme.accentColor),
                     onPressed: (ctx) {
                       showDialog(
                           context: ctx,
                           builder: (ctx) => ContentDialog(
                                 title: const Text('Update'),
-                                content: const Text('There is no update available at this time.'),
+                                content: const Text(
+                                    'There is no update available at this time.'),
                                 actions: <Widget>[
                                   TextButton(
                                     child: const Text('OK'),
@@ -223,13 +243,15 @@ class SettingsState extends ConsumerState<Settings> {
                     'Download & Install Update',
                     style: TextStyle(decoration: TextDecoration.lineThrough),
                   ),
-                  leading: Icon(FluentIcons.update_restore, color: theme.accentColor),
+                  leading: Icon(FluentIcons.update_restore,
+                      color: theme.accentColor),
                   onPressed: (ctx) {
                     showDialog(
                         context: ctx,
                         builder: (ctx) => ContentDialog(
                               title: const Text('Update'),
-                              content: const Text('Error fetching version. Please try again later.'),
+                              content: const Text(
+                                  'Error fetching version. Please try again later.'),
                               actions: <Widget>[
                                 TextButton(
                                   child: const Text('OK'),
@@ -246,7 +268,8 @@ class SettingsState extends ConsumerState<Settings> {
                     'Download & Install Update',
                     style: TextStyle(decoration: TextDecoration.lineThrough),
                   ),
-                  leading: Icon(FluentIcons.update_restore, color: theme.accentColor),
+                  leading: Icon(FluentIcons.update_restore,
+                      color: theme.accentColor),
                   onPressed: (ctx) {
                     showDialog(
                         context: ctx,
@@ -273,21 +296,24 @@ class SettingsState extends ConsumerState<Settings> {
                   children: [
                     const Text('Feature developed for '),
                     GradientText('IRANIAN',
-                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                        gradient: LinearGradient(colors: [Colors.green, Colors.white, Colors.red])),
+                        style: TextStyle(
+                            color: Colors.green, fontWeight: FontWeight.bold),
+                        gradient: LinearGradient(
+                            colors: [Colors.green, Colors.white, Colors.red])),
                     const Text(' users :)'),
                   ],
                 ),
                 initialValue: appSettings.windscribeSettings.autoSwitch,
                 title: Text(
-                    'Toggle Windscribe auto-switch (${appSettings.windscribeSettings.path == null ? 'Click to initiate' : 'Initiated'})'),
+                    'Windscribe auto-switch (${appSettings.windscribeSettings.path == null ? 'Click to initiate' : 'Initiated'})'),
                 onToggle: (bool value) async {
                   appSettingsNotifier.setWindscribe(autoSwitch: value);
                   await appSettingsNotifier.save();
                 },
                 onPressed: appSettings.windscribeSettings.autoSwitch
                     ? (context) async {
-                        final value = await appSettingsNotifier.setupWindscribePath();
+                        final value =
+                            await appSettingsNotifier.setupWindscribePath();
                         if (value == null && mounted) {
                           showSnackbar(
                             context,
@@ -297,18 +323,29 @@ class SettingsState extends ConsumerState<Settings> {
                                     child: const Text('Select Manually'),
                                     onPressed: () async {
                                       final path = await FilePicker.platform
-                                          .getDirectoryPath(dialogTitle: 'Pick Windscribe\'s installation folder.');
-                                      if (path != null && await File('$path\\windscribe-cli.exe').exists()) {
-                                        appSettingsNotifier.setWindscribe(path: '$path\\windscribe-cli.exe');
+                                          .getDirectoryPath(
+                                              dialogTitle:
+                                                  'Pick Windscribe\'s installation folder.');
+                                      if (path != null &&
+                                          await File(
+                                                  '$path\\windscribe-cli.exe')
+                                              .exists()) {
+                                        appSettingsNotifier.setWindscribe(
+                                            path: '$path\\windscribe-cli.exe');
                                         await appSettingsNotifier.save();
                                         showDialog(
                                             context: context,
                                             builder: (context) => ContentDialog(
-                                                  content: const Text('Windscribe path has been updated.'),
+                                                  content: const Text(
+                                                      'Windscribe path has been updated.'),
                                                   actions: [
                                                     Button(
-                                                        child: const Text('Understood.'),
-                                                        onPressed: () => Navigator.of(context).pop()),
+                                                        child: const Text(
+                                                            'Understood.'),
+                                                        onPressed: () =>
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop()),
                                                   ],
                                                 ));
                                       }
@@ -327,29 +364,38 @@ class SettingsState extends ConsumerState<Settings> {
                 title: const Text('Start Streaming Mode'),
                 onPressed: (ctx) async {
                   if (!isStreaming) {
-                    final Directory docWTbgAStream = Directory('$appDocPath\\stream');
+                    final Directory docWTbgAStream =
+                        Directory('$appDocPath\\stream');
                     if (!(await docWTbgAStream.exists())) {
                       await docWTbgAStream.create(recursive: true);
                     }
-                    File fileFFMPEG = File('${docWTbgAStream.path}\\out\\ffmpeg.exe');
-                    File fileMona = File('${docWTbgAStream.path}\\out\\MonaTiny.exe');
+                    File fileFFMPEG =
+                        File('${docWTbgAStream.path}\\out\\ffmpeg.exe');
+                    File fileMona =
+                        File('${docWTbgAStream.path}\\out\\MonaTiny.exe');
                     bool ffmpegExists = await fileFFMPEG.exists();
                     bool monaExists = await fileMona.exists();
                     if (ffmpegExists && monaExists) {
-                      monaProcess = await Process.start('cmd.exe', ['/c', fileMona.path],
-                          runInShell: true, workingDirectory: docWTbgAStream.path);
-                      monaProcess?.stdout.transform(utf8.decoder).listen((event) {
+                      monaProcess = await Process.start(
+                          'cmd.exe', ['/c', fileMona.path],
+                          runInShell: true,
+                          workingDirectory: docWTbgAStream.path);
+                      monaProcess?.stdout
+                          .transform(utf8.decoder)
+                          .listen((event) {
                         if (kDebugMode) {
                           print(event);
                         }
                       });
-                      monaProcess?.stderr.transform(utf8.decoder).listen((event) {
+                      monaProcess?.stderr
+                          .transform(utf8.decoder)
+                          .listen((event) {
                         if (kDebugMode) {
                           print(event);
                         }
                       });
-                      final deviceIP =
-                          await AppUtil.runPowerShellScript(AppUtil.deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
+                      final deviceIP = await AppUtil.runPowerShellScript(
+                          AppUtil.deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
                       final command = FfmpegCommand(
                         inputs: [FfmpegInput.virtualDevice('desktop')],
                         args: [
@@ -367,9 +413,12 @@ class SettingsState extends ConsumerState<Settings> {
                       );
                       isStreaming = true;
                       try {
-                        outerProcess =
-                            await Ffmpeg().run(command, path: fileFFMPEG.path, workingDir: docWTbgAStream.path);
-                        outerProcess?.stderr.transform(utf8.decoder).listen((event) {
+                        outerProcess = await Ffmpeg().run(command,
+                            path: fileFFMPEG.path,
+                            workingDir: docWTbgAStream.path);
+                        outerProcess?.stderr
+                            .transform(utf8.decoder)
+                            .listen((event) {
                           if (kDebugMode) {
                             print(event);
                           }
@@ -382,15 +431,23 @@ class SettingsState extends ConsumerState<Settings> {
                       try {
                         await showLoading(
                             context: context,
-                            future: downloadFfmpegMona(monaExists, ffmpegExists),
+                            future:
+                                downloadFfmpegMona(monaExists, ffmpegExists),
                             message: 'Downloading FFMPEG / Mona');
                         if (!mounted) return;
 
-                        showSnackbar(context,
-                            const Snackbar(content: Text('Downloaded FFMPEG / Mona, click again to start streaming')));
+                        showSnackbar(
+                            context,
+                            const Snackbar(
+                                content: Text(
+                                    'Downloaded FFMPEG / Mona, click again to start streaming')));
                       } catch (e, st) {
                         if (!mounted) return;
-                        showSnackbar(context, const Snackbar(content: Text('Failed to download FFMPEG / Mona')));
+                        showSnackbar(
+                            context,
+                            const Snackbar(
+                                content:
+                                    Text('Failed to download FFMPEG / Mona')));
                         log(e.toString(), stackTrace: st);
                       }
                     }
@@ -417,7 +474,8 @@ class SettingsState extends ConsumerState<Settings> {
                     context: context,
                     builder: (context) => ContentDialog(
                       title: const Text('Reset app'),
-                      content: const Text('Are you sure you want to reset app data?'),
+                      content: const Text(
+                          'Are you sure you want to reset app data?'),
                       actions: [
                         TextButton(
                           child: const Text('Cancel'),
@@ -428,7 +486,10 @@ class SettingsState extends ConsumerState<Settings> {
                           onPressed: () async {
                             await prefs.clear();
                             if (!mounted) return;
-                            Navigator.pushReplacement(context, FluentPageRoute(builder: (context) => const Loading()));
+                            Navigator.pushReplacement(
+                                context,
+                                FluentPageRoute(
+                                    builder: (context) => const Loading()));
                           },
                         ),
                       ],
@@ -442,21 +503,26 @@ class SettingsState extends ConsumerState<Settings> {
             SettingsTile.switchTile(
               initialValue: appSettings.engineWarning.enabled,
               onToggle: (bool value) async {
-                appSettingsNotifier
-                    .update(appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(enabled: value)));
+                appSettingsNotifier.update(appSettings.copyWith(
+                    engineWarning:
+                        appSettings.engineWarning.copyWith(enabled: value)));
                 await appSettingsNotifier.save();
               },
               title: const Text('Engine Sound'),
               description: const Text('Click to change file'),
-              leading: SizedBox(height: 55, child: _buildSliderEngine(appSettings)),
+              leading:
+                  SizedBox(height: 55, child: _buildSliderEngine(appSettings)),
               onPressed: (context) async {
-                final file = await FilePicker.platform
-                    .pickFiles(dialogTitle: 'Select audio file for engine', type: FileType.audio);
+                final file = await FilePicker.platform.pickFiles(
+                    dialogTitle: 'Select audio file for engine',
+                    type: FileType.audio);
                 if (file != null) {
-                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+                  String docFilePath =
+                      await AppUtil.saveInDocs(file.files.first.path!);
 
-                  appSettingsNotifier.update(
-                      appSettings.copyWith(engineWarning: appSettings.engineWarning.copyWith(path: docFilePath)));
+                  appSettingsNotifier.update(appSettings.copyWith(
+                      engineWarning: appSettings.engineWarning
+                          .copyWith(path: docFilePath)));
                   await appSettingsNotifier.save();
                 }
               },
@@ -464,21 +530,26 @@ class SettingsState extends ConsumerState<Settings> {
             SettingsTile.switchTile(
               initialValue: appSettings.overHeatWarning.enabled,
               onToggle: (bool value) async {
-                appSettingsNotifier.update(
-                    appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(enabled: value)));
+                appSettingsNotifier.update(appSettings.copyWith(
+                    overHeatWarning:
+                        appSettings.overHeatWarning.copyWith(enabled: value)));
                 await appSettingsNotifier.save();
               },
               title: const Text('Overheat Sound'),
               description: const Text('Click to change file'),
-              leading: SizedBox(height: 55, child: _buildSliderOverHeat(appSettings)),
+              leading: SizedBox(
+                  height: 55, child: _buildSliderOverHeat(appSettings)),
               onPressed: (context) async {
-                final file = await FilePicker.platform
-                    .pickFiles(dialogTitle: 'Select audio file for overheat', type: FileType.audio);
+                final file = await FilePicker.platform.pickFiles(
+                    dialogTitle: 'Select audio file for overheat',
+                    type: FileType.audio);
                 if (file != null) {
-                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+                  String docFilePath =
+                      await AppUtil.saveInDocs(file.files.first.path!);
 
-                  appSettingsNotifier.update(
-                      appSettings.copyWith(overHeatWarning: appSettings.overHeatWarning.copyWith(path: docFilePath)));
+                  appSettingsNotifier.update(appSettings.copyWith(
+                      overHeatWarning: appSettings.overHeatWarning
+                          .copyWith(path: docFilePath)));
                   await appSettingsNotifier.save();
                 }
               },
@@ -486,21 +557,26 @@ class SettingsState extends ConsumerState<Settings> {
             SettingsTile.switchTile(
               initialValue: appSettings.overGWarning.enabled,
               onToggle: (value) async {
-                appSettingsNotifier
-                    .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(enabled: value)));
+                appSettingsNotifier.update(appSettings.copyWith(
+                    overGWarning:
+                        appSettings.overGWarning.copyWith(enabled: value)));
                 await appSettingsNotifier.save();
               },
               title: const Text('OverG Sound'),
               description: const Text('Click to change file'),
-              leading: SizedBox(height: 55, child: _buildSliderOverG(appSettings)),
+              leading:
+                  SizedBox(height: 55, child: _buildSliderOverG(appSettings)),
               onPressed: (context) async {
-                final file = await FilePicker.platform
-                    .pickFiles(dialogTitle: 'Select audio file for high G-Load', type: FileType.audio);
+                final file = await FilePicker.platform.pickFiles(
+                    dialogTitle: 'Select audio file for high G-Load',
+                    type: FileType.audio);
                 if (file != null) {
-                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+                  String docFilePath =
+                      await AppUtil.saveInDocs(file.files.first.path!);
 
-                  appSettingsNotifier
-                      .update(appSettings.copyWith(overGWarning: appSettings.overGWarning.copyWith(path: docFilePath)));
+                  appSettingsNotifier.update(appSettings.copyWith(
+                      overGWarning: appSettings.overGWarning
+                          .copyWith(path: docFilePath)));
                   await appSettingsNotifier.save();
                 }
               },
@@ -508,21 +584,26 @@ class SettingsState extends ConsumerState<Settings> {
             SettingsTile.switchTile(
               initialValue: appSettings.pullUpSetting.enabled,
               onToggle: (value) async {
-                appSettingsNotifier
-                    .update(appSettings.copyWith(pullUpSetting: appSettings.pullUpSetting.copyWith(enabled: value)));
+                appSettingsNotifier.update(appSettings.copyWith(
+                    pullUpSetting:
+                        appSettings.pullUpSetting.copyWith(enabled: value)));
                 await appSettingsNotifier.save();
               },
               title: const Text('Pull up Sound'),
               description: const Text('Click to change file'),
-              leading: SizedBox(height: 55, child: _buildSliderPullUP(appSettings)),
+              leading:
+                  SizedBox(height: 55, child: _buildSliderPullUP(appSettings)),
               onPressed: (context) async {
-                final file = await FilePicker.platform
-                    .pickFiles(dialogTitle: 'Select audio file for pull up', type: FileType.audio);
+                final file = await FilePicker.platform.pickFiles(
+                    dialogTitle: 'Select audio file for pull up',
+                    type: FileType.audio);
                 if (file != null) {
-                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+                  String docFilePath =
+                      await AppUtil.saveInDocs(file.files.first.path!);
 
-                  appSettingsNotifier.update(
-                      appSettings.copyWith(pullUpSetting: appSettings.pullUpSetting.copyWith(path: docFilePath)));
+                  appSettingsNotifier.update(appSettings.copyWith(
+                      pullUpSetting: appSettings.pullUpSetting
+                          .copyWith(path: docFilePath)));
                   await appSettingsNotifier.save();
                 }
               },
@@ -535,12 +616,16 @@ class SettingsState extends ConsumerState<Settings> {
               },
               title: const Text('Enemy Proximity Sound'),
               description: const Text('Click to change file'),
-              leading: SizedBox(height: 55, child: _buildSliderProxy(appSettings)),
+              leading:
+                  SizedBox(height: 55, child: _buildSliderProxy(appSettings)),
               onPressed: (context) async {
-                final file = await FilePicker.platform
-                    .pickFiles(dialogTitle: 'Select audio file for enemy proximity warning', type: FileType.audio);
+                final file = await FilePicker.platform.pickFiles(
+                    dialogTitle:
+                        'Select audio file for enemy proximity warning',
+                    type: FileType.audio);
                 if (file != null) {
-                  String docFilePath = await AppUtil.saveInDocs(file.files.first.path!);
+                  String docFilePath =
+                      await AppUtil.saveInDocs(file.files.first.path!);
 
                   appSettingsNotifier.setProximitySetting(path: docFilePath);
                   await appSettingsNotifier.save();
@@ -560,7 +645,8 @@ class SettingsState extends ConsumerState<Settings> {
               initialValue: ref.watch(provider.needPremiumProvider),
               onToggle: (value) async {
                 ref.read(provider.needPremiumProvider.notifier).state = value;
-                await PresenceService().needPremium((await deviceInfo.windowsInfo).computerName, value);
+                await PresenceService().needPremium(
+                    (await deviceInfo.windowsInfo).computerName, value);
                 await prefs.setBool('needPremium', value);
               },
               title: const Text('Gib Premium!'),
@@ -587,7 +673,9 @@ class SettingsState extends ConsumerState<Settings> {
           divisions: 100,
           label: '${appSettings.engineWarning.volume.toInt()} %',
           onChanged: (value) async {
-            ref.read(provider.appSettingsProvider.notifier).setEngineWarning(volume: value);
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .setEngineWarning(volume: value);
             await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
@@ -597,7 +685,8 @@ class SettingsState extends ConsumerState<Settings> {
           icon: const Icon(FluentIcons.play),
           onPressed: () async {
             await audio1.play(DeviceFileSource(appSettings.engineWarning.path),
-                volume: appSettings.engineWarning.volume / 100, mode: PlayerMode.lowLatency);
+                volume: appSettings.engineWarning.volume / 100,
+                mode: PlayerMode.lowLatency);
           },
         ),
       ],
@@ -614,7 +703,9 @@ class SettingsState extends ConsumerState<Settings> {
           divisions: 100,
           label: '${appSettings.overHeatWarning.volume.toInt()} %',
           onChanged: (value) async {
-            ref.read(provider.appSettingsProvider.notifier).setOverHeatWarning(volume: value);
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .setOverHeatWarning(volume: value);
             await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
@@ -623,8 +714,10 @@ class SettingsState extends ConsumerState<Settings> {
         IconButton(
           icon: const Icon(FluentIcons.play),
           onPressed: () async {
-            await audio1.play(DeviceFileSource(appSettings.overHeatWarning.path),
-                volume: appSettings.overHeatWarning.volume / 100, mode: PlayerMode.lowLatency);
+            await audio1.play(
+                DeviceFileSource(appSettings.overHeatWarning.path),
+                volume: appSettings.overHeatWarning.volume / 100,
+                mode: PlayerMode.lowLatency);
           },
         ),
       ],
@@ -641,7 +734,9 @@ class SettingsState extends ConsumerState<Settings> {
           divisions: 100,
           label: '${appSettings.overGWarning.volume.toInt()} %',
           onChanged: (value) async {
-            ref.read(provider.appSettingsProvider.notifier).setOverGWarning(volume: value);
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .setOverGWarning(volume: value);
             await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
@@ -651,7 +746,8 @@ class SettingsState extends ConsumerState<Settings> {
           icon: const Icon(FluentIcons.play),
           onPressed: () async {
             await audio1.play(DeviceFileSource(appSettings.overGWarning.path),
-                volume: appSettings.overGWarning.volume / 100, mode: PlayerMode.lowLatency);
+                volume: appSettings.overGWarning.volume / 100,
+                mode: PlayerMode.lowLatency);
           },
         ),
       ],
@@ -668,7 +764,9 @@ class SettingsState extends ConsumerState<Settings> {
           divisions: 100,
           label: '${appSettings.pullUpSetting.volume.toInt()} %',
           onChanged: (value) async {
-            ref.read(provider.appSettingsProvider.notifier).setPullUpSetting(volume: value);
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .setPullUpSetting(volume: value);
             await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
@@ -678,7 +776,8 @@ class SettingsState extends ConsumerState<Settings> {
           icon: const Icon(FluentIcons.play),
           onPressed: () async {
             await audio1.play(DeviceFileSource(appSettings.pullUpSetting.path),
-                volume: appSettings.pullUpSetting.volume / 100, mode: PlayerMode.lowLatency);
+                volume: appSettings.pullUpSetting.volume / 100,
+                mode: PlayerMode.lowLatency);
           },
         ),
       ],
@@ -695,7 +794,9 @@ class SettingsState extends ConsumerState<Settings> {
           divisions: 100,
           label: '${appSettings.proximitySetting.volume.toInt()} %',
           onChanged: (value) async {
-            ref.read(provider.appSettingsProvider.notifier).setProximitySetting(volume: value);
+            ref
+                .read(provider.appSettingsProvider.notifier)
+                .setProximitySetting(volume: value);
             await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
@@ -704,8 +805,10 @@ class SettingsState extends ConsumerState<Settings> {
         IconButton(
           icon: const Icon(FluentIcons.play),
           onPressed: () async {
-            await audio1.play(DeviceFileSource(appSettings.proximitySetting.path),
-                volume: appSettings.proximitySetting.volume / 100, mode: PlayerMode.lowLatency);
+            await audio1.play(
+                DeviceFileSource(appSettings.proximitySetting.path),
+                volume: appSettings.proximitySetting.volume / 100,
+                mode: PlayerMode.lowLatency);
           },
         ),
       ],
@@ -720,7 +823,12 @@ class SettingsState extends ConsumerState<Settings> {
             onPressed: () async {
               ref
                   .read(provider.appSettingsProvider.notifier)
-                  .setProximitySetting(volume: ref.read(provider.appSettingsProvider).proximitySetting.distance + 100);
+                  .setProximitySetting(
+                      volume: ref
+                              .read(provider.appSettingsProvider)
+                              .proximitySetting
+                              .distance +
+                          100);
               await ref.read(provider.appSettingsProvider.notifier).save();
             }),
         IconButton(
@@ -728,7 +836,12 @@ class SettingsState extends ConsumerState<Settings> {
             onPressed: () async {
               ref
                   .read(provider.appSettingsProvider.notifier)
-                  .setProximitySetting(volume: ref.read(provider.appSettingsProvider).proximitySetting.distance - 100);
+                  .setProximitySetting(
+                      volume: ref
+                              .read(provider.appSettingsProvider)
+                              .proximitySetting
+                              .distance -
+                          100);
               await ref.read(provider.appSettingsProvider.notifier).save();
             }),
       ],
@@ -742,41 +855,34 @@ class SettingsState extends ConsumerState<Settings> {
   @override
   Widget build(BuildContext context) {
     final ipValue = ref.watch(provider.deviceIPProvider);
-    return ScaffoldPage(
-      content: Column(
-        children: [
-          Expanded(
-            flex: 1,
-            child: GestureDetector(
-              onTap: () {
-                ref.refresh(provider.deviceIPProvider);
-              },
-              child: ipValue.when(data: (data) {
-                return Text(
-                  'Device IP: $data',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                );
-              }, error: (e, st) {
-                return Text(
-                  'Device IP: Error',
-                  style: TextStyle(fontSize: 20, color: Colors.red),
-                );
-              }, loading: () {
-                return Text(
-                  'Device IP: Loading...',
-                  style: TextStyle(fontSize: 20, color: Colors.orange),
-                );
-              }),
-            ),
-          ),
-          Expanded(flex: 10, child: settings(context)),
-          const SizedBox(height: 10),
-        ],
-      ),
+    return Column(
+      children: [
+        Expanded(
+          flex: 1,
+          child: ipValue.when(data: (data) {
+            return Text(
+              'Device IP: $data',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            );
+          }, error: (e, st) {
+            return Text(
+              'Device IP: Error',
+              style: TextStyle(fontSize: 20, color: Colors.red),
+            );
+          }, loading: () {
+            return Text(
+              'Device IP: Loading...',
+              style: TextStyle(fontSize: 20, color: Colors.orange),
+            );
+          }),
+        ),
+        Expanded(flex: 10, child: settings(context)),
+        const SizedBox(height: 10),
+      ],
     );
   }
 }

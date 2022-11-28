@@ -31,12 +31,14 @@ class LoadingState extends State<Loading> {
   Future<void> checkGitVersion(String version) async {
     try {
       Data data = await Data.getData();
-      if (int.parse(data.tagName.replaceAll('.', '')) > int.parse(version.replaceAll('.', ''))) {
+      if (int.parse(data.tagName.replaceAll('.', '')) >
+          int.parse(version.replaceAll('.', ''))) {
         if (!mounted) return;
         showSnackbar(
             context,
             Snackbar(
-              content: Text('Version: $version. Status: Proceeding to update in 4 seconds!'),
+              content: Text(
+                  'Version: $version. Status: Proceeding to update in 4 seconds!'),
               extended: true,
               action: TextButton(
                   child: const Text('Cancel update'),
@@ -45,7 +47,8 @@ class LoadingState extends State<Loading> {
                       context,
                       PageRouteBuilder(
                         pageBuilder: (c, a1, a2) => const Home(),
-                        transitionsBuilder: (c, anim, a2, child) => FadeTransition(opacity: anim, child: child),
+                        transitionsBuilder: (c, anim, a2, child) =>
+                            FadeTransition(opacity: anim, child: child),
                         transitionDuration: const Duration(milliseconds: 1000),
                       ),
                     );
@@ -54,7 +57,8 @@ class LoadingState extends State<Loading> {
 
         await Future.delayed(const Duration(seconds: 4), () async {});
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(FluentPageRoute(builder: (context) {
+        Navigator.of(context)
+            .pushReplacement(FluentPageRoute(builder: (context) {
           return const Downloader();
         }));
       } else {
@@ -75,7 +79,8 @@ class LoadingState extends State<Loading> {
       showSnackbar(
           context,
           Snackbar(
-            content: Text('Version: $version ___ Status: Error checking for update!'),
+            content: Text(
+                'Version: $version ___ Status: Error checking for update!'),
             extended: true,
           ));
       log(e.toString(), stackTrace: st);
@@ -105,7 +110,8 @@ class LoadingState extends State<Loading> {
           Center(
             child: BlinkText(
               '..: Loading :..',
-              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
               endColor: Colors.purple,
             ),
           ),

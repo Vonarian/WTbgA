@@ -54,7 +54,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     if (!ref.read(provider.premiumUserProvider)) return;
     if (ias != null) {
       if (ias! >= ref.read(provider.gearLimitProvider) && gear! > 20) {
-        await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22, mode: PlayerMode.lowLatency);
+        await audio.play(AssetSource('sounds/beep.wav'),
+            volume: 0.22, mode: PlayerMode.lowLatency);
       }
     }
   }
@@ -64,7 +65,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
     if (!mounted) return false;
     if (fmData != null) {
-      final double maxLoad = (fmData!.critWingOverload2 / ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
+      final double maxLoad = (fmData!.critWingOverload2 /
+          ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
       if (load == null) return false;
       if ((load)! >= (maxLoad - (0.09 * maxLoad))) {
         return true;
@@ -80,66 +82,79 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     if (!ref.read(provider.inMatchProvider)) return;
     if (!mounted) return;
     final appSettings = ref.read(provider.appSettingsProvider);
-    final settings = ref.read(provider.rgbSettingProvider);
+    final rgbSettings = ref.read(provider.rgbSettingProvider);
+    final inMatch = ref.read(provider.inMatchProvider);
+    final client = ref.read(provider.orgbClientProvider);
     if (!appSettings.fullNotif) return;
     if (damage == defaultDamage) return;
-    if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: no fuel') {
+    if (appSettings.engineWarning.enabled &&
+        inMatch &&
+        damage.msg == 'Engine died: no fuel') {
       tripleWarning(AppSettingsEnum.engineSetting);
     }
-    if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Engine overheated') {
-      var client = ref.read(provider.orgbClientProvider);
+    if (appSettings.overHeatWarning.enabled &&
+        inMatch &&
+        damage.msg == 'Engine overheated') {
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
         final controllersProvider = ref.read(provider.orgbControllersProvider);
-        await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
+        await flashNTimes(
+            client!, controllersProvider, Modes.overHeat, rgbSettings);
       }
     }
-    if (appSettings.overHeatWarning.enabled && oil != 15 && damage.msg == 'Oil overheated') {
-      var client = ref.read(provider.orgbClientProvider);
+    if (appSettings.overHeatWarning.enabled &&
+        inMatch &&
+        damage.msg == 'Oil overheated') {
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
         final controllersProvider = ref.read(provider.orgbControllersProvider);
-        await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
+        await flashNTimes(
+            client!, controllersProvider, Modes.overHeat, rgbSettings);
       }
     }
-    if (appSettings.overHeatWarning.enabled && water != 15 && damage.msg == 'Water overheated') {
-      var client = ref.read(provider.orgbClientProvider);
+    if (appSettings.overHeatWarning.enabled &&
+        inMatch &&
+        damage.msg == 'Water overheated') {
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
         final controllersProvider = ref.read(provider.orgbControllersProvider);
-        await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
+        await flashNTimes(
+            client!, controllersProvider, Modes.overHeat, rgbSettings);
       }
     }
-    if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: overheating') {
+    if (appSettings.engineWarning.enabled &&
+        inMatch &&
+        damage.msg == 'Engine died: overheating') {
       tripleWarning(AppSettingsEnum.engineSetting);
     }
-    if (appSettings.engineWarning.enabled && oil != 15 && damage.msg == 'Engine died: propeller broken') {
+    if (appSettings.engineWarning.enabled &&
+        inMatch &&
+        damage.msg == 'Engine died: propeller broken') {
       tripleWarning(AppSettingsEnum.engineSetting);
     }
-    if (oil != 15 && damage.msg.contains('set afire')) {
+    if (inMatch && damage.msg.contains('set afire')) {
       final List<String> split = damage.msg.split('set afire');
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
-        var client = ref.read(provider.orgbClientProvider);
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
-          final controllersProvider = ref.read(provider.orgbControllersProvider);
-          await flashNTimes(client!, controllersProvider, Modes.overHeat, settings);
+          final controllersProvider =
+              ref.read(provider.orgbControllersProvider);
+          await flashNTimes(
+              client!, controllersProvider, Modes.overHeat, rgbSettings);
         }
       }
-    } else if (oil != 15 && damage.msg.contains('shot down')) {
+    } else if (inMatch && damage.msg.contains('shot down')) {
       final List<String> split = damage.msg.split('shot down');
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
-        var client = ref.read(provider.orgbClientProvider);
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
           final data = ref.read(provider.orgbControllersProvider);
           await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
         }
       }
-    } else if (oil != 15 && damage.msg.contains('destroyed')) {
+    } else if (inMatch && damage.msg.contains('destroyed')) {
       final List<String> split = damage.msg.split('destroyed');
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
-        var client = ref.read(provider.orgbClientProvider);
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
           final data = ref.read(provider.orgbControllersProvider);
@@ -149,11 +164,13 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> flashNTimes(OpenRGBClient client, List<RGBController> data, Modes mode, OpenRGBSettings settings) async {
+  Future<void> flashNTimes(OpenRGBClient client, List<RGBController> data,
+      Modes mode, OpenRGBSettings settings) async {
     if (mode == Modes.fire) {
       for (int i = 0; i < settings.flashTimes; i++) {
         await settings.setAllFire(client, data);
-        await Future.delayed(Duration(milliseconds: settings.delayBetweenFlashes));
+        await Future.delayed(
+            Duration(milliseconds: settings.delayBetweenFlashes));
         await OpenRGBSettings.setAllOff(client, data);
         await Future.delayed(const Duration(milliseconds: 200));
       }
@@ -161,7 +178,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     if (mode == Modes.overHeat) {
       for (int i = 0; i < settings.flashTimes; i++) {
         await settings.setAllOverHeat(client, data);
-        await Future.delayed(Duration(milliseconds: settings.delayBetweenFlashes));
+        await Future.delayed(
+            Duration(milliseconds: settings.delayBetweenFlashes));
         await OpenRGBSettings.setAllOff(client, data);
         await Future.delayed(const Duration(milliseconds: 200));
       }
@@ -215,45 +233,54 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     if (appEnum == AppSettingsEnum.engineSetting) {
       if (times == 0) {
         await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.engineWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 1) {
         await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.engineWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 2) {
         await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.engineWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times = 0;
       }
     }
     if (appEnum == AppSettingsEnum.overHeatSetting) {
       if (times == 0) {
         await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.overHeatWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 1) {
         await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.overHeatWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 2) {
         await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.overHeatWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times = 0;
       }
     }
     if (appEnum == AppSettingsEnum.overGSetting) {
       if (times == 0) {
         await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.overGWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 1) {
         await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.overGWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times++;
       } else if (times == 2) {
         await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume / 100, mode: PlayerMode.lowLatency);
+            volume: appSetting.overGWarning.volume / 100,
+            mode: PlayerMode.lowLatency);
         times = 0;
       }
     }
@@ -265,11 +292,16 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
   Future<void> pullUp() async {
     if (!ref.read(provider.inMatchProvider)) return;
-    if (aoa == null || gear == null || vertical == null || ias == null || altitude == null) {
+    if (aoa == null ||
+        gear == null ||
+        vertical == null ||
+        ias == null ||
+        altitude == null) {
       return;
     }
     if (climb.isNegative && (vertical! * -1) <= -15) {
-      await PullUpData.checkAndPlayWarning(altitude!, climb.toDouble(), ref.read(provider.appSettingsProvider));
+      await PullUpData.checkAndPlayWarning(
+          altitude!, climb.toDouble(), ref.read(provider.appSettingsProvider));
     }
     return;
   }
@@ -291,11 +323,21 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         await hotKeyManager.register(
           _hotKey,
           keyDownHandler: (hotKey) async {
-            if (ref.read(provider.appSettingsProvider).windscribeSettings.path != null) {
+            if (ref
+                    .read(provider.appSettingsProvider)
+                    .windscribeSettings
+                    .path !=
+                null) {
               if (ref.read(provider.wstunnelRunning)) {
-                await ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe();
+                await ref
+                    .read(provider.appSettingsProvider)
+                    .windscribeSettings
+                    .disconnectWindscribe();
               } else {
-                await ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe();
+                await ref
+                    .read(provider.appSettingsProvider)
+                    .windscribeSettings
+                    .connectWindscribe();
               }
             }
           },
@@ -305,9 +347,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (!mounted) return;
       final exePath = await AppUtil.getOpenRGBExecutablePath(context, false);
       await Process.run(exePath, ['--server', '--noautoconnect']);
-      ref.read(provider.rgbSettingProvider.notifier).state = fromDisk ?? const OpenRGBSettings();
+      ref.read(provider.rgbSettingProvider.notifier).state =
+          fromDisk ?? const OpenRGBSettings();
       if (ref.read(provider.rgbSettingProvider).autoStart) {
-        ref.read(provider.orgbClientProvider.notifier).state = await OpenRGBClient.connect();
+        ref.read(provider.orgbClientProvider.notifier).state =
+            await OpenRGBClient.connect();
         if (ref.read(provider.orgbClientProvider.notifier).state != null) {
           ref.read(provider.orgbControllersProvider.notifier).state =
               await ref.read(provider.orgbClientProvider)!.getAllControllers();
@@ -337,7 +381,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     });
     Future.delayed(Duration.zero, () async {
       await PresenceService().configureUserPresence(
-          (await deviceInfo.windowsInfo).computerName, File(AppUtil.versionPath).readAsStringSync());
+          (await deviceInfo.windowsInfo).computerName,
+          File(AppUtil.versionPath).readAsStringSync());
       await Future.delayed(const Duration(seconds: 50));
       subscriptionForPresence = startListening();
     });
@@ -347,14 +392,16 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       await updateMsgId();
 
       if (index != 0) {
-        if (subscriptionForIndicators != null && subscriptionForIndicators!.isPaused) {
+        if (subscriptionForIndicators != null &&
+            subscriptionForIndicators!.isPaused) {
           subscriptionForIndicators!.resume();
           if (subscriptionForState != null && subscriptionForState!.isPaused) {
             subscriptionForState!.resume();
           }
         }
       } else {
-        if (subscriptionForIndicators != null && !subscriptionForIndicators!.isPaused) {
+        if (subscriptionForIndicators != null &&
+            !subscriptionForIndicators!.isPaused) {
           subscriptionForIndicators!.pause();
           if (subscriptionForState != null && !subscriptionForState!.isPaused) {
             subscriptionForState!.pause();
@@ -379,7 +426,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (!ref.read(provider.premiumUserProvider)) return;
       if (loadChecker()) {
         final settings = ref.read(provider.appSettingsProvider).overGWarning;
-        await audio.play(DeviceFileSource(settings.path), volume: settings.volume / 100, mode: PlayerMode.lowLatency);
+        await audio.play(DeviceFileSource(settings.path),
+            volume: settings.volume / 100, mode: PlayerMode.lowLatency);
       }
     });
     Future.delayed(Duration.zero, () async {
@@ -387,7 +435,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
       namesMap = convertNamesToMap(csvNames);
       if (ref.read(provider.vehicleNameProvider) != null) {
-        fmData = await FmData.setFlightModel(namesMap?[ref.read(provider.vehicleNameProvider)!] ?? '');
+        fmData = FmData.setFlightModel(
+            namesMap?[ref.read(provider.vehicleNameProvider)!] ?? '');
       }
     });
   }
@@ -420,9 +469,12 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
           data['subtitle'] != '') {
         Message message = Message.fromMap(data);
         if (prefs.getInt('id') != message.id) {
-          if (message.device == (await deviceInfo.windowsInfo).computerName || message.device == null) {
-            var toast = await WinToast.instance()
-                .showToast(type: ToastType.text04, title: message.title, subtitle: message.subtitle);
+          if (message.device == (await deviceInfo.windowsInfo).computerName ||
+              message.device == null) {
+            var toast = await WinToast.instance().showToast(
+                type: ToastType.text04,
+                title: message.title,
+                subtitle: message.subtitle);
             toast?.eventStream.listen((event) async {
               if (event is ActivatedEvent) {
                 if (message.url != null) {
@@ -441,7 +493,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             await prefs.setInt('id', message.id);
           }
         }
-      } else if (data != null && data['operation'] != null && data['id'] != null && data['title'] == null) {
+      } else if (data != null &&
+          data['operation'] != null &&
+          data['id'] != null &&
+          data['title'] == null) {
         switch (data['operation']) {
           case 'getUserName':
             await Message.getUserName(context, data);
@@ -467,62 +522,53 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   int number = 0;
 
   Future<void> startListeners() async {
-    final windscribeSettings = ref.watch(provider.appSettingsProvider).windscribeSettings;
+    final windscribeSettings =
+        ref.watch(provider.appSettingsProvider).windscribeSettings;
     ref.listen<String?>(provider.vehicleNameProvider, (previous, next) async {
       if (next.notNull && next != '') {
-        fmData = await FmData.setFlightModel(namesMap?[next] ?? '');
+        fmData = FmData.setFlightModel(namesMap?[next] ?? '');
         if (fmData != null) {
-          ref.read(provider.gearLimitProvider.notifier).state = fmData!.critGearSpd;
+          ref.read(provider.gearLimitProvider.notifier).state =
+              fmData!.critGearSpd;
         }
       }
     });
     ref.listen<bool>(provider.inMatchProvider, (previous, next) async {
       if (previous != next) {
         if (next) {
-          if (ref.read(provider.wstunnelRunning) && windscribeSettings.autoSwitch) {
-            Future.delayed(const Duration(milliseconds: 1200))
-                .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.disconnectWindscribe());
+          if (ref.read(provider.wstunnelRunning) &&
+              windscribeSettings.autoSwitch) {
+            Future.delayed(const Duration(milliseconds: 1200)).then((_) => ref
+                .read(provider.appSettingsProvider)
+                .windscribeSettings
+                .disconnectWindscribe());
           }
           final client = ref.watch(provider.orgbClientProvider);
           final data = await client?.getAllControllers();
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
           if (data != null) {
-            await OpenRGBSettings.setJoinBattleEffect(client!, data, settings.loadingColor);
+            await OpenRGBSettings.setJoinBattleEffect(
+                client!, data, settings.loadingColor);
             await OpenRGBSettings.setAllOff(client, data);
           }
         } else {
-          if (!ref.read(provider.wstunnelRunning) && windscribeSettings.autoSwitch) {
-            Future.delayed(const Duration(milliseconds: 300))
-                .then((_) => ref.read(provider.appSettingsProvider).windscribeSettings.connectWindscribe());
+          if (!ref.read(provider.wstunnelRunning) &&
+              windscribeSettings.autoSwitch) {
+            Future.delayed(const Duration(milliseconds: 300)).then((_) => ref
+                .read(provider.appSettingsProvider)
+                .windscribeSettings
+                .connectWindscribe());
           }
           final client = ref.watch(provider.orgbClientProvider);
           final data = await client?.getAllControllers();
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
           if (client != null && data != null) {
-            await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
+            await OpenRGBSettings.setLoadingEffect(
+                client, data, settings.loadingColor);
           }
         }
       }
     });
-  }
-
-  Future<void> checkCritAoa() async {
-    if (!ref.read(provider.inMatchProvider)) return;
-    if (fmData != null && vertical.notNull) {
-      if (flap == null) return;
-      if (flap! <= 10 && !vertical!.isNegative) {
-        critAoa = fmData!.critAoa1;
-      }
-      if (flap! > 10 && !vertical!.isNegative) {
-        critAoa = fmData!.critAoa2;
-      }
-      if (flap! > 10 && vertical!.isNegative) {
-        critAoa = fmData!.critAoa3;
-      }
-      if (flap! <= 10 && vertical!.isNegative) {
-        critAoa = fmData!.critAoa4;
-      }
-    }
   }
 
   Map<String, String>? namesMap;
@@ -530,7 +576,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Map<String, String> convertNamesToMap(String csvStringNames) {
     Map<String, String> map = {};
 
-    for (final rows in LineSplitter.split(csvStringNames).skip(1).map((line) => line.split(';'))) {
+    for (final rows in LineSplitter.split(csvStringNames)
+        .skip(1)
+        .map((line) => line.split(';'))) {
       map[rows.first] = rows[1];
     }
 
@@ -557,8 +605,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     msg: '',
   );
   String csvNames = '';
-  String namesPath =
-      p.joinAll([p.dirname(Platform.resolvedExecutable), 'data/flutter_assets/assets', 'fm_names_db.csv']);
+  String namesPath = p.joinAll([
+    p.dirname(Platform.resolvedExecutable),
+    'data/flutter_assets/assets',
+    'fm_names_db.csv'
+  ]);
 
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
   ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
@@ -570,7 +621,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   int index = 0;
   int climb = 0;
   late final stateStream = StateData.getState().asBroadcastStream();
-  late final Stream<IndicatorData?> indicatorStream = IndicatorData.getIndicator().asBroadcastStream();
+  late final Stream<IndicatorData?> indicatorStream =
+      IndicatorData.getIndicator().asBroadcastStream();
 
   @override
   Widget build(BuildContext context) {
@@ -588,11 +640,16 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: [
-                      if (isPremium) Icon(FluentIcons.starburst, color: Colors.yellow, size: 20),
+                      if (isPremium)
+                        Icon(FluentIcons.starburst,
+                            color: Colors.yellow, size: 20),
                       if (isPremium) const SizedBox(width: 5),
                       Text(
                         'War Thunder background Assistant',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: theme.accentColor.lighter),
                       ),
                     ],
                   ),
@@ -602,20 +659,27 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                   fireBaseVersion.when(data: (data) {
                     bool isNew = false;
                     if (data.hasValue &&
-                        int.parse(data!.replaceAll('.', '')) > int.parse(appVersion.replaceAll('.', ''))) {
+                        int.parse(data!.replaceAll('.', '')) >
+                            int.parse(appVersion.replaceAll('.', ''))) {
                       isNew = true;
                     }
                     if (isNew) {
                       return HoverButton(
                         builder: (context, set) => Text(
                           '$data available',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: theme.accentColor.lighter),
                         ),
                       );
                     } else {
                       return Text(
                         'v$data',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.accentColor.lighter),
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: theme.accentColor.lighter),
                       );
                     }
                   }, error: (e, st) {
@@ -629,7 +693,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                 if (data != null) {
                   return Text(
                     'Developer\'s message: $data',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.red, fontWeight: FontWeight.bold),
                   );
                 } else {
                   return const SizedBox();
@@ -654,7 +719,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                     onPressed: () async {
                       var client = ref.read(provider.orgbClientProvider);
                       if (client != null) {
-                        final data = ref.watch(provider.orgbControllersProvider);
+                        final data =
+                            ref.watch(provider.orgbControllersProvider);
                         if (data.isNotEmpty) {
                           showSnackbar(
                               context,
@@ -663,20 +729,27 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 extended: true,
                               ),
                               duration: const Duration(seconds: 5));
-                          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider.notifier).state;
-                          await OpenRGBSettings.setDeathEffect(client, data, [255, 255]);
+                          OpenRGBSettings settings = ref
+                              .read(provider.rgbSettingProvider.notifier)
+                              .state;
+                          await OpenRGBSettings.setDeathEffect(
+                              client, data, [255, 255]);
                           await settings.setAllOverHeat(client, data);
                           await Future.delayed(const Duration(seconds: 1));
                           await settings.setAllFire(client, data);
                           await Future.delayed(const Duration(seconds: 1));
-                          await OpenRGBSettings.setLoadingEffect(client, data, settings.loadingColor);
+                          await OpenRGBSettings.setLoadingEffect(
+                              client, data, settings.loadingColor);
                           await Future.delayed(const Duration(seconds: 3));
-                          await OpenRGBSettings.setJoinBattleEffect(client, data, settings.loadingColor, times: 6);
+                          await OpenRGBSettings.setJoinBattleEffect(
+                              client, data, settings.loadingColor,
+                              times: 6);
                         } else {
                           showSnackbar(
                               context,
                               const Snackbar(
-                                content: Text('No data found, please retry connection'),
+                                content: Text(
+                                    'No data found, please retry connection'),
                                 extended: true,
                               ),
                               duration: const Duration(seconds: 5));
@@ -701,9 +774,14 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                             TextButton(
                               child: const Text('Stop'),
                               onPressed: () async {
-                                await ref.read(provider.orgbClientProvider)?.disconnect();
-                                await Process.run('taskkill', ['/IM', 'OpenRGB.exe']);
-                                ref.read(provider.orgbClientProvider.notifier).state = null;
+                                await ref
+                                    .read(provider.orgbClientProvider)
+                                    ?.disconnect();
+                                await Process.run(
+                                    'taskkill', ['/IM', 'OpenRGB.exe']);
+                                ref
+                                    .read(provider.orgbClientProvider.notifier)
+                                    .state = null;
                                 if (!mounted) return;
                                 Navigator.pop(context);
                               },
@@ -712,32 +790,60 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                               child: Text(
                                   'Auto start: ${ref.watch(provider.rgbSettingProvider).autoStart ? 'On' : 'Off'}'),
                               onPressed: () async {
-                                ref.read(provider.rgbSettingProvider.notifier).state = ref
-                                    .read(provider.rgbSettingProvider)
-                                    .copyWith(autoStart: !ref.read(provider.rgbSettingProvider).autoStart);
+                                ref
+                                        .read(provider.rgbSettingProvider.notifier)
+                                        .state =
+                                    ref
+                                        .read(provider.rgbSettingProvider)
+                                        .copyWith(
+                                            autoStart: !ref
+                                                .read(
+                                                    provider.rgbSettingProvider)
+                                                .autoStart);
                                 setState(() {});
-                                await ref.read(provider.rgbSettingProvider.notifier).state.save();
+                                await ref
+                                    .read(provider.rgbSettingProvider.notifier)
+                                    .state
+                                    .save();
                               },
                             ),
                             TextButton(
                               child: const Text('Start'),
                               onPressed: () async {
-                                String openRGBExe = await AppUtil.getOpenRGBExecutablePath(context, true);
-                                await Process.start(openRGBExe, ['--server', '--noautoconnect'],
+                                String openRGBExe =
+                                    await AppUtil.getOpenRGBExecutablePath(
+                                        context, true);
+                                await Process.start(
+                                    openRGBExe, ['--server', '--noautoconnect'],
                                     workingDirectory: p.dirname(openRGBExe));
                                 await showLoading(
                                     context: context,
-                                    future: Future.delayed(const Duration(milliseconds: 400)),
+                                    future: Future.delayed(
+                                        const Duration(milliseconds: 400)),
                                     message: 'Starting...');
                                 if (!mounted) return;
                                 try {
-                                  ref.read(provider.orgbClientProvider.notifier).state = await showLoading(
-                                      context: context, future: OpenRGBClient.connect(), message: 'Connecting...');
-                                  ref.read(provider.orgbControllersProvider.notifier).state =
-                                      await ref.read(provider.orgbClientProvider.notifier).state!.getAllControllers();
+                                  ref
+                                          .read(provider
+                                              .orgbClientProvider.notifier)
+                                          .state =
+                                      await showLoading(
+                                          context: context,
+                                          future: OpenRGBClient.connect(),
+                                          message: 'Connecting...');
+                                  ref
+                                          .read(provider
+                                              .orgbControllersProvider.notifier)
+                                          .state =
+                                      await ref
+                                          .read(provider
+                                              .orgbClientProvider.notifier)
+                                          .state!
+                                          .getAllControllers();
                                   await showLoading(
                                       context: context,
-                                      future: Future.delayed(const Duration(milliseconds: 600)),
+                                      future: Future.delayed(
+                                          const Duration(milliseconds: 600)),
                                       message: 'Receiving data...');
                                 } catch (e, st) {
                                   showSnackbar(
@@ -747,7 +853,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                         extended: true,
                                       ),
                                       duration: const Duration(seconds: 5));
-                                  await Future.delayed(const Duration(seconds: 5));
+                                  await Future.delayed(
+                                      const Duration(seconds: 5));
                                   if (!mounted) return;
                                   showDialog(
                                     context: context,
@@ -758,7 +865,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                         actions: [
                                           TextButton(
                                             child: const Text('Ok'),
-                                            onPressed: () => Navigator.pop(context),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
                                           ),
                                         ],
                                       );
@@ -796,9 +904,14 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             });
           },
           items: [
-            PaneItem(icon: const Icon(FluentIcons.home), title: const Text('Home')),
-            PaneItem(icon: const Icon(FluentIcons.nav2_d_map_view), title: const Text('Game Map')),
-            PaneItem(icon: const Icon(FluentIcons.chat), title: const Text('Game Chat')),
+            PaneItem(
+                icon: const Icon(FluentIcons.home), title: const Text('Home')),
+            PaneItem(
+                icon: const Icon(FluentIcons.nav2_d_map_view),
+                title: const Text('Game Map')),
+            PaneItem(
+                icon: const Icon(FluentIcons.chat),
+                title: const Text('Game Chat')),
             PaneItem(
               icon: const Icon(FluentIcons.settings),
               title: const Text('Settings'),
@@ -806,7 +919,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                   data: (data) {
                     bool isNew = false;
                     if (data.hasValue &&
-                        int.parse(data!.replaceAll('.', '')) > int.parse(appVersion.replaceAll('.', ''))) {
+                        int.parse(data!.replaceAll('.', '')) >
+                            int.parse(appVersion.replaceAll('.', ''))) {
                       isNew = true;
                     }
                     return isNew ? const InfoBadge(source: Text('!')) : null;
@@ -846,7 +960,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   alignment: Alignment.center,
                                   child: const Text(
                                     'Not In Match',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40),
                                   ),
                                 ),
                               ),
@@ -863,7 +980,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                         load = shot.data!.load;
                         fuelMass = shot.data!.fuel;
                         climb = shot.data!.climb.toInt();
-                        double fuel = shot.data!.fuel / shot.data!.maxFuel * 100;
+                        double fuel =
+                            shot.data!.fuel / shot.data!.maxFuel * 100;
                         return Flex(
                           direction: Axis.vertical,
                           children: [
@@ -875,8 +993,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   text: TextSpan(children: [
                                     TextSpan(
                                         style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                        text: 'Throttle= ${shot.data!.throttle1} %')
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Throttle= ${shot.data!.throttle1} %')
                                   ]),
                                 ),
                               ),
@@ -889,7 +1010,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   text: TextSpan(children: [
                                     TextSpan(
                                         style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
                                         text: 'IAS= ${shot.data!.ias} km/h')
                                   ]),
                                 ),
@@ -901,8 +1024,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 alignment: Alignment.topLeft,
                                 child: Text(
                                   'Altitude= ${shot.data!.altitude} m',
-                                  style:
-                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
                                 ),
                               ),
                             ),
@@ -912,8 +1037,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 alignment: Alignment.topLeft,
                                 child: Text(
                                   'Climb= ${shot.data!.climb} m/s',
-                                  style:
-                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
                                 ),
                               ),
                             ),
@@ -925,13 +1052,17 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                       ? BlinkText(
                                           'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
                                           style: const TextStyle(
-                                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
                                           endColor: Colors.red,
                                         )
                                       : Text(
                                           'Fuel= ${fuel.toStringAsFixed(1)} %',
                                           style: const TextStyle(
-                                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 40),
                                         )),
                             ),
                             Expanded(
@@ -942,8 +1073,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   text: TextSpan(children: [
                                     TextSpan(
                                         style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                        text: 'Oil Temp= ${shot.data!.oilTemp1C}°c')
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Oil Temp= ${shot.data!.oilTemp1C}°c')
                                   ]),
                                 ),
                               ),
@@ -956,8 +1090,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   text: TextSpan(children: [
                                     TextSpan(
                                         style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                        text: 'Water Temp= ${shot.data!.waterTemp1C}°c')
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Water Temp= ${shot.data!.waterTemp1C}°c')
                                   ]),
                                 ),
                               ),
@@ -968,8 +1105,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 alignment: Alignment.topLeft,
                                 child: Text(
                                   'AoA= ${shot.data!.aoa}°',
-                                  style:
-                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40),
                                 ),
                               ),
                             ),
@@ -980,7 +1119,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                             child: BlinkText(
                           'ERROR: NO DATA',
                           endColor: Colors.red,
-                          style: const TextStyle(color: Colors.white, fontSize: 40),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 40),
                         ));
                       } else {
                         return const Center(
@@ -998,8 +1138,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                     builder: (context, AsyncSnapshot<IndicatorData?> shot) {
                       if (shot.hasData) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (ref.read(provider.vehicleNameProvider) != shot.data!.type) {
-                            ref.read(provider.vehicleNameProvider.notifier).state = shot.data!.type;
+                          if (ref.read(provider.vehicleNameProvider) !=
+                              shot.data!.type) {
+                            ref
+                                .read(provider.vehicleNameProvider.notifier)
+                                .state = shot.data!.type;
                           }
                         });
                         vertical = shot.data!.vertical;
@@ -1014,7 +1157,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   alignment: Alignment.center,
                                   child: const Text(
                                     'Not In Match',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40),
                                   ),
                                 ),
                               ),
@@ -1032,8 +1178,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   text: TextSpan(children: [
                                     TextSpan(
                                         style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                        text: 'Compass= ${shot.data!.compass?.toStringAsFixed(0) ?? ''}°')
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Compass= ${shot.data!.compass?.toStringAsFixed(0) ?? ''}°')
                                   ]),
                                 ),
                               ),
@@ -1046,8 +1195,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   text: TextSpan(children: [
                                     TextSpan(
                                         style: const TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 40),
-                                        text: 'Mach= ${mach.toStringAsFixed(1)} M')
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40),
+                                        text:
+                                            'Mach= ${mach.toStringAsFixed(1)} M')
                                   ]),
                                 ),
                               ),
@@ -1057,7 +1209,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                       }
                       if (shot.hasError) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
-                          ref.read(provider.vehicleNameProvider.notifier).state = '';
+                          ref
+                              .read(provider.vehicleNameProvider.notifier)
+                              .state = '';
                         });
                         return Center(
                           child: Container(
@@ -1065,12 +1219,15 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                               child: BlinkText(
                                 'ERROR: NO DATA',
                                 endColor: Colors.red,
-                                style: const TextStyle(color: Colors.white, fontSize: 40),
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 40),
                               )),
                         );
                       } else {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
-                          ref.read(provider.vehicleNameProvider.notifier).state = '';
+                          ref
+                              .read(provider.vehicleNameProvider.notifier)
+                              .state = '';
                         });
                         return const Center(
                             child: SizedBox(

@@ -58,7 +58,9 @@ class MapObj {
       return MapObj(
         type: map['type'] as String,
         color: map['color'] as String,
-        colors: map['color[]'] != null ? map['color[]'].cast<int>() as List<int> : null,
+        colors: map['color[]'] != null
+            ? map['color[]'].cast<int>() as List<int>
+            : null,
         blink: map['blink'] as int,
         icon: map['icon'] as String,
         iconBg: (map['icon_bg'] ?? 'NONE') as String,
@@ -78,7 +80,9 @@ class MapObj {
       return MapObj(
         type: map['type'] as String,
         color: map['color'] as String,
-        colors: map['color[]'] != null ? map['color[]'].cast<int>() as List<int> : null,
+        colors: map['color[]'] != null
+            ? map['color[]'].cast<int>() as List<int>
+            : null,
         blink: map['blink'] as int,
         icon: map['icon'] as String,
         iconBg: (map['icon_bg'] ?? 'NONE'),
@@ -95,7 +99,9 @@ class MapObj {
       return MapObj(
         type: map['type'] as String,
         color: map['color'] as String,
-        colors: map['color[]'] != null ? map['color[]'].cast<int>() as List<int> : null,
+        colors: map['color[]'] != null
+            ? map['color[]'].cast<int>() as List<int>
+            : null,
         blink: map['blink'] as int,
         icon: map['icon'] as String,
         iconBg: (map['icon_bg'] ?? 'NONE'),
@@ -113,8 +119,9 @@ class MapObj {
 
   static Future<List<MapObj>> mapObj() async {
     try {
-      Response response =
-          await dio.get('http://localhost:8111/map_obj.json').timeout(const Duration(milliseconds: 250));
+      Response response = await dio
+          .get('http://localhost:8111/map_obj.json')
+          .timeout(const Duration(milliseconds: 250));
 
       List<MapObj> mapObjList = [];
       if (response.data.isNotEmpty) {

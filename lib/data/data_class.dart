@@ -16,7 +16,13 @@ class Message {
   final String? device;
 
   @override
-  const Message({required this.title, required this.subtitle, required this.id, this.url, this.operation, this.device});
+  const Message(
+      {required this.title,
+      required this.subtitle,
+      required this.id,
+      this.url,
+      this.operation,
+      this.device});
 
   @override
   String toString() {
@@ -46,9 +52,12 @@ class Message {
   }
 
   static Future<void> getUserName(BuildContext context, data) async {
-    if (prefs.getString('userName') == null || prefs.getString('userName') == '') {
+    if (prefs.getString('userName') == null ||
+        prefs.getString('userName') == '') {
       try {
-        showDialog(context: context, builder: (context) => dialogBuilderUserName(context, data));
+        showDialog(
+            context: context,
+            builder: (context) => dialogBuilderUserName(context, data));
       } catch (e) {
         return;
       }
@@ -57,7 +66,9 @@ class Message {
 
   static Future<void> getUserNameCustom(BuildContext context, data) async {
     try {
-      showDialog(context: context, builder: (context) => dialogBuilderUserName(context, data));
+      showDialog(
+          context: context,
+          builder: (context) => dialogBuilderUserName(context, data));
     } catch (e, st) {
       log(e.toString(), stackTrace: st);
     }
@@ -92,7 +103,8 @@ ContentDialog dialogBuilderUserName(BuildContext context, data) {
             Navigator.of(context).pop();
             await prefs.setString('userName', userNameController.text);
             await PresenceService().configureUserPresence(
-                (await deviceInfo.windowsInfo).computerName, await File(AppUtil.versionPath).readAsString());
+                (await deviceInfo.windowsInfo).computerName,
+                await File(AppUtil.versionPath).readAsString());
             if (data != null) {
               await prefs.setInt('id', data['id']);
             }
@@ -125,8 +137,10 @@ class Performance {
 
   static Future<Performance> getPerformance() async {
     try {
-      final output = await AppUtil.runPowerShellScript(AppUtil.getPerformancePath, ['-ExecutionPolicy', 'Bypass']);
-      final performance = Performance.fromMap(output.trim() as Map<String, dynamic>);
+      final output = await AppUtil.runPowerShellScript(
+          AppUtil.getPerformancePath, ['-ExecutionPolicy', 'Bypass']);
+      final performance =
+          Performance.fromMap(output.trim() as Map<String, dynamic>);
       return performance;
     } catch (e, st) {
       log(e.toString(), stackTrace: st);

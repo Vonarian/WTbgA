@@ -25,7 +25,8 @@ class GameMap extends ConsumerStatefulWidget {
   GameMapState createState() => GameMapState();
 }
 
-class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderStateMixin {
+class GameMapState extends ConsumerState<GameMap>
+    with SingleTickerProviderStateMixin {
   late final StreamSubscription subscription;
 
   @override
@@ -44,6 +45,7 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
     });
     Timer.periodic(const Duration(milliseconds: 500), (timer) async {
       if (mounted) {
+        if (!ref.read(provider.inMatchProvider)) return;
         _getSizes();
         future = MapObj.mapObj();
         mapSize = (await MapInfo.getMapInfo()).mapMax * 2;
@@ -83,14 +85,22 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
   double widgetHeight = 0;
   final canPlay = ValueNotifier<bool>(true);
   GlobalKey key = GlobalKey();
-  final List<String> enemyHexColor = ['#f40C00', '#ff0D00', '#ff0000', '#f00C00'];
+  final List<String> enemyHexColor = [
+    '#f40C00',
+    '#ff0D00',
+    '#ff0000',
+    '#f00C00'
+  ];
 
   FutureBuilder<ui.Image> imageBuilder(MapObj e, Future<ui.Image> future) {
     final settings = ref.watch(provider.appSettingsProvider);
     final wtFocused = ref.watch(provider.wtFocusedProvider);
     double? distance;
     bool flag = false;
-    if (player != null && (e.icon == 'Fighter' || e.icon == 'Assault') && e.x != null && e.y != null) {
+    if (player != null &&
+        (e.icon == 'Fighter' || e.icon == 'Assault') &&
+        e.x != null &&
+        e.y != null) {
       distance = getLinearDistanceBetween(
         Offset(e.x!, e.y!),
         Offset(player!.x!, player!.y!),
@@ -242,13 +252,16 @@ class GameMapState extends ConsumerState<GameMap> with SingleTickerProviderState
                             break;
                         }
                         if (e.type == 'aircraft') {
-                          final future = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
+                          final future = ObjectPainter.getUiImage(
+                              'assets/icons/$assetIcon.png');
                           return imageBuilder(e, future);
                         } else if (e.type == 'ground_model') {
-                          final future = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
+                          final future = ObjectPainter.getUiImage(
+                              'assets/icons/$assetIcon.png');
                           return imageBuilder(e, future);
                         } else if (e.type == 'airfield') {
-                          final future = ObjectPainter.getUiImage('assets/icons/$assetIcon.png');
+                          final future = ObjectPainter.getUiImage(
+                              'assets/icons/$assetIcon.png');
                           return imageBuilder(e, future);
                         } else {
                           return const SizedBox();
@@ -303,7 +316,8 @@ class ObjectPainter extends CustomPainter {
     var paintAirfieldLine = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.9;
-    paintAirfieldLine.colorFilter = ColorFilter.mode(HexColor.fromHex(colorHex), BlendMode.srcATop);
+    paintAirfieldLine.colorFilter =
+        ColorFilter.mode(HexColor.fromHex(colorHex), BlendMode.srcATop);
 
     if (height != null && width != null && !airfield) {
       canvas.drawImage(image, Offset((width! * x), height! * y), paint1);

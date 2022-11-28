@@ -50,7 +50,8 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
                               1))),
                 ],
               ),
-              description: const Text('Select the color for the moment you catch fire'),
+              description:
+                  const Text('Select the color for the moment you catch fire'),
               onPressed: (context) async {
                 c.Color? colorFire = await showDialog<c.Color?>(
                     barrierDismissible: true,
@@ -79,7 +80,8 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
                       );
                     });
                 if (colorFire != null) {
-                  ref.read(provider.rgbSettingProvider.notifier).state = orgbSettings.copyWith(
+                  ref.read(provider.rgbSettingProvider.notifier).state =
+                      orgbSettings.copyWith(
                     fireSettings: orgbSettings.fireSettings.copyWith(
                       color: colorFire,
                     ),
@@ -100,7 +102,8 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
                               1))),
                 ],
               ),
-              description: const Text('Select the color for the moment your plane overheats'),
+              description: const Text(
+                  'Select the color for the moment your plane overheats'),
               onPressed: (context) async {
                 c.Color? colorOH = await showDialog<c.Color?>(
                     barrierDismissible: true,
@@ -129,7 +132,8 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
                       );
                     });
                 if (colorOH != null) {
-                  ref.read(provider.rgbSettingProvider.notifier).state = orgbSettings.copyWith(
+                  ref.read(provider.rgbSettingProvider.notifier).state =
+                      orgbSettings.copyWith(
                     overHeat: orgbSettings.overHeat.copyWith(
                       color: colorOH,
                     ),
@@ -143,11 +147,15 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
                 children: [
                   Text('Select Color for Loadings',
                       style: TextStyle(
-                          color: Color.fromRGBO(loadingColor.toRgbColor().r.toInt(),
-                              loadingColor.toRgbColor().g.toInt(), loadingColor.toRgbColor().b.toInt(), 1))),
+                          color: Color.fromRGBO(
+                              loadingColor.toRgbColor().r.toInt(),
+                              loadingColor.toRgbColor().g.toInt(),
+                              loadingColor.toRgbColor().b.toInt(),
+                              1))),
                 ],
               ),
-              description: const Text('This color is used when you are outside of a battle'),
+              description: const Text(
+                  'This color is used when you are outside of a battle'),
               onPressed: (context) async {
                 c.Color? loadingColor = await showDialog<c.Color?>(
                     barrierDismissible: true,
@@ -188,8 +196,10 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
               leading: counter(context, orgbSettings),
             ),
             SettingsTile(
-              title: Text('Delay Between Each Flash: ${orgbSettings.delayBetweenFlashes} ms'),
-              description: const Text('Delay between each flash for flash (OH and Fire) effects'),
+              title: Text(
+                  'Delay Between Each Flash: ${orgbSettings.delayBetweenFlashes} ms'),
+              description: const Text(
+                  'Delay between each flash for flash (OH and Fire) effects'),
               leading: delayCounter(context, orgbSettings),
             ),
           ],
@@ -205,14 +215,16 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
             icon: const Icon(FluentIcons.add),
             onPressed: () async {
               ref.read(provider.rgbSettingProvider.notifier).state =
-                  orgbSettings.copyWith(flashTimes: orgbSettings.flashTimes + 1);
+                  orgbSettings.copyWith(
+                      flashTimes: orgbSettings.flashTimes + 1);
               await orgbSettings.save();
             }),
         IconButton(
             icon: const Icon(FluentIcons.remove),
             onPressed: () async {
               ref.read(provider.rgbSettingProvider.notifier).state =
-                  orgbSettings.copyWith(flashTimes: orgbSettings.flashTimes - 1);
+                  orgbSettings.copyWith(
+                      flashTimes: orgbSettings.flashTimes - 1);
               await orgbSettings.save();
             }),
       ],
@@ -226,15 +238,20 @@ class RGBSettingsState extends ConsumerState<RGBSettings> {
             icon: const Icon(FluentIcons.add),
             onPressed: () async {
               ref.read(provider.rgbSettingProvider.notifier).state =
-                  orgbSettings.copyWith(delayBetweenFlashes: orgbSettings.delayBetweenFlashes + 100);
+                  orgbSettings.copyWith(
+                      delayBetweenFlashes:
+                          orgbSettings.delayBetweenFlashes + 100);
               await ref.read(provider.rgbSettingProvider).save();
             }),
         IconButton(
             icon: const Icon(FluentIcons.remove),
             onPressed: () async {
-              if (ref.read(provider.rgbSettingProvider).delayBetweenFlashes > 50) {
+              if (ref.read(provider.rgbSettingProvider).delayBetweenFlashes >
+                  50) {
                 ref.read(provider.rgbSettingProvider.notifier).state =
-                    orgbSettings.copyWith(delayBetweenFlashes: orgbSettings.delayBetweenFlashes - 100);
+                    orgbSettings.copyWith(
+                        delayBetweenFlashes:
+                            orgbSettings.delayBetweenFlashes - 100);
                 await ref.read(provider.rgbSettingProvider).save();
               }
             }),

@@ -91,7 +91,8 @@ class Data {
 
   static Future<Data> getData() async {
     try {
-      Response response = await dio.get('https://api.github.com/repos/Vonarian/WTbgA/releases/latest');
+      Response response = await dio
+          .get('https://api.github.com/repos/Vonarian/WTbgA/releases/latest');
       return Data.fromJson(response.data);
     } catch (e) {
       rethrow;

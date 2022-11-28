@@ -1,13 +1,15 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-double getLinearDistanceBetween(Offset offset1, Offset offset2, {required double mapSize}) {
+double getLinearDistanceBetween(Offset offset1, Offset offset2,
+    {required double mapSize}) {
   final Offset delta = (offset1 - offset2) * mapSize;
   final distance = delta.distance;
   return double.parse(distance.abs().toStringAsFixed(0));
 }
 
-double getDegreesBetween(double x, double y, double x2, double y2, double compass) {
+double getDegreesBetween(
+    double x, double y, double x2, double y2, double compass) {
   final double deltaX = x2 - x;
   final double deltaY = y2 - y;
 
@@ -15,7 +17,8 @@ double getDegreesBetween(double x, double y, double x2, double y2, double compas
   theta = degreeNormalize(theta);
 
   double distance = math.sqrt(deltaX * deltaX + deltaY * deltaY);
-  double lineDistance = (math.tan(radians(theta)) * deltaX + deltaY).abs() / distance;
+  double lineDistance =
+      (math.tan(radians(theta)) * deltaX + deltaY).abs() / distance;
 
   double alpha = degrees(math.asin(lineDistance / distance));
   return alpha;

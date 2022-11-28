@@ -36,7 +36,8 @@ class OpenRGBSettings {
   }
 
   static Future<OpenRGBSettings?> loadFromDisc() async {
-    final Map<String, dynamic>? map = jsonDecode(prefs.getString('openrgb') ?? '{}');
+    final Map<String, dynamic>? map =
+        jsonDecode(prefs.getString('openrgb') ?? '{}');
     if (map == null || map.isEmpty) {
       return const OpenRGBSettings();
     }
@@ -83,20 +84,27 @@ class OpenRGBSettings {
     );
   }
 
-  Future<void> setAllFire(OpenRGBClient client, List<RGBController> data) async {
-    await OpenRGBSettings.setAllCustomSetColor(client, data, fireSettings.color);
+  Future<void> setAllFire(
+      OpenRGBClient client, List<RGBController> data) async {
+    await OpenRGBSettings.setAllCustomSetColor(
+        client, data, fireSettings.color);
   }
 
-  static Future<void> setAllOff(OpenRGBClient client, List<RGBController> data) async {
-    await OpenRGBSettings.setAllCustomSetColor(client, data, const c.Color.rgb(0, 0, 0));
+  static Future<void> setAllOff(
+      OpenRGBClient client, List<RGBController> data) async {
+    await OpenRGBSettings.setAllCustomSetColor(
+        client, data, const c.Color.rgb(0, 0, 0));
   }
 
-  Future<void> setAllOverHeat(OpenRGBClient client, List<RGBController> data) async {
+  Future<void> setAllOverHeat(
+      OpenRGBClient client, List<RGBController> data) async {
     await OpenRGBSettings.setAllCustomSetColor(client, data, overHeat.color);
   }
 
-  static Future<void> setAllCustomMode(OpenRGBClient client, List<RGBController> data) async {
-    List<int> faultyControllers = await OpenRGBSettings.faultyControllerByModes(client, data);
+  static Future<void> setAllCustomMode(
+      OpenRGBClient client, List<RGBController> data) async {
+    List<int> faultyControllers =
+        await OpenRGBSettings.faultyControllerByModes(client, data);
     for (var i = 0; i < data.length; i++) {
       if (!faultyControllers.contains(i)) {
         await client.setCustomMode(i);
@@ -104,7 +112,8 @@ class OpenRGBSettings {
     }
   }
 
-  static Future<List<int>> faultyControllerByModes(OpenRGBClient client, List<RGBController> data) async {
+  static Future<List<int>> faultyControllerByModes(
+      OpenRGBClient client, List<RGBController> data) async {
     var faulty = <int>[];
     for (var i = 0; i < data.length; i++) {
       final controller = data[i];
@@ -122,7 +131,8 @@ class OpenRGBSettings {
     return faulty;
   }
 
-  static Future<void> setAllCustomSetColor(OpenRGBClient client, List<RGBController> data, c.Color color) async {
+  static Future<void> setAllCustomSetColor(
+      OpenRGBClient client, List<RGBController> data, c.Color color) async {
     await OpenRGBSettings.setAllCustomMode(client, data);
     final updatedData = await client.getAllControllers();
     for (var i = 0; i < data.length; i++) {
@@ -133,7 +143,8 @@ class OpenRGBSettings {
     }
   }
 
-  static Future<void> setLoadingEffect(OpenRGBClient client, List<RGBController> data, c.Color color) async {
+  static Future<void> setLoadingEffect(
+      OpenRGBClient client, List<RGBController> data, c.Color color) async {
     for (var i = 0; i < data.length; i++) {
       var modeIndex = data[i].modes.indexWhere((element) {
         String modeName = element.modeName.toLowerCase();
@@ -153,34 +164,41 @@ class OpenRGBSettings {
     }
   }
 
-  static Future<void> setGradientOn(OpenRGBClient client, List<RGBController> data, int redInt) async {
+  static Future<void> setGradientOn(
+      OpenRGBClient client, List<RGBController> data, int redInt) async {
     await OpenRGBSettings.setAllCustomMode(client, data);
     final updatedData = await client.getAllControllers();
     for (var i = 0; i < data.length; i++) {
       for (var j = 0; j < redInt; j++) {
         if (updatedData[i].modes[updatedData[i].activeMode].modeColorPerLED) {
-          await client.updateLeds(i, updatedData[i].colors.length, c.Color.rgb(j, 0, 0));
+          await client.updateLeds(
+              i, updatedData[i].colors.length, c.Color.rgb(j, 0, 0));
         } else {
-          await client.setMode(i, updatedData[i].activeMode, c.Color.rgb(j, 0, 0));
+          await client.setMode(
+              i, updatedData[i].activeMode, c.Color.rgb(j, 0, 0));
         }
       }
     }
   }
 
-  static Future<void> setGradientOff(OpenRGBClient client, List<RGBController> data, int redInt) async {
+  static Future<void> setGradientOff(
+      OpenRGBClient client, List<RGBController> data, int redInt) async {
     await OpenRGBSettings.setAllCustomMode(client, data);
     final updatedData = await client.getAllControllers();
     for (var i = 0; i < data.length; i++) {
       for (var j = redInt; j >= 0; j--) {
-        await client.setMode(i, updatedData[i].activeMode, c.Color.rgb(j, 0, 0));
+        await client.setMode(
+            i, updatedData[i].activeMode, c.Color.rgb(j, 0, 0));
         if (updatedData[i].modes[updatedData[i].activeMode].modeColorPerLED) {
-          await client.updateLeds(i, updatedData[i].colors.length, c.Color.rgb(j, 0, 0));
+          await client.updateLeds(
+              i, updatedData[i].colors.length, c.Color.rgb(j, 0, 0));
         }
       }
     }
   }
 
-  static Future<void> setDeathEffect(OpenRGBClient client, List<RGBController> data, List<int> values) async {
+  static Future<void> setDeathEffect(
+      OpenRGBClient client, List<RGBController> data, List<int> values) async {
     await OpenRGBSettings.setGradientOn(client, data, values.first - 170);
     await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
     await OpenRGBSettings.setGradientOn(client, data, values.first);
@@ -191,7 +209,8 @@ class OpenRGBSettings {
     await OpenRGBSettings.setGradientOff(client, data, values.last - 170);
   }
 
-  static Future<void> setJoinBattleEffect(OpenRGBClient client, List<RGBController> data, c.Color color,
+  static Future<void> setJoinBattleEffect(
+      OpenRGBClient client, List<RGBController> data, c.Color color,
       {int times = 4, int delay = 130}) async {
     for (var i = 0; i < times; i++) {
       await OpenRGBSettings.setAllCustomSetColor(client, data, color);
