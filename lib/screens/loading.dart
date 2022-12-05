@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:blinking_text/blinking_text.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:wtbgassistant/data_receivers/github.dart';
 
 import '../services/utility.dart';
@@ -10,7 +11,10 @@ import 'downloader.dart';
 import 'home.dart';
 
 class Loading extends StatefulWidget {
-  const Loading({Key? key}) : super(key: key);
+  final bool startup;
+  final bool minimize;
+  const Loading({Key? key, required this.startup, required this.minimize})
+      : super(key: key);
 
   @override
   LoadingState createState() => LoadingState();
@@ -28,9 +32,9 @@ class LoadingState extends State<Loading> {
     }
   }
 
-  Future<void> checkGitVersion(String version) async {
+  Future<void> checkAndUpdate(String version) async {
     try {
-      Data data = await Data.getData();
+      GHData data = await GHData.getData();
       if (int.parse(data.tagName.replaceAll('.', '')) >
           int.parse(version.replaceAll('.', ''))) {
         if (!mounted) return;
@@ -97,7 +101,12 @@ class LoadingState extends State<Loading> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await checkGitVersion(await checkVersion());
+      await checkAndUpdate(await checkVersion());
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (widget.startup && widget.minimize) {
+        await windowManager.minimize();
+      }
     });
   }
 

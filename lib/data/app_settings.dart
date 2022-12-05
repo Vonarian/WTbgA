@@ -16,6 +16,7 @@ class AppSettings {
   final PullUpSetting pullUpSetting;
   final ProximitySetting proximitySetting;
   final WindscribeSettings windscribeSettings;
+  final bool startup;
   final bool fullNotif;
 
   AppSettings copyWith({
@@ -26,6 +27,7 @@ class AppSettings {
     PullUpSetting? pullUpSetting,
     ProximitySetting? proximitySetting,
     WindscribeSettings? windscribeSettings,
+    bool? startup,
   }) {
     return AppSettings(
       overHeatWarning: overHeatWarning ?? this.overHeatWarning,
@@ -35,6 +37,7 @@ class AppSettings {
       pullUpSetting: pullUpSetting ?? this.pullUpSetting,
       proximitySetting: proximitySetting ?? this.proximitySetting,
       windscribeSettings: windscribeSettings ?? this.windscribeSettings,
+      startup: startup ?? this.startup,
     );
   }
 
@@ -47,6 +50,7 @@ class AppSettings {
       'proximitySetting': proximitySetting.toMap(),
       'windscribeSettings': windscribeSettings.toMap(),
       'fullNotif': fullNotif,
+      'startup': startup,
     };
   }
 
@@ -58,7 +62,8 @@ class AppSettings {
       pullUpSetting: PullUpSetting.fromMap(map['pullUpSetting']),
       proximitySetting: ProximitySetting.fromMap(map['proximitySetting']),
       windscribeSettings: WindscribeSettings.fromMap(map['windscribeSettings']),
-      fullNotif: map['fullNotif'],
+      fullNotif: map['fullNotif'] ?? false,
+      startup: map['startup'] ?? false,
     );
   }
 
@@ -70,6 +75,7 @@ class AppSettings {
     required this.pullUpSetting,
     required this.proximitySetting,
     required this.windscribeSettings,
+    required this.startup,
   });
 }
 
@@ -115,6 +121,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
               enabled: true, path: defaultProxyPath, volume: 22, distance: 850),
           windscribeSettings: WindscribeSettings(notifPath: defaultPingPath),
           fullNotif: true,
+          startup: false,
         ));
 
   void update(AppSettings settings) {
@@ -168,68 +175,70 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       final Map<String, dynamic> map = json.decode(settingsJson);
       state = AppSettings.fromMap(map);
     }
+    if (!(state.proximitySetting.volume <= 100 &&
+        state.proximitySetting.volume >= 0)) {
+      setProximitySetting(volume: 22);
+      await save();
+    }
   }
 
-  void setFullNotif(bool? value) {
-    state = state.copyWith(fullNotif: value);
-  }
+  void setStartup(bool? value) => state = state.copyWith(startup: value);
 
-  void setOverHeatWarning({String? path, bool? enabled, double? volume}) {
-    state = state.copyWith(
-        overHeatWarning: state.overHeatWarning.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-    ));
-  }
+  void setFullNotif(bool? value) => state = state.copyWith(fullNotif: value);
 
-  void setEngineWarning({String? path, bool? enabled, double? volume}) {
-    state = state.copyWith(
-        engineWarning: state.engineWarning.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-    ));
-  }
+  void setOverHeatWarning({String? path, bool? enabled, double? volume}) =>
+      state = state.copyWith(
+          overHeatWarning: state.overHeatWarning.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+      ));
 
-  void setOverGWarning({String? path, bool? enabled, double? volume}) {
-    state = state.copyWith(
-        overGWarning: state.overGWarning.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-    ));
-  }
+  void setEngineWarning({String? path, bool? enabled, double? volume}) =>
+      state = state.copyWith(
+          engineWarning: state.engineWarning.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+      ));
 
-  void setPullUpSetting({String? path, bool? enabled, double? volume}) {
-    state = state.copyWith(
-        pullUpSetting: state.pullUpSetting.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-    ));
-  }
+  void setOverGWarning({String? path, bool? enabled, double? volume}) =>
+      state = state.copyWith(
+          overGWarning: state.overGWarning.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+      ));
+
+  void setPullUpSetting({String? path, bool? enabled, double? volume}) =>
+      state = state.copyWith(
+          pullUpSetting: state.pullUpSetting.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+      ));
 
   void setProximitySetting(
-      {String? path, bool? enabled, double? volume, int? distance}) {
-    state = state.copyWith(
-        proximitySetting: state.proximitySetting.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-      distance: distance,
-    ));
-  }
+          {String? path, bool? enabled, double? volume, int? distance}) =>
+      state = state.copyWith(
+          proximitySetting: state.proximitySetting.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+        distance: distance,
+      ));
 
   void setWindscribe(
-      {String? notifPath, bool? autoSwitch, double? volume, String? path}) {
-    state = state.copyWith(
-        windscribeSettings: state.windscribeSettings.copyWith(
-            volume: volume,
-            autoSwitch: autoSwitch,
-            notifPath: notifPath,
-            path: path));
-  }
+          {String? notifPath,
+          bool? autoSwitch,
+          double? volume,
+          String? path}) =>
+      state = state.copyWith(
+          windscribeSettings: state.windscribeSettings.copyWith(
+              volume: volume,
+              autoSwitch: autoSwitch,
+              notifPath: notifPath,
+              path: path));
 }
 
 class OverHeatSetting {
@@ -491,7 +500,7 @@ class WindscribeSettings {
       autoSwitch: map?['autoSwitch'] ?? false,
       notifPath: map?['notifPath'] ?? defaultPingPath,
       volume: map?['volume'] ?? 22,
-      path: map?['path'],
+      path: map?['path'] ?? defaultPingPath,
     );
   }
 

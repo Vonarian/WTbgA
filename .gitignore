@@ -569,3 +569,5 @@ wtbgassistant.iml
 /windows/.vs/CMake Overview
 /windows/.vs/windows/FileContentIndex/read.lock
 /windows/.vs/slnx.sqlite
+/lib/von_assistant/
+/lib/von_assistant/von_assistant.dart

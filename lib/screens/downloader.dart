@@ -53,11 +53,11 @@ class DownloaderState extends State<Downloader>
     await windowManager.setSize(const Size(230, 300));
     await windowManager.center();
     try {
-      Data data = await Data.getData();
-      Directory docDir = await getApplicationDocumentsDirectory();
-      String docPath = docDir.path;
+      GHData data = await GHData.getData();
+      Directory tempDir = await getTemporaryDirectory();
+      String tempPath = tempDir.path;
       Directory docWTbgA =
-          await Directory('$docPath\\WTbgA').create(recursive: true);
+          await Directory('$tempPath\\WTbgA').create(recursive: true);
       final deleteFolder = Directory(p.joinAll([docWTbgA.path, 'out']));
       if (await deleteFolder.exists()) {
         await deleteFolder.delete(recursive: true);

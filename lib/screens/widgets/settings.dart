@@ -20,6 +20,7 @@ import 'package:wtbgassistant/screens/downloader.dart';
 import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
 import 'package:wtbgassistant/screens/widgets/settings_list_custom.dart';
 import 'package:wtbgassistant/services/presence.dart';
+import 'package:wtbgassistant/von_assistant/von_assistant.dart';
 
 import '../../data/data_class.dart';
 import '../../main.dart';
@@ -184,6 +185,35 @@ class SettingsState extends ConsumerState<Settings> {
                   appSettingsNotifier.setProximitySetting(enabled: value);
                   await appSettingsNotifier.save();
                 },
+                activeSwitchColor: theme.accentColor.lightest,
+              ),
+              SettingsTile.switchTile(
+                initialValue: appSettings.startup,
+                description:
+                    const Text('Run WTbgA on startup (Needs VonAssistant)'),
+                onToggle: (value) async {
+                  try {
+                    final von = await showLoading<VonAssistant>(
+                        context: context,
+                        future: VonAssistant.initialize(),
+                        message: 'Getting Startup Service ready!');
+                    if (von.installed) {
+                      await von.setStartup(value);
+                      appSettingsNotifier.setStartup(value);
+                      await appSettingsNotifier.save();
+                    }
+                  } catch (e, st) {
+                    log(e.toString(), stackTrace: st);
+                    showLoading(
+                        context: context,
+                        future: Future.delayed(const Duration(seconds: 2)),
+                        message: 'Error: $e');
+                  }
+                },
+                title: const Text('Run at Startup'),
+                leading: Icon(FluentIcons.app_icon_default,
+                    color: theme.accentColor),
+                activeSwitchColor: theme.accentColor.lightest,
               ),
               firebaseVersion.when(data: (data) {
                 int fbVersion = int.parse(data?.replaceAll('.', '') ?? '0000');
@@ -305,7 +335,7 @@ class SettingsState extends ConsumerState<Settings> {
                 ),
                 initialValue: appSettings.windscribeSettings.autoSwitch,
                 title: Text(
-                    'Windscribe auto-switch (${appSettings.windscribeSettings.path == null ? 'Click to initiate' : 'Initiated'})'),
+                    'Windscribe auto-switch (${appSettings.windscribeSettings.path == null ? 'Click to Initialize' : 'Initialized'})'),
                 onToggle: (bool value) async {
                   appSettingsNotifier.setWindscribe(autoSwitch: value);
                   await appSettingsNotifier.save();
@@ -359,6 +389,7 @@ class SettingsState extends ConsumerState<Settings> {
                         }
                       }
                     : null,
+                activeSwitchColor: theme.accentColor.lightest,
               ),
               SettingsTile(
                 title: const Text('Start Streaming Mode'),
@@ -489,7 +520,10 @@ class SettingsState extends ConsumerState<Settings> {
                             Navigator.pushReplacement(
                                 context,
                                 FluentPageRoute(
-                                    builder: (context) => const Loading()));
+                                    builder: (context) => const Loading(
+                                          minimize: false,
+                                          startup: false,
+                                        )));
                           },
                         ),
                       ],
@@ -526,6 +560,7 @@ class SettingsState extends ConsumerState<Settings> {
                   await appSettingsNotifier.save();
                 }
               },
+              activeSwitchColor: theme.accentColor.lightest,
             ),
             SettingsTile.switchTile(
               initialValue: appSettings.overHeatWarning.enabled,
@@ -553,6 +588,7 @@ class SettingsState extends ConsumerState<Settings> {
                   await appSettingsNotifier.save();
                 }
               },
+              activeSwitchColor: theme.accentColor.lightest,
             ),
             SettingsTile.switchTile(
               initialValue: appSettings.overGWarning.enabled,
@@ -580,6 +616,7 @@ class SettingsState extends ConsumerState<Settings> {
                   await appSettingsNotifier.save();
                 }
               },
+              activeSwitchColor: theme.accentColor.lightest,
             ),
             SettingsTile.switchTile(
               initialValue: appSettings.pullUpSetting.enabled,
@@ -607,6 +644,7 @@ class SettingsState extends ConsumerState<Settings> {
                   await appSettingsNotifier.save();
                 }
               },
+              activeSwitchColor: theme.accentColor.lightest,
             ),
             SettingsTile.switchTile(
               initialValue: appSettings.proximitySetting.enabled,
@@ -631,6 +669,7 @@ class SettingsState extends ConsumerState<Settings> {
                   await appSettingsNotifier.save();
                 }
               },
+              activeSwitchColor: theme.accentColor.lightest,
               trailing: Row(
                 children: [
                   distance(context, appSettings),
@@ -652,6 +691,7 @@ class SettingsState extends ConsumerState<Settings> {
               title: const Text('Gib Premium!'),
               description: const Text(
                   'This is a way to notify me (Vonarian) if you need premium features and you can\'t get one :)'),
+              activeSwitchColor: theme.accentColor.lightest,
             ),
             SettingsTile(
               title: const Text('Set a Username'),
@@ -824,7 +864,7 @@ class SettingsState extends ConsumerState<Settings> {
               ref
                   .read(provider.appSettingsProvider.notifier)
                   .setProximitySetting(
-                      volume: ref
+                      distance: ref
                               .read(provider.appSettingsProvider)
                               .proximitySetting
                               .distance +
@@ -837,7 +877,7 @@ class SettingsState extends ConsumerState<Settings> {
               ref
                   .read(provider.appSettingsProvider.notifier)
                   .setProximitySetting(
-                      volume: ref
+                      distance: ref
                               .read(provider.appSettingsProvider)
                               .proximitySetting
                               .distance -

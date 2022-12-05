@@ -33,7 +33,7 @@ late String appDocPath;
 late final String appVersion;
 late final List<String> rowList;
 
-Future<void> main() async {
+Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   await Window.initialize();
@@ -69,8 +69,12 @@ Future<void> main() async {
   app = await Firebase.initializeApp(
       options: FirebaseOptions.fromMap(firebaseConfig), name: 'wtbga-815e4');
   runApp(
-    const ProviderScope(
-      child: App(child: Loading()),
+    ProviderScope(
+      child: App(
+          child: Loading(
+        startup: arguments.contains('startup'),
+        minimize: arguments.contains('minimize'),
+      )),
     ),
   );
 }

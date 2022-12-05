@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:wtbgassistant/main.dart';
 
-Data networkFromJson(String str) => Data.fromJson(json.decode(str));
+GHData networkFromJson(String str) => GHData.fromJson(json.decode(str));
 
-String networkToJson(Data data) => json.encode(data.toJson());
+String networkToJson(GHData data) => json.encode(data.toJson());
 
-class Data {
-  const Data({
+class GHData {
+  const GHData({
     required this.url,
     required this.assetsUrl,
     required this.uploadUrl,
@@ -48,7 +48,7 @@ class Data {
   final String zipballUrl;
   final String body;
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
+  factory GHData.fromJson(Map<String, dynamic> json) => GHData(
         url: json['url'],
         assetsUrl: json['assets_url'],
         uploadUrl: json['upload_url'],
@@ -89,11 +89,11 @@ class Data {
         'body': body,
       };
 
-  static Future<Data> getData() async {
+  static Future<GHData> getData() async {
     try {
       Response response = await dio
           .get('https://api.github.com/repos/Vonarian/WTbgA/releases/latest');
-      return Data.fromJson(response.data);
+      return GHData.fromJson(response.data);
     } catch (e) {
       rethrow;
     }
