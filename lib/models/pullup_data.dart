@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:wtbgassistant/data/app_settings.dart';
-import 'package:wtbgassistant/main.dart';
+import '../main.dart';
+
+import 'app_settings.dart';
 
 class PullUpData {
   ///Play warning by checking if the altitude is dangerous.

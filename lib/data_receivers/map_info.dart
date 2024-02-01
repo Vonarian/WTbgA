@@ -6,7 +6,7 @@
 // "map_min" : [ -32768.0, -32768.0 ]
 // }s dev;
 
-import 'package:wtbgassistant/main.dart';
+import '../main.dart';
 
 const double earthRadiusKM = 6378.137;
 

@@ -3,12 +3,11 @@ import 'dart:async';
 import 'package:firebase_dart/database.dart';
 import 'package:intl/intl.dart';
 
-import '../data/firebase.dart';
 import '../main.dart';
 
 class PresenceService {
-  FirebaseDatabase database =
-      FirebaseDatabase(app: app, databaseURL: dataBaseUrl);
+  FirebaseDatabase database = FirebaseDatabase(
+      app: app, databaseURL: secrets.firebaseData?.databaseURL);
   StreamSubscription? subscription;
   DatabaseReference? con;
 

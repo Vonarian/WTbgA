@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-import '../main.dart';
-
 String fmPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
   'data/flutter_assets/assets',
@@ -64,7 +62,8 @@ class FmData {
     required this.critAoa4,
   });
 
-  static FmData? setFlightModel(String? name) {
+  static Future<FmData?> setFlightModel(String? name) async {
+    final rowList = convertFmToList(await csvString());
     FmData? fmData;
     if (name == null) return null;
     for (var element in rowList.skip(1)) {

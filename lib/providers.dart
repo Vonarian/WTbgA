@@ -1,11 +1,12 @@
 import 'package:firebase_dart/firebase_dart.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openrgb/openrgb.dart';
-import 'package:wtbgassistant/data/app_settings.dart';
-import 'package:wtbgassistant/data/orgb_data_class.dart';
-import 'package:wtbgassistant/services/presence.dart';
-import 'package:wtbgassistant/services/utility.dart';
+import 'package:openrgb/openrgb.dart' as orgb;
+
+import 'models/app_settings.dart';
+import 'models/orgb_data_class.dart';
+import 'services/presence.dart';
+import 'services/utility.dart';
 
 class MyProvider {
   final trayProvider = StateProvider<bool>((ref) => true);
@@ -31,10 +32,10 @@ class MyProvider {
   final systemColorProvider = StateProvider<Color>((ref) => Colors.red);
   final systemThemeProvider =
       StateProvider<Brightness>((ref) => Brightness.dark);
-  final orgbClientProvider = StateProvider<OpenRGBClient?>(
+  final orgbClientProvider = StateProvider<orgb.OpenRGBClient?>(
     (ref) => null,
   );
-  final orgbControllersProvider = StateProvider<List<RGBController>>(
+  final orgbControllersProvider = StateProvider<List<orgb.RGBController>>(
     (ref) => [],
   );
   final rgbSettingProvider =

@@ -1,4 +1,4 @@
-import 'package:wtbgassistant/main.dart';
+import '../main.dart';
 
 class GameChat {
   final int id;

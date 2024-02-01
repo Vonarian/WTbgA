@@ -2,10 +2,10 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:wtbgassistant/services/utility.dart';
 
 import '../main.dart';
 import '../services/presence.dart';
+import '../services/utility.dart';
 
 class Message {
   final String title;

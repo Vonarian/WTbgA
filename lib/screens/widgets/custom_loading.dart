@@ -32,13 +32,13 @@ class InkDrop extends StatefulWidget {
   final List<Color> colors;
 
   const InkDrop({
-    Key? key,
+    super.key,
     required this.size,
     required this.color,
     required this.strokeWidth,
     required this.colors,
     this.ringColor = const Color(0x1A000000),
-  }) : super(key: key);
+  });
 
   @override
   InkDropState createState() => InkDropState();

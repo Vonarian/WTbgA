@@ -3,60 +3,52 @@ description: WTbgA
 
 publish_to: 'none'
 
-version: 3.0.7
 
 environment:
-  sdk: ">=2.18.0 <3.0.0"
+  sdk: ">=3.2.6 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  settings_ui:
-    path: ../flutter-settings-ui
   win_toast: ^0.1.1
   blinking_text: ^1.0.1+2
   url_launcher: ^6.1.2
   path: ^1.8.1
-  window_manager: ^0.2.3
+  window_manager: ^0.3.7
   path_provider: ^2.0.10
   tray_manager: ^0.2.0
   shared_preferences: ^2.0.15
   hotkey_manager: ^0.1.7
-  percent_indicator: 4.2.2
-  dio: ^4.0.6
+  percent_indicator: ^4.2.3
+  dio: ^5.4.0
   flutter_riverpod: ^2.1.1
   csv: ^5.0.1
   archive: ^3.3.0
-  fluent_ui:
-    path: ../fluent_ui
-  audioplayers: ^1.0.1
-  ffmpeg_cli:
-    path: ../ffmpeg_cli
+  fluent_ui: ^4.8.2
+  audioplayers: ^5.2.1
   firebase_dart: ^1.0.11
   firebase_dart_flutter:
-  firebase_core: 2.3.0
-  device_info_plus: ^8.0.0
-  intl: ^0.17.0
+  device_info_plus: ^9.1.1
+  intl: ^0.18.1
   flutter_acrylic: ^1.0.0+2
   system_theme: ^2.0.0
-  dynamic_color:
-    path: ../dynamic_color
-  system_info2: ^2.0.4
-  openrgb: 0.2.4
+  dynamic_color: ^1.6.8
+  system_info2: ^4.0.0
+  openrgb: ^0.2.5
   flutter_colorpicker: ^1.0.3
   color: 3.0.0
-  file_picker: ^5.2.2
-  pinging_point:
-    path: ../pinging_point
-  win32: ^3.1.1
+  file_picker: ^6.1.1
+  win32: ^5.1.1
   collection: ^1.16.0
   win32_registry: ^1.0.2
   window_watcher: ^0.0.2
+  version: ^3.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
+
+  flutter_lints: ^3.0.1
 
 
 # The following section is specific to Flutter.

@@ -9,9 +9,10 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:win32/win32.dart';
 import 'package:window_watcher/window_watcher.dart';
-import 'package:wtbgassistant/data/data_class.dart';
-import 'package:wtbgassistant/main.dart';
-import 'package:wtbgassistant/screens/widgets/loading_widget.dart';
+
+import '../main.dart';
+import '../models/data_class.dart';
+import '../screens/widgets/loading_widget.dart';
 
 final List<String> isWarThunder = [
   'War Thunder',
@@ -125,6 +126,7 @@ class AppUtil {
         File('$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe');
     if (!(await openRGBExecutable.exists()) && check && context != null) {
       String docsPath = await AppUtil.getAppDocsPath();
+      //ignore:use_build_context_synchronously
       await showLoading(
           context: context,
           future: dio.download(

@@ -2,24 +2,22 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:blinking_text/blinking_text.dart';
 import 'package:dio/dio.dart';
-import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
-import 'package:flutter/material.dart' show SnackBarAction;
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/screens/widgets/custom_loading.dart';
 
 import '../data_receivers/github.dart';
+import 'widgets/custom_loading.dart';
 
 class Downloader extends StatefulWidget {
   const Downloader({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   DownloaderState createState() => DownloaderState();
@@ -106,22 +104,18 @@ class DownloaderState extends State<Downloader>
       }).timeout(const Duration(minutes: 8));
     } catch (e) {
       if (!mounted) return;
-      showSnackbar(
-          context,
-          Snackbar(
-            content: BlinkText(
-              e.toString(),
-              endColor: Colors.red,
-              duration: const Duration(milliseconds: 300),
-            ),
-            action: SnackBarAction(
+      displayInfoBar(context,
+          builder: (BuildContext context, void Function() close) {
+        return InfoBar(
+            title: const Text('Retry'),
+            action: IconButton(
+              icon: const Icon(FluentIcons.refresh),
               onPressed: () {
                 Navigator.pushReplacement(context,
                     FluentPageRoute(builder: (context) => const Downloader()));
               },
-              label: 'Retry',
-            ),
-          ));
+            ));
+      });
       windowManager.setSize(const Size(600, 600));
       error = true;
       text = 'ERROR!';

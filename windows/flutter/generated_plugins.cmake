@@ -10,6 +10,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   screen_retriever
   system_theme
   tray_manager
+  uni_links_desktop
   url_launcher_windows
   win_toast
   window_manager

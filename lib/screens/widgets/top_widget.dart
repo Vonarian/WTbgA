@@ -1,16 +1,15 @@
 import 'dart:async';
 
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/client/client.dart';
-import 'package:system_theme/system_theme.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../../data/orgb_data_class.dart';
 import '../../main.dart';
+import '../../models/orgb_data_class.dart';
 import '../../services/presence.dart';
 import '../../services/utility.dart';
 import '../downloader.dart';
@@ -34,7 +33,7 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       if (!focused) return;
       Color? systemColor = await DynamicColorPlugin.getAccentColor();
       Brightness brightness =
-          SystemTheme.isDarkMode ? Brightness.dark : Brightness.light;
+          WidgetsBinding.instance.platformDispatcher.platformBrightness;
       if (ref.read(provider.systemColorProvider.notifier).state !=
               systemColor &&
           systemColor != null) {
@@ -60,35 +59,39 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
               await ref.read(provider.orgbClientProvider)!.getAllControllers();
         }
       }
-      PresenceService()
-          .getPremium((await deviceInfo.windowsInfo).computerName)
-          .listen((event) {
-        if (!mounted) return;
-        ref.read(provider.premiumUserProvider.notifier).state =
-            event.snapshot.value as bool;
-      });
-    });
-
-    PresenceService().getVersion().listen((event) async {
-      final version = event.snapshot.value.toString().replaceAll('.', '');
-      final currentVersion = appVersion.replaceAll('.', '');
-      if (int.parse(version) > int.parse(currentVersion)) {
-        final toast = await WinToast.instance().showToast(
-          title: 'New Version Available!',
-          subtitle:
-              'Click on this notification to download the latest version.',
-          type: ToastType.text04,
-        );
-        toast?.eventStream.listen((event) async {
-          if (event is ActivatedEvent) {
-            await _handleClickRestore();
-            if (!mounted) return;
-            Navigator.of(context).pushReplacement(
-                FluentPageRoute(builder: (context) => const Downloader()));
-          }
+      if (secrets.firebaseValid) {
+        PresenceService()
+            .getPremium((await deviceInfo.windowsInfo).computerName)
+            .listen((event) {
+          if (!mounted) return;
+          ref.read(provider.premiumUserProvider.notifier).state =
+              event.snapshot.value as bool;
         });
       }
     });
+
+    if (secrets.firebaseValid) {
+      PresenceService().getVersion().listen((event) async {
+        final version = event.snapshot.value.toString().replaceAll('.', '');
+        final currentVersion = appVersion.replaceAll('.', '');
+        if (int.parse(version) > int.parse(currentVersion)) {
+          final toast = await WinToast.instance().showToast(
+            title: 'New Version Available!',
+            subtitle:
+                'Click on this notification to download the latest version.',
+            type: ToastType.text04,
+          );
+          toast?.eventStream.listen((event) async {
+            if (event is ActivatedEvent) {
+              await _handleClickRestore();
+              if (!mounted) return;
+              Navigator.of(context).pushReplacement(
+                  FluentPageRoute(builder: (context) => const Downloader()));
+            }
+          });
+        }
+      });
+    }
     AppUtil.getWTWindow().listen((event) {
       if (event == null) {
         ref.read(provider.gameRunningProvider.notifier).state = false;
@@ -108,12 +111,6 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         ref.read(provider.wstunnelRunning.notifier).state = event ?? false;
       }
     });
-    //TODO Implement performance monitoring.
-    // AppUtil.getPerformance().listen((value) {
-    //   if (value != null) {
-    //     if (ref.read(provider.inMatchProvider)) {}
-    //   }
-    // });
   }
 
   bool inMatch(String value) {
@@ -134,7 +131,7 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
   Widget build(BuildContext context) {
     final systemColor = ref.watch(provider.systemColorProvider);
     return FluentApp(
-        theme: ThemeData(
+        theme: FluentThemeData(
             brightness: ref.watch(provider.systemThemeProvider),
             visualDensity: VisualDensity.adaptivePlatformDensity,
             accentColor: systemColor.toAccentColor(),

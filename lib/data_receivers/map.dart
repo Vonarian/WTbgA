@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:wtbgassistant/main.dart';
+import '../main.dart';
 
 class MapObj {
   const MapObj({

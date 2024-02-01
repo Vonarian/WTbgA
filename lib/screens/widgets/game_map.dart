@@ -7,19 +7,18 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pinging_point/pinging_point.dart';
-import 'package:wtbgassistant/data_receivers/indicator_receiver.dart';
-import 'package:wtbgassistant/data_receivers/map.dart';
-import 'package:wtbgassistant/data_receivers/map_info.dart';
-import 'package:wtbgassistant/services/extensions.dart';
 
+import '../../data_receivers/indicator_receiver.dart';
+import '../../data_receivers/map.dart';
+import '../../data_receivers/map_info.dart';
 import '../../main.dart';
+import '../../services/extensions.dart';
 import '../../services/helpers.dart';
 
 class GameMap extends ConsumerStatefulWidget {
   final bool isInMatch;
 
-  const GameMap({Key? key, required this.isInMatch}) : super(key: key);
+  const GameMap({super.key, required this.isInMatch});
 
   @override
   GameMapState createState() => GameMapState();
@@ -128,14 +127,15 @@ class GameMapState extends ConsumerState<GameMap>
                 });
               }
               if (e.type == 'aircraft') {
-                return PingingPoint.pingingPoint(
-                  x: e.x!,
-                  y: e.y!,
-                  pointColor: HexColor.fromHex(e.color),
-                  pointSize: 8,
-                  height: widgetHeight,
-                  width: widgetWidth,
-                );
+                return const Placeholder();
+                // return PingingPoint.pingingPoint(
+                //   x: e.x!,
+                //   y: e.y!,
+                //   pointColor: HexColor.fromHex(e.color),
+                //   pointSize: 8,
+                //   height: widgetHeight,
+                //   width: widgetWidth,
+                // );
               } else if (e.type == 'ground_model') {
                 return CustomPaint(
                     painter: ObjectPainter(

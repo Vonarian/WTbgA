@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:wtbgassistant/main.dart';
+import '../main.dart';
 
 GHData networkFromJson(String str) => GHData.fromJson(json.decode(str));
 

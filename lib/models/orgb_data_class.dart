@@ -3,8 +3,9 @@ import 'dart:convert';
 
 import 'package:color/color.dart' as c;
 import 'package:openrgb/openrgb.dart';
-import 'package:wtbgassistant/main.dart';
-import 'package:wtbgassistant/services/extensions.dart';
+
+import '../main.dart';
+import '../services/extensions.dart';
 
 class OpenRGBSettings {
   final OverHeatSettings overHeat;
@@ -19,7 +20,7 @@ class OpenRGBSettings {
     this.fireSettings = const FireSettings(),
     this.loadingColor = const c.Color.rgb(63, 240, 4),
     this.flashTimes = 4,
-    this.autoStart = true,
+    this.autoStart = false,
     this.delayBetweenFlashes = 350,
   });
 

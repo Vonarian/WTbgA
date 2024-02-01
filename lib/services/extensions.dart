@@ -1,7 +1,8 @@
+import 'dart:convert';
 import 'dart:ui' as ui;
 
-import 'package:color/color.dart' as c;
-import 'package:fluent_ui/fluent_ui.dart' as f;
+import 'package:color/color.dart' as color;
+import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 extension HexColor on ui.Color {
   /// String is in the format "aabbcc" or "ffaabbcc" with an optional leading "#".
@@ -26,18 +27,18 @@ extension IsNotNull on Object? {
 }
 
 extension ToRGB on ui.Color {
-  c.Color toRGB() {
-    return c.Color.rgb(red, green, blue);
+  color.Color toRGB() {
+    return color.Color.rgb(red, green, blue);
   }
 }
 
-extension ColorFromMap on c.Color {
-  static c.Color fromMap(Map<String, dynamic> map) {
-    return c.Color.rgb(map['r'], map['g'], map['b']);
+extension ColorFromMap on color.Color {
+  static color.Color fromMap(Map<String, dynamic> map) {
+    return color.Color.rgb(map['r'], map['g'], map['b']);
   }
 }
 
-extension ColorToMap on c.Color {
+extension ColorToMap on color.Color {
   Map<String, num> toJson() {
     final color = toRgbColor();
     return {
@@ -48,15 +49,19 @@ extension ColorToMap on c.Color {
   }
 }
 
-extension ToString on c.Color {
+extension ToString on color.Color {
   String toStringHex() {
     final stringColor = toHexColor().toString();
     return stringColor;
   }
 }
 
-extension FluentColortoRGB on f.Color {
-  c.Color fluentToRGB() {
-    return c.Color.rgb(red, green, blue);
+extension FluentColortoRGB on fluent.Color {
+  color.Color fluentToRGB() {
+    return color.Color.rgb(red, green, blue);
   }
+}
+
+extension StringToJson on String {
+  dynamic decode() => jsonDecode(this);
 }

@@ -13,15 +13,15 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_info2/system_info2.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:wtbgassistant/providers.dart';
-import 'package:wtbgassistant/screens/loading.dart';
-import 'package:wtbgassistant/screens/widgets/top_widget.dart';
-import 'package:wtbgassistant/services/csv_class.dart';
-import 'package:wtbgassistant/services/utility.dart';
 
-import 'data/firebase.dart';
+import 'models/secret_data.dart';
+import 'providers.dart';
+import 'screens/loading.dart';
+import 'screens/widgets/top_widget.dart';
+import 'services/utility.dart';
 
-late final FirebaseApp? app;
+late final SecretData secrets;
+FirebaseApp? app;
 late final SharedPreferences prefs;
 final dio = Dio();
 final audio = AudioPlayer();
@@ -31,9 +31,9 @@ final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
 late final String appVersion;
-late final List<String> rowList;
 
 Future<void> main(List<String> arguments) async {
+  secrets = SecretData.load();
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   await Window.initialize();
@@ -58,7 +58,6 @@ Future<void> main(List<String> arguments) async {
     await windowManager.show();
   });
   appVersion = await File(AppUtil.versionPath).readAsString();
-  rowList = convertFmToList(await csvString());
   prefs = await SharedPreferences.getInstance();
   bool? autoStart = prefs.get('autoStart') as bool?;
   if (autoStart ?? false) {
@@ -66,8 +65,10 @@ Future<void> main(List<String> arguments) async {
     Process.run(exePath, ['--server', '--noautoconnect']);
   }
   await FirebaseDartFlutter.setup();
-  app = await Firebase.initializeApp(
-      options: FirebaseOptions.fromMap(firebaseConfig), name: 'wtbga-815e4');
+  if (secrets.firebaseData != null) {
+    app = await Firebase.initializeApp(
+        options: secrets.firebaseData!, name: 'wtbga-815e4');
+  }
   runApp(
     ProviderScope(
       child: App(

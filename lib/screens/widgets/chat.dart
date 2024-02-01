@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wtbgassistant/main.dart';
+import '../../main.dart';
 
 import '../../data_receivers/chat.dart';
 
 class Chat extends ConsumerStatefulWidget {
-  const Chat({Key? key}) : super(key: key);
+  const Chat({super.key});
 
   @override
   ChatState createState() => ChatState();
