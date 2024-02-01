@@ -31,7 +31,6 @@ dependencies:
   device_info_plus: ^9.1.1
   intl: ^0.18.1
   flutter_acrylic: ^1.0.0+2
-  system_theme: ^2.0.0
   dynamic_color: ^1.6.8
   system_info2: ^4.0.0
   openrgb: ^0.2.5
@@ -62,3 +61,4 @@ flutter:
     - assets/icons/
     - assets/sounds/
     - assets/scripts/
+    - assets/fm

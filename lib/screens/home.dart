@@ -304,12 +304,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     return;
   }
 
-  final HotKey _hotKey = HotKey(
-    KeyCode.keyW,
-    modifiers: [KeyModifier.control, KeyModifier.shift],
-    scope: HotKeyScope.system,
-  );
-
   @override
   void initState() {
     super.initState();
