@@ -110,7 +110,8 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
 
   bool inMatch(String value) {
     final String name = value.toLowerCase();
-    return name.trim() == 'war thunder - in battle';
+    return name.trim() == 'war thunder - in battle' ||
+        name.trim() == 'war thunder - test flight';
   }
 
   @override

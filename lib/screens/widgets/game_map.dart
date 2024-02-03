@@ -14,6 +14,7 @@ import '../../data_receivers/map_info.dart';
 import '../../main.dart';
 import '../../services/extensions.dart';
 import '../../services/helpers.dart';
+import 'pinging_point/pinging_point.dart';
 
 class GameMap extends ConsumerStatefulWidget {
   final bool isInMatch;
@@ -33,10 +34,10 @@ class GameMapState extends ConsumerState<GameMap>
     super.initState();
     _getSizes();
     future = MapObj.mapObj();
-    canPlay.addListener(() async {
-      if (!canPlay.value) {
+    shouldPlay.addListener(() async {
+      if (!shouldPlay.value) {
         await Future.delayed(const Duration(milliseconds: 3250));
-        canPlay.value = true;
+        shouldPlay.value = true;
       }
     });
     subscription = IndicatorData.getIndicator().listen((data) {
@@ -58,7 +59,7 @@ class GameMapState extends ConsumerState<GameMap>
   @override
   void dispose() {
     subscription.cancel();
-    canPlay.removeListener(() {});
+    shouldPlay.removeListener(() {});
     super.dispose();
   }
 
@@ -82,7 +83,7 @@ class GameMapState extends ConsumerState<GameMap>
   double? mapSize;
   double widgetWidth = 0;
   double widgetHeight = 0;
-  final canPlay = ValueNotifier<bool>(true);
+  final shouldPlay = ValueNotifier<bool>(true);
   GlobalKey key = GlobalKey();
   final List<String> enemyHexColor = [
     '#f40C00',
@@ -114,7 +115,7 @@ class GameMapState extends ConsumerState<GameMap>
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (flag) {
-              if (!wtFocused && canPlay.value) {
+              if (!wtFocused && shouldPlay.value) {
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
                   if (settings.proximitySetting.enabled) {
                     await audio2.play(
@@ -122,20 +123,19 @@ class GameMapState extends ConsumerState<GameMap>
                       volume: settings.proximitySetting.volume,
                       mode: PlayerMode.lowLatency,
                     );
-                    canPlay.value = false;
+                    shouldPlay.value = false;
                   }
                 });
               }
               if (e.type == 'aircraft') {
-                return const Placeholder();
-                // return PingingPoint.pingingPoint(
-                //   x: e.x!,
-                //   y: e.y!,
-                //   pointColor: HexColor.fromHex(e.color),
-                //   pointSize: 8,
-                //   height: widgetHeight,
-                //   width: widgetWidth,
-                // );
+                print(widgetWidth - (widgetWidth * e.x!));
+                print(widgetHeight - (widgetHeight * e.y!));
+                Matrix4 matrix = Matrix4.translationValues(
+                    (widgetWidth * e.x!), (widgetHeight * e.y!), 0);
+                return Transform(
+                  transform: matrix,
+                  child: const PingingPoint(),
+                );
               } else if (e.type == 'ground_model') {
                 return CustomPaint(
                     painter: ObjectPainter(
@@ -161,6 +161,18 @@ class GameMapState extends ConsumerState<GameMap>
               }
             }
             if (e.type == 'aircraft') {
+              if (e.icon == 'Player') {
+                return CustomPaint(
+                    painter: ObjectPainter(
+                  x: e.x!,
+                  y: e.y!,
+                  height: widgetHeight,
+                  width: widgetWidth,
+                  image: snapshot.data!,
+                  colorHex: '#FFFFFF',
+                  compass: compass,
+                ));
+              }
               return CustomPaint(
                   painter: ObjectPainter(
                 x: e.x!,
@@ -168,8 +180,7 @@ class GameMapState extends ConsumerState<GameMap>
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
-                colorHex: e.icon == 'Player' ? '#FFFFFF' : e.color,
-                compass: compass,
+                colorHex: e.color,
               ));
             } else if (e.type == 'ground_model') {
               return CustomPaint(
@@ -295,6 +306,19 @@ class GameMapState extends ConsumerState<GameMap>
 }
 
 class ObjectPainter extends CustomPainter {
+  const ObjectPainter({
+    required this.y,
+    required this.x,
+    this.width,
+    this.height,
+    required this.image,
+    required this.colorHex,
+    this.airfield = false,
+    this.startOffset = const Offset(0, 0),
+    this.endOffset = const Offset(0, 0),
+    this.compass = 0,
+  });
+
   final double y;
   final double x;
   final Offset startOffset;
@@ -328,19 +352,6 @@ class ObjectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
-
-  const ObjectPainter({
-    required this.y,
-    required this.x,
-    this.width,
-    this.height,
-    required this.image,
-    required this.colorHex,
-    this.airfield = false,
-    this.startOffset = const Offset(0, 0),
-    this.endOffset = const Offset(0, 0),
-    this.compass = 0,
-  });
 
   static Future<ui.Image> getUiImage(String imageAssetPath) async {
     final ByteData assetImageByteData = await rootBundle.load(imageAssetPath);

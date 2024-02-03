@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -271,8 +269,8 @@ class SettingsState extends ConsumerState<Settings> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('WTNews', style: theme.typography.body),
-                        Text('2023 Vonarian 😎',
+                        Text('WTbgA', style: theme.typography.body),
+                        Text('2024 Vonarian 😎',
                             style: theme.typography.caption),
                       ],
                     ),
@@ -281,11 +279,11 @@ class SettingsState extends ConsumerState<Settings> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                            'WTNews is an open-source program voluntarily developed by Vonarian.\nFeel free to contact me via the following methods:'),
+                            'WTbgA is an open-source program voluntarily developed by Vonarian.\nFeel free to contact me via the following methods:'),
                         const Gap(5),
                         Tooltip(
                           message:
-                              'Open https://github.com/Vonarian in browser',
+                              'Open https://github.com/Vonarian/WTbgA in browser',
                           child: ListTile(
                             leading: const Padding(
                               padding: EdgeInsets.all(8.0),
@@ -300,13 +298,14 @@ class SettingsState extends ConsumerState<Settings> {
                               style: theme.typography.caption,
                             ),
                             onPressed: () {
-                              launchUrlString('https://github.com/Vonarian');
+                              launchUrlString(
+                                  'https://github.com/Vonarian/WTbgA');
                             },
                           ),
                         ),
                         Tooltip(
                           message:
-                              'Open https://forum.warthunder.com/index.php?/profile/718501-vonarianthegreat in browser',
+                              'Open https://forum.warthunder.com/u/Vonarian_aka_Ardeshir/ in browser',
                           child: ListTile(
                             leading: const Padding(
                               padding: EdgeInsets.all(8.0),
@@ -322,7 +321,7 @@ class SettingsState extends ConsumerState<Settings> {
                             ),
                             onPressed: () {
                               launchUrlString(
-                                  'https://forum.warthunder.com/index.php?/profile/718501-vonarianthegreat');
+                                  'https://forum.warthunder.com/u/Vonarian_aka_Ardeshir/');
                             },
                           ),
                         ),
@@ -339,7 +338,7 @@ class SettingsState extends ConsumerState<Settings> {
                             ),
                             title: const Text('Discord Server'),
                             subtitle: Text(
-                              'AKA Vonarian\'s Chilling Zone! 🙂 You can share feedback and discuss stuff easier here.',
+                              'Vonarian\'s Chilling Zone! 🙂 You can share feedback and discuss stuff easier here.',
                               style: theme.typography.caption,
                             ),
                             onPressed: () {
@@ -509,7 +508,7 @@ class SettingsState extends ConsumerState<Settings> {
     );
   }
 
-  Widget distance(BuildContext context, AppSettings appSettings) {
+  Widget _distance(BuildContext context, AppSettings appSettings) {
     return Column(
       children: [
         IconButton(
@@ -541,10 +540,6 @@ class SettingsState extends ConsumerState<Settings> {
       ],
     );
   }
-
-  bool isStreaming = false;
-  Process? outerProcess;
-  Process? monaProcess;
 
   @override
   Widget build(BuildContext context) {
