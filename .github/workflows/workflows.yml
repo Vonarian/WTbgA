@@ -7,15 +7,15 @@ on:
 jobs:
   build:
     runs-on: windows-latest  # Run the job on a Windows runner
-
+    defaults:
+      run:
+        working-directory: ./
     steps:
       - uses: actions/checkout@v3  # Checkout the code
         with:
-          node-version: 20
       - uses: subosito/flutter-action@v2  # Set up Flutter environment
         with:
           channel: 'stable'  # Specify the Flutter channel (stable, beta, master)
-          node-version: 20
       - uses: actions/cache@v3  # Cache Flutter dependencies
         id: cache-flutter
         with:
@@ -23,11 +23,10 @@ jobs:
           key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
             ${{ runner.os }}-flutter-
-          node-version: 20
       - run: flutter pub get  # Skip if cache hit
         if: steps.cache-flutter.outputs.cache-hit != 'true'
       - uses: actions/upload-artifact@v3  # Upload the build artifact
         with:
           name: windows-build
-          path: build/windows/x64/runner/Release
-
+          path: build/windows/x64/runner/Release/
+          if-no-files-found: error
