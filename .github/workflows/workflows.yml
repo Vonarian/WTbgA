@@ -18,7 +18,7 @@ jobs:
       - uses: actions/cache@v3  # Cache Flutter dependencies
         id: cache-flutter
         with:
-          path: ${{ PUB_CACHE }}
+          path: ${{ env.PUB_CACHE }}
           key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
             ${{ runner.os }}-flutter-
