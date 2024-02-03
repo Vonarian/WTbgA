@@ -9,7 +9,7 @@ jobs:
     runs-on: windows-latest  # Run the job on a Windows runner
     defaults:
       run:
-        working-directory: ./
+        working-directory: ${{ GITHUB_WORKSPACE }}
     steps:
       - uses: actions/checkout@v3  # Checkout the code
       - uses: subosito/flutter-action@v2  # Set up Flutter environment
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/cache@v3  # Cache Flutter dependencies
         id: cache-flutter
         with:
-          path: ~/.pub-cache
+          path: ${{ PUB_CACHE }}
           key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
             ${{ runner.os }}-flutter-
@@ -27,5 +27,5 @@ jobs:
       - uses: actions/upload-artifact@v3  # Upload the build artifact
         with:
           name: windows-build
-          path: build/windows/x64/runner/Release/
+          path: build\windows\x64\runner\Release\
           if-no-files-found: error
