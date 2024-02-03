@@ -24,6 +24,7 @@ jobs:
             ${{ runner.os }}-flutter-
       - run: flutter pub get  # Skip if cache hit
         if: steps.cache-flutter.outputs.cache-hit != 'true'
+      - run: flutter build windows --release  # Skip if cache hit
       - uses: actions/upload-artifact@v3  # Upload the build artifact
         with:
           name: windows-build
