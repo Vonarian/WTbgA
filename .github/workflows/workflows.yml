@@ -12,7 +12,6 @@ jobs:
         working-directory: ./
     steps:
       - uses: actions/checkout@v3  # Checkout the code
-        with:
       - uses: subosito/flutter-action@v2  # Set up Flutter environment
         with:
           channel: 'stable'  # Specify the Flutter channel (stable, beta, master)
