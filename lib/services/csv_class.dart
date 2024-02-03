@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 String fmPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
   'data/flutter_assets/assets',
+  'fm',
   'fm_data_db.csv'
 ]);
 

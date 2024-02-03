@@ -42,16 +42,19 @@ Future<void> main(List<String> arguments) async {
     await windowManager.setTitle('WTbgA');
     await windowManager.setIcon('assets/app_icon.ico');
     appDocPath = await AppUtil.getAppDocsPath();
-
-    if (SysInfo.operatingSystemName.contains('Windows 11')) {
-      await Window.setEffect(
-          effect: WindowEffect.acrylic,
-          color: const Color(0xCC222222),
-          dark: true);
+    final buildVersion =
+        int.parse(SysInfo.operatingSystemVersion.split('.').last);
+    if (buildVersion >= 22000) {
+      if (buildVersion > 22523) {
+        await Window.setEffect(
+            effect: WindowEffect.tabbed,
+            color: const Color(0xFF111111),
+            dark: true);
+      }
     } else {
       await Window.setEffect(
           effect: WindowEffect.aero,
-          color: const Color(0xCC222222),
+          color: const Color(0xFF111111),
           dark: true);
     }
     await hotKeyManager.unregisterAll();

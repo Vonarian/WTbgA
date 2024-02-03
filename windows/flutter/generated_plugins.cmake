@@ -8,7 +8,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_acrylic
   hotkey_manager
   screen_retriever
-  system_theme
   tray_manager
   uni_links_desktop
   url_launcher_windows

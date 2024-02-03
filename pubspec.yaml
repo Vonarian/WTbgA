@@ -42,6 +42,7 @@ dependencies:
   win32_registry: ^1.0.2
   window_watcher: ^0.0.2
   version: ^3.0.2
+  gap: ^3.0.1
 
 dev_dependencies:
   flutter_test:
@@ -57,8 +58,7 @@ flutter:
 
   assets:
     - assets/
-    - assets/Version/
+    - assets/version/
     - assets/icons/
     - assets/sounds/
-    - assets/scripts/
-    - assets/fm
+    - assets/fm/

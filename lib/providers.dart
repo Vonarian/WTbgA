@@ -6,7 +6,6 @@ import 'package:openrgb/openrgb.dart' as orgb;
 import 'models/app_settings.dart';
 import 'models/orgb_data_class.dart';
 import 'services/presence.dart';
-import 'services/utility.dart';
 
 class MyProvider {
   final trayProvider = StateProvider<bool>((ref) => true);
@@ -15,13 +14,7 @@ class MyProvider {
 
   final flapLimitProvider = StateProvider<int>((ref) => 800);
   final downloadCompleteProvider = StateProvider<bool>((ref) => false);
-  final deviceIPProvider = FutureProvider.autoDispose<String>(
-    (ref) async {
-      String ip = await AppUtil.runPowerShellScript(
-          AppUtil.deviceIPPath, ['-ExecutionPolicy', 'Bypass']);
-      return ip;
-    },
-  );
+
   final versionFBProvider = StreamProvider<String?>(
     (ref) async* {
       await for (Event e in PresenceService().getVersion()) {
@@ -54,7 +47,6 @@ class MyProvider {
     },
   );
 
-  final wstunnelRunning = StateProvider<bool>((ref) => false);
   final gameRunningProvider = StateProvider<bool>((ref) => false);
   final inMatchProvider = StateProvider<bool>((ref) => false);
   final wtFocusedProvider = StateProvider<bool>((ref) => false);

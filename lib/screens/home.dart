@@ -27,10 +27,10 @@ import '../services/csv_class.dart';
 import '../services/extensions.dart';
 import '../services/presence.dart';
 import '../services/utility.dart';
+import 'settings.dart';
 import 'widgets/chat.dart';
 import 'widgets/game_map.dart';
 import 'widgets/loading_widget.dart';
-import 'widgets/settings.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({super.key});
@@ -497,8 +497,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   int number = 0;
 
   Future<void> startListeners() async {
-    final windscribeSettings =
-        ref.watch(provider.appSettingsProvider).windscribeSettings;
     ref.listen<String?>(provider.vehicleNameProvider, (previous, next) async {
       if (next.notNull && next != '') {
         fmData = await FmData.setFlightModel(namesMap?[next] ?? '');
@@ -511,13 +509,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     ref.listen<bool>(provider.inMatchProvider, (previous, next) async {
       if (previous != next) {
         if (next) {
-          if (ref.read(provider.wstunnelRunning) &&
-              windscribeSettings.autoSwitch) {
-            Future.delayed(const Duration(milliseconds: 1200)).then((_) => ref
-                .read(provider.appSettingsProvider)
-                .windscribeSettings
-                .disconnectWindscribe());
-          }
           final client = ref.watch(provider.orgbClientProvider);
           final data = await client?.getAllControllers();
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
@@ -527,13 +518,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             await OpenRGBSettings.setAllOff(client, data);
           }
         } else {
-          if (!ref.read(provider.wstunnelRunning) &&
-              windscribeSettings.autoSwitch) {
-            Future.delayed(const Duration(milliseconds: 300)).then((_) => ref
-                .read(provider.appSettingsProvider)
-                .windscribeSettings
-                .connectWindscribe());
-          }
           final client = ref.watch(provider.orgbClientProvider);
           final data = await client?.getAllControllers();
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
@@ -583,7 +567,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   String namesPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
-    'fm_names_db.csv'
+    'fm/'
+        'fm_names_db.csv'
   ]);
 
   ValueNotifier<int?> chatIdSecond = ValueNotifier(null);

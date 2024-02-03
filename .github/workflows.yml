@@ -1,0 +1,29 @@
+name: Flutter Windows Build with Caching
+
+on:
+  push:
+    branches: [ dev ]  # Trigger on pushes to master or develop branches
+
+jobs:
+  build:
+    runs-on: windows-latest  # Run the job on a Windows runner
+
+    steps:
+      - uses: actions/checkout@v3  # Checkout the code
+      - uses: subosito/flutter-action@v2  # Set up Flutter environment
+        with:
+          channel: 'stable'  # Specify the Flutter channel (stable, beta, master)
+      - uses: actions/cache@v3  # Cache Flutter dependencies
+        id: cache-flutter
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+      - run: flutter pub get  # Skip if cache hit
+        if: steps.cache-flutter.outputs.cache-hit != 'true'
+      - uses: actions/upload-artifact@v3  # Upload the build artifact
+        with:
+          name: windows-build
+          path: build/windows/runner/Release
+

@@ -11,7 +11,6 @@ import 'package:win32/win32.dart';
 import 'package:window_watcher/window_watcher.dart';
 
 import '../main.dart';
-import '../models/data_class.dart';
 import '../screens/widgets/loading_widget.dart';
 
 final List<String> isWarThunder = [
@@ -24,7 +23,7 @@ final List<String> isWarThunder = [
 
 class AppUtil {
   static final versionPath =
-      '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\Version\\version.txt';
+      '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\version\\version.txt';
   static final defaultBeepPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data\\flutter_assets\\assets',
@@ -33,23 +32,7 @@ class AppUtil {
   static final String deviceIPPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data\\flutter_assets\\assets',
-    'scripts\\deviceIP.ps1'
-  ]);
-  static final String windowPath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data\\flutter_assets\\assets',
-    'scripts\\getWindow.ps1'
-  ]);
-  static final String checkWStunnel = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data\\flutter_assets\\assets',
-    'scripts\\checkWStunnel.ps1'
-  ]);
-
-  static final String getPerformancePath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data\\flutter_assets\\assets',
-    'scripts\\getPerformance.ps1'
+    'HyperlinkButton(\\deviceIP.ps1'
   ]);
 
   static Future<String> createFolderInAppDocDir(String path) async {
@@ -172,40 +155,6 @@ class AppUtil {
           return e.exePath!.contains('aces.exe');
         });
         return wtWindow;
-      } catch (e) {
-        return null;
-      }
-    });
-    await for (var e in stream) {
-      yield await e;
-    }
-  }
-
-  static Stream<bool?> wstunnelRunning() async* {
-    final stream =
-        Stream.periodic(const Duration(milliseconds: 1500), (_) async {
-      try {
-        final bool running = (await runPowerShellScript(
-                    checkWStunnel, ['-ExecutionPolicy', 'Bypass']))
-                .contains('true')
-            ? true
-            : false;
-        return running;
-      } catch (e) {
-        return null;
-      }
-    });
-    await for (var e in stream) {
-      yield await e;
-    }
-  }
-
-  static Stream<Performance?> getPerformance() async* {
-    final stream =
-        Stream.periodic(const Duration(milliseconds: 8000), (_) async {
-      try {
-        final value = await Performance.getPerformance();
-        return value;
       } catch (e) {
         return null;
       }

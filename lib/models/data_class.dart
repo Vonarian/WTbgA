@@ -134,17 +134,4 @@ class Performance {
       engineCopy: map['engineCopy'] ?? 0,
     );
   }
-
-  static Future<Performance> getPerformance() async {
-    try {
-      final output = await AppUtil.runPowerShellScript(
-          AppUtil.getPerformancePath, ['-ExecutionPolicy', 'Bypass']);
-      final performance =
-          Performance.fromMap(output.trim() as Map<String, dynamic>);
-      return performance;
-    } catch (e, st) {
-      log(e.toString(), stackTrace: st);
-      rethrow;
-    }
-  }
 }

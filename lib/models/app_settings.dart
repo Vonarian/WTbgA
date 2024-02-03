@@ -1,11 +1,8 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:win32_registry/win32_registry.dart';
 
 import '../main.dart';
 
@@ -15,7 +12,6 @@ class AppSettings {
   final OverGSetting overGWarning;
   final PullUpSetting pullUpSetting;
   final ProximitySetting proximitySetting;
-  final WindscribeSettings windscribeSettings;
   final bool startup;
   final bool fullNotif;
 
@@ -26,7 +22,6 @@ class AppSettings {
     bool? fullNotif,
     PullUpSetting? pullUpSetting,
     ProximitySetting? proximitySetting,
-    WindscribeSettings? windscribeSettings,
     bool? startup,
   }) {
     return AppSettings(
@@ -36,7 +31,6 @@ class AppSettings {
       fullNotif: fullNotif ?? this.fullNotif,
       pullUpSetting: pullUpSetting ?? this.pullUpSetting,
       proximitySetting: proximitySetting ?? this.proximitySetting,
-      windscribeSettings: windscribeSettings ?? this.windscribeSettings,
       startup: startup ?? this.startup,
     );
   }
@@ -48,7 +42,6 @@ class AppSettings {
       'overGWarning': overGWarning.toMap(),
       'pullUpSetting': pullUpSetting.toMap(),
       'proximitySetting': proximitySetting.toMap(),
-      'windscribeSettings': windscribeSettings.toMap(),
       'fullNotif': fullNotif,
       'startup': startup,
     };
@@ -61,7 +54,6 @@ class AppSettings {
       overGWarning: OverGSetting.fromMap(map['overGWarning']),
       pullUpSetting: PullUpSetting.fromMap(map['pullUpSetting']),
       proximitySetting: ProximitySetting.fromMap(map['proximitySetting']),
-      windscribeSettings: WindscribeSettings.fromMap(map['windscribeSettings']),
       fullNotif: map['fullNotif'] ?? false,
       startup: map['startup'] ?? false,
     );
@@ -74,7 +66,6 @@ class AppSettings {
     required this.fullNotif,
     required this.pullUpSetting,
     required this.proximitySetting,
-    required this.windscribeSettings,
     required this.startup,
   });
 }
@@ -119,50 +110,12 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
               PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 22),
           proximitySetting: ProximitySetting(
               enabled: true, path: defaultProxyPath, volume: 22, distance: 850),
-          windscribeSettings: WindscribeSettings(notifPath: defaultPingPath),
           fullNotif: true,
           startup: false,
         ));
 
   void update(AppSettings settings) {
     state = settings;
-  }
-
-  Future<String?> setupWindscribePath() async {
-    RegistryKey? key;
-    RegistryKey? key2;
-    RegistryKey? key3;
-    try {
-      key = Registry.openPath(RegistryHive.currentUser,
-          path: r'Software\Windscribe\Installer');
-    } catch (e, st) {
-      log(e.toString(), stackTrace: st);
-    }
-    try {
-      key2 = Registry.openPath(RegistryHive.localMachine,
-          path: r'Software\Windscribe\Installer');
-    } catch (e, st) {
-      log(e.toString(), stackTrace: st);
-    }
-    try {
-      key3 = Registry.openPath(RegistryHive.allUsers,
-          path: r'Software\Windscribe\Installer');
-    } catch (e, st) {
-      log(e.toString(), stackTrace: st);
-    }
-    final value = key?.getValueAsString('applicationPath') ??
-        key2?.getValueAsString('applicationPath') ??
-        key3?.getValueAsString('applicationPath');
-    if (value != null) {
-      state = state.copyWith(
-          windscribeSettings: state.windscribeSettings
-              .copyWith(path: '$value\\windscribe-cli.exe'));
-      return '$value\\windscribe-cli.exe';
-    }
-    key?.close();
-    key2?.close();
-    key3?.close();
-    return null;
   }
 
   Future<void> save() async {
@@ -227,18 +180,6 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
         path: path,
         distance: distance,
       ));
-
-  void setWindscribe(
-          {String? notifPath,
-          bool? autoSwitch,
-          double? volume,
-          String? path}) =>
-      state = state.copyWith(
-          windscribeSettings: state.windscribeSettings.copyWith(
-              volume: volume,
-              autoSwitch: autoSwitch,
-              notifPath: notifPath,
-              path: path));
 }
 
 class OverHeatSetting {
@@ -449,78 +390,6 @@ class ProximitySetting {
   @override
   String toString() {
     return 'ProximitySetting{path: $path, enabled: $enabled, volume: $volume, distance: $distance}';
-  }
-}
-
-class WindscribeSettings {
-  final bool autoSwitch;
-  final String notifPath;
-  final double volume;
-  final String? path;
-
-  const WindscribeSettings({
-    this.autoSwitch = false,
-    required this.notifPath,
-    this.volume = 22,
-    this.path,
-  });
-
-  Future<void> connectWindscribe() async {
-    if (path == null) return;
-    final process = await Process.start(path!, ['connect']);
-    await for (var e in process.stdout.transform(utf8.decoder)) {
-      log(e);
-    }
-    await audio2.play(DeviceFileSource(notifPath),
-        volume: volume / 100, mode: PlayerMode.lowLatency);
-  }
-
-  Future<void> disconnectWindscribe() async {
-    if (path == null) return;
-    final process = await Process.start(path!, ['disconnect']);
-    await for (var e in process.stdout.transform(utf8.decoder)) {
-      log(e);
-    }
-    await Process.run('taskkill', ['/F', '/IM', 'wstunnel.exe']);
-    await audio2.play(DeviceFileSource(notifPath),
-        volume: volume / 100, mode: PlayerMode.lowLatency);
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'autoSwitch': autoSwitch,
-      'notifPath': notifPath,
-      'volume': volume,
-      'path': path,
-    };
-  }
-
-  factory WindscribeSettings.fromMap(Map<String, dynamic>? map) {
-    return WindscribeSettings(
-      autoSwitch: map?['autoSwitch'] ?? false,
-      notifPath: map?['notifPath'] ?? defaultPingPath,
-      volume: map?['volume'] ?? 22,
-      path: map?['path'] ?? defaultPingPath,
-    );
-  }
-
-  WindscribeSettings copyWith({
-    bool? autoSwitch,
-    String? notifPath,
-    double? volume,
-    String? path,
-  }) {
-    return WindscribeSettings(
-      autoSwitch: autoSwitch ?? this.autoSwitch,
-      notifPath: notifPath ?? this.notifPath,
-      volume: volume ?? this.volume,
-      path: path ?? this.path,
-    );
-  }
-
-  @override
-  String toString() {
-    return 'WindscribeSettings{autoSwitch: $autoSwitch, notifPath: $notifPath, volume: $volume, path: $path}';
   }
 }
 

@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:color/color.dart' as color;
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
+import 'package:fluent_ui/fluent_ui.dart';
+import 'package:gap/gap.dart';
 
 extension HexColor on ui.Color {
   /// String is in the format "aabbcc" or "ffaabbcc" with an optional leading "#".
@@ -64,4 +66,26 @@ extension FluentColortoRGB on fluent.Color {
 
 extension StringToJson on String {
   dynamic decode() => jsonDecode(this);
+}
+
+extension EnhancedWidgetList on List<Widget> {
+  List<Widget> withDividerBetween(BuildContext context) => [
+        if (isNotEmpty) this[0],
+        for (int i = 1; i < length; i++) ...[
+          this[i],
+          Divider(
+              style: DividerThemeData(
+            decoration: BoxDecoration(
+                color: FluentTheme.of(context).scaffoldBackgroundColor),
+          )),
+        ],
+      ];
+
+  List<Widget> withSpaceBetween(double space) => [
+        if (isNotEmpty) this[0],
+        for (int i = 1; i < length; i++) ...[
+          Gap(space),
+          this[i],
+        ],
+      ];
 }
