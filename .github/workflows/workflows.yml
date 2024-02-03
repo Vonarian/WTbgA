@@ -9,7 +9,7 @@ jobs:
     runs-on: windows-latest  # Run the job on a Windows runner
     defaults:
       run:
-        working-directory: ${{ GITHUB_WORKSPACE }}
+        working-directory: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v3  # Checkout the code
       - uses: subosito/flutter-action@v2  # Set up Flutter environment
