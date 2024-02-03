@@ -27,5 +27,5 @@ jobs:
       - uses: actions/upload-artifact@v3  # Upload the build artifact
         with:
           name: windows-build
-          path: build\windows\x64\runner\Release\
+          path: .\build\windows\x64\runner\Release\
           if-no-files-found: error
