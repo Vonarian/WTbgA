@@ -31,6 +31,7 @@ final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
 late final String appVersion;
+final List<String> csvList = [];
 
 Future<void> main(List<String> arguments) async {
   secrets = SecretData.load();

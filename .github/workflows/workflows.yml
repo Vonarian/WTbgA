@@ -2,31 +2,32 @@ name: Flutter Windows Build with Caching
 
 on:
   push:
-    branches: [ dev ]  # Trigger on pushes to master or develop branches
+    branches: [ dev ]
 
 jobs:
   build:
-    runs-on: windows-latest  # Run the job on a Windows runner
+    runs-on: windows-latest
     defaults:
       run:
         working-directory: ${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v3  # Checkout the code
-      - uses: subosito/flutter-action@v2  # Set up Flutter environment
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'  # Specify the Flutter channel (stable, beta, master)
-      - uses: actions/cache@v3  # Cache Flutter dependencies
-        id: cache-flutter
+          channel: 'stable'
+      - uses: actions/cache@v3
+        id: cache-pub
         with:
           path: ${{ env.PUB_CACHE }}
           key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
             ${{ runner.os }}-flutter-
-      - run: flutter pub get  # Skip if cache hit
-        if: steps.cache-flutter.outputs.cache-hit != 'true'
-      - run: flutter build windows --release  # Skip if cache hit
-      - uses: actions/upload-artifact@v3  # Upload the build artifact
+      - run: flutter pub get
+        if: steps.cache-pub.outputs.cache-hit != 'true'
+      - run: flutter build windows --release
+      - uses: actions/upload-artifact@v3
         with:
           name: windows-build
           path: .\build\windows\x64\runner\Release\
           if-no-files-found: error
+          compression-level: 8
