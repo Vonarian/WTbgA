@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:local_notifier/local_notifier.dart';
 import 'package:openrgb/client/client.dart';
 import 'package:tray_manager/tray_manager.dart';
-import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../main.dart';
@@ -75,20 +75,14 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         final version = event.snapshot.value.toString().replaceAll('.', '');
         final currentVersion = appVersion.replaceAll('.', '');
         if (int.parse(version) > int.parse(currentVersion)) {
-          final toast = await WinToast.instance().showToast(
-            title: 'New Version Available!',
-            subtitle:
-                'Click on this notification to download the latest version.',
-            type: ToastType.text04,
+          final localNotification = LocalNotification(
+            title: 'New Version Available',
+            body: 'Click to download the latest version.',
           );
-          toast?.eventStream.listen((event) async {
-            if (event is ActivatedEvent) {
-              await _handleClickRestore();
-              if (!mounted) return;
-              Navigator.of(context).pushReplacement(
-                  FluentPageRoute(builder: (context) => const Downloader()));
-            }
-          });
+          localNotification.onClick = () {
+            Navigator.of(context).pushReplacement(
+                FluentPageRoute(builder: (context) => const Downloader()));
+          };
         }
       });
     }

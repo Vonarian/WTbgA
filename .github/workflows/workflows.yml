@@ -25,7 +25,7 @@ jobs:
       - run: flutter pub get
         if: steps.cache-pub.outputs.cache-hit != 'true'
       - run: flutter build windows --release
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: .\build\windows\x64\runner\Release\

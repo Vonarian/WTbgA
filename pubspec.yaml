@@ -10,8 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  win_toast: ^0.1.1
-  blinking_text: ^1.0.1+2
+  local_notifier: ^0.1.5
+  blinking_text: ^1.0.1
   url_launcher: ^6.1.2
   path: ^1.8.1
   window_manager: ^0.3.7
@@ -36,7 +36,6 @@ dependencies:
   openrgb: ^0.2.5
   flutter_colorpicker: ^1.0.3
   color: 3.0.0
-  file_picker: ^6.1.1
   win32: ^5.1.1
   collection: ^1.16.0
   win32_registry: ^1.0.2
@@ -45,8 +44,7 @@ dependencies:
   gap: ^3.0.1
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
+  dependency_validator: ^3.2.3
 
   flutter_lints: ^3.0.1
 

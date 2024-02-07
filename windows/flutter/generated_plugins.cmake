@@ -7,11 +7,11 @@ list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
   flutter_acrylic
   hotkey_manager
+  local_notifier
   screen_retriever
   tray_manager
   uni_links_desktop
   url_launcher_windows
-  win_toast
   window_manager
 )
 

@@ -13,4 +13,5 @@ ios/
 .packages
 pubspec.lock
 wtbgassistant.iml
-/analysis_options.yaml
+analysis_options.yaml
+installer/

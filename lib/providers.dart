@@ -10,13 +10,16 @@ import 'services/presence.dart';
 class MyProvider {
   final trayProvider = StateProvider<bool>((ref) => true);
   final vehicleNameProvider = StateProvider<String?>((ref) => null);
-  final gearLimitProvider = StateProvider<int>((ref) => 1000);
+  final gearLimitProvider = StateProvider<double>((ref) => 1000);
 
   final flapLimitProvider = StateProvider<int>((ref) => 800);
   final downloadCompleteProvider = StateProvider<bool>((ref) => false);
 
-  final versionFBProvider = StreamProvider<String?>(
-    (ref) async* {
+  final versionFBProvider = StreamProvider.family<String?, bool>(
+    (ref, valid) async* {
+      if (!valid) {
+        yield null;
+      }
       await for (Event e in PresenceService().getVersion()) {
         yield e.snapshot.value as String?;
       }

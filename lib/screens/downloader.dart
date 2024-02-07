@@ -4,11 +4,11 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:local_notifier/local_notifier.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:tray_manager/tray_manager.dart';
-import 'package:win_toast/win_toast.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../data_receivers/github.dart';
@@ -41,11 +41,10 @@ class DownloaderState extends State<Downloader>
   }
 
   Future<void> downloadUpdate() async {
-    await WinToast.instance().showToast(
-        type: ToastType.text04,
-        title: 'Updating WTbgA...',
-        subtitle:
-            'WTbgA is downloading update, please do not close the application');
+    await LocalNotification(
+      title: 'WTbgA Update',
+      subtitle: 'Downloading update, please do not close the application',
+    ).show();
     await windowManager.setMinimumSize(const Size(230, 300));
     await windowManager.setMaximumSize(const Size(600, 600));
     await windowManager.setSize(const Size(230, 300));
@@ -93,11 +92,11 @@ class DownloaderState extends State<Downloader>
           'installer.bat'
         ]));
 
-        await WinToast.instance().showToast(
-            type: ToastType.text04,
-            title: 'Update process starting in a moment',
-            subtitle:
-                'Do not close the application until the update process is finished');
+        await LocalNotification(
+          title: 'WTbgA Update',
+          body:
+              'Do not close the application until the update process is finished',
+        ).show();
         text = 'Installing';
         setState(() {});
         await Process.run(installer, [docWTbgA.path]);

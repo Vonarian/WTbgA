@@ -6,24 +6,24 @@ import '../services/extensions.dart';
 
 class SecretData {
   final FirebaseOptions? firebaseData;
-  final String? gh;
 
-  const SecretData({required this.firebaseData, required this.gh});
+  const SecretData({required this.firebaseData});
 
   factory SecretData.load() {
     try {
       const firebaseData = String.fromEnvironment('firebaseData');
-      const ghString = String.fromEnvironment('gh');
       return SecretData(
-          firebaseData: firebaseData.isNotEmpty
-              ? FirebaseOptions.fromMap(firebaseData.decode())
-              : null,
-          gh: ghString.isNotEmpty ? ghString : null);
+        firebaseData: firebaseData.isNotEmpty
+            ? FirebaseOptions.fromMap(firebaseData.decode())
+            : null,
+      );
     } catch (e, st) {
       log(e.toString(), stackTrace: st);
-      return const SecretData(firebaseData: null, gh: null);
+      return const SecretData(firebaseData: null);
     }
   }
 
   bool get firebaseValid => firebaseData != null;
+
+  bool get firebaseInvalid => !firebaseValid;
 }

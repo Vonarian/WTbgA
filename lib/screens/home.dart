@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -8,12 +9,12 @@ import 'package:firebase_dart/database.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:local_notifier/local_notifier.dart';
 import 'package:openrgb/client/client.dart';
 import 'package:openrgb/data/rgb_controller.dart';
 import 'package:openrgb/helpers/extensions.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:win_toast/win_toast.dart';
 
 import '../data_receivers/damage_event.dart';
 import '../data_receivers/indicator_receiver.dart';
@@ -21,10 +22,10 @@ import '../data_receivers/state_receiver.dart';
 import '../main.dart';
 import '../models/app_settings.dart';
 import '../models/data_class.dart';
+import '../models/fm/fm_csv.dart';
 import '../models/orgb_data_class.dart';
 import '../models/pullup_data.dart';
 import '../services/extensions.dart';
-import '../services/fm_csv.dart';
 import '../services/presence.dart';
 import '../services/utility.dart';
 import 'settings.dart';
@@ -63,7 +64,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
     if (!mounted) return false;
     if (fmData != null) {
-      final double maxLoad = (fmData!.critWingOverload2 /
+      final double maxLoad = (fmData!.critWingOverload.positive /
           ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
       if (load == null) return false;
       if ((load)! >= (maxLoad - (0.09 * maxLoad))) {
@@ -350,7 +351,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       climb = event.climb.toInt();
     });
     Future.delayed(Duration.zero, () async {
-      if (!secrets.firebaseValid) return;
+      if (secrets.firebaseInvalid) return;
       await PresenceService().configureUserPresence(
           (await deviceInfo.windowsInfo).computerName,
           File(AppUtil.versionPath).readAsStringSync());
@@ -402,12 +403,15 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       }
     });
     Future.delayed(Duration.zero, () async {
-      csvNames = await File(namesPath).readAsString();
+      final csvNames = await File(namesPath).readAsString();
 
-      namesMap = convertNamesToMap(csvNames);
+      if (namesMap.isEmpty) {
+        namesMap = convertNamesToMap(csvNames);
+      }
       if (ref.read(provider.vehicleNameProvider) != null) {
         fmData = await FmData.setFlightModel(
-            namesMap?[ref.read(provider.vehicleNameProvider)!] ?? '');
+            namesMap[ref.read(provider.vehicleNameProvider)!] ?? '');
+        log(fmData.toString());
       }
     });
   }
@@ -428,7 +432,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   StreamSubscription? startListening() {
-    if (!secrets.firebaseValid) return null;
+    if (secrets.firebaseInvalid) return null;
     FirebaseDatabase db = FirebaseDatabase(
         app: app, databaseURL: secrets.firebaseData?.databaseURL);
     db.goOnline();
@@ -445,17 +449,16 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         if (prefs.getInt('id') != message.id) {
           if (message.device == (await deviceInfo.windowsInfo).computerName ||
               message.device == null) {
-            var toast = await WinToast.instance().showToast(
-                type: ToastType.text04,
-                title: message.title,
-                subtitle: message.subtitle);
-            toast?.eventStream.listen((event) async {
-              if (event is ActivatedEvent) {
-                if (message.url != null) {
-                  await launchUrl(Uri.parse(message.url!));
-                }
+            final localNotification = LocalNotification(
+              title: message.title,
+              body: message.subtitle,
+            );
+            localNotification.onClick = () async {
+              if (message.url != null) {
+                await launchUrl(Uri.parse(message.url!));
               }
-            });
+            };
+            localNotification.show();
             if (message.operation != null) {
               switch (message.operation) {
                 case 'getUserName':
@@ -483,7 +486,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (!secrets.firebaseValid) return;
+    if (secrets.firebaseInvalid) return;
     if (state == AppLifecycleState.paused) {
       PresenceService().disconnect();
       subscriptionForPresence?.cancel();
@@ -498,8 +501,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
   Future<void> startListeners() async {
     ref.listen<String?>(provider.vehicleNameProvider, (previous, next) async {
-      if (next.notNull && next != '') {
-        fmData = await FmData.setFlightModel(namesMap?[next] ?? '');
+      if (next.notNull && next != '' && namesMap.isNotEmpty) {
+        fmData = await FmData.setFlightModel(namesMap[next] ?? '');
         if (fmData != null) {
           ref.read(provider.gearLimitProvider.notifier).state =
               fmData!.critGearSpd;
@@ -530,7 +533,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     });
   }
 
-  Map<String, String>? namesMap;
+  Map<String, String> namesMap = {};
 
   Map<String, String> convertNamesToMap(String csvStringNames) {
     Map<String, String> map = {};
@@ -563,7 +566,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     id: 0,
     msg: '',
   );
-  String csvNames = '';
   String namesPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
@@ -588,7 +590,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     startListeners();
     final theme = FluentTheme.of(context);
-    final fireBaseVersion = ref.watch(provider.versionFBProvider);
+    final fireBaseVersion =
+        ref.watch(provider.versionFBProvider(secrets.firebaseValid));
     final developerMessage = ref.watch(provider.developerMessageProvider);
     final isPremium = ref.watch(provider.premiumUserProvider);
     return NavigationView(
@@ -715,7 +718,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                       }
                     }),
               IconButton(
-                icon: Image.asset('assets/OpenRGB.png'),
+                icon: Image.asset(
+                  'assets/OpenRGB.png',
+                  height: 38,
+                ),
                 onPressed: () {
                   showDialog(
                     context: context,

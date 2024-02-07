@@ -10,6 +10,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:local_notifier/local_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_info2/system_info2.dart';
 import 'package:window_manager/window_manager.dart';
@@ -51,14 +52,24 @@ Future<void> main(List<String> arguments) async {
             effect: WindowEffect.tabbed,
             color: const Color(0xFF111111),
             dark: true);
+      } else {
+        await Window.setEffect(
+          effect: WindowEffect.acrylic,
+          color: const Color(0xFF111111),
+          dark: true,
+        );
       }
     } else {
       await Window.setEffect(
-          effect: WindowEffect.aero,
+          effect: WindowEffect.acrylic,
           color: const Color(0xFF111111),
           dark: true);
     }
-    await hotKeyManager.unregisterAll();
+    await localNotifier.setup(
+      appName: 'WTbgA',
+      shortcutPolicy: ShortcutPolicy.ignore,
+    );
+    hotKeyManager.unregisterAll();
     await windowManager.show();
   });
   appVersion = await File(AppUtil.versionPath).readAsString();

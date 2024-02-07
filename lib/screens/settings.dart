@@ -49,7 +49,8 @@ class SettingsState extends ConsumerState<Settings> {
   Widget settings(BuildContext context) {
     final appSettings = ref.watch(provider.appSettingsProvider);
     final appSettingsNotifier = ref.read(provider.appSettingsProvider.notifier);
-    final firebaseVersion = ref.watch(provider.versionFBProvider);
+    final firebaseVersion =
+        ref.watch(provider.versionFBProvider(secrets.firebaseValid));
     final theme = FluentTheme.of(context);
     return ScaffoldPage(
       header: Padding(
@@ -63,26 +64,28 @@ class SettingsState extends ConsumerState<Settings> {
         controller: scrollController,
         child: Card(
           backgroundColor: Colors.transparent,
+          padding: const EdgeInsets.only(left: 10, top: 10, bottom: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              firebaseVersion.when(
-                  data: (data) => data != null
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Updates',
-                              style: theme.typography.bodyStrong,
-                            ),
-                            const SizedBox(height: 6.0),
-                            updateWidget(data, theme: theme),
-                          ],
-                        )
-                      : const SizedBox(),
-                  error: (_, __) => const SizedBox(),
-                  loading: () => const SizedBox()),
+              if (secrets.firebaseValid)
+                firebaseVersion.when(
+                    data: (data) => data != null
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Updates',
+                                style: theme.typography.bodyStrong,
+                              ),
+                              const SizedBox(height: 6.0),
+                              updateWidget(data, theme: theme),
+                            ],
+                          )
+                        : const SizedBox(),
+                    error: (_, __) => const SizedBox(),
+                    loading: () => const SizedBox()),
               Text(
                 'Main',
                 style: theme.typography.bodyStrong,
