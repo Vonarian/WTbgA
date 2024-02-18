@@ -109,8 +109,8 @@ class AppUtil {
         File('$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe');
     if (!(await openRGBExecutable.exists()) && check && context != null) {
       String docsPath = await AppUtil.getAppDocsPath();
-      //ignore:use_build_context_synchronously
       await showLoading(
+          // ignore: use_build_context_synchronously
           context: context,
           future: dio.download(
               'https://github.com/Vonarian/WTbgA/releases/download/2.6.2.0/OpenRGB.zip',

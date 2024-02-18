@@ -128,8 +128,6 @@ class GameMapState extends ConsumerState<GameMap>
                 });
               }
               if (e.type == 'aircraft') {
-                print(widgetWidth - (widgetWidth * e.x!));
-                print(widgetHeight - (widgetHeight * e.y!));
                 Matrix4 matrix = Matrix4.translationValues(
                     (widgetWidth * e.x!), (widgetHeight * e.y!), 0);
                 return Transform(

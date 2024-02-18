@@ -56,11 +56,11 @@ class __LoadingDialogState extends State<_LoadingDialog> {
   void initState() {
     super.initState();
     widget.future.then((value) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       widget.completer.complete(value);
       Navigator.of(context).pop();
     }).onError<Object>((error, stackTrace) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       widget.completer.completeError(error, stackTrace);
       Navigator.of(context).pop();
     });

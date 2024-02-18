@@ -7,7 +7,9 @@ import '../../main.dart';
 import 'aoa.dart';
 import 'flap.dart';
 import 'rpm.dart';
+import 'wing_area.dart';
 import 'wing_overload.dart';
+import 'wing_span.dart';
 
 String fmPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
@@ -20,8 +22,8 @@ String fmPath = p.joinAll([
 class FmData {
   final String name;
   final double length;
-  final double wingSpan;
-  final double wingArea;
+  final WingSpan wingSpan;
+  final WingArea wingArea;
   final double emptyMass;
   final double maxFuelMass;
   final int critAirSpd;
@@ -55,19 +57,19 @@ class FmData {
   });
 
   static Future<FmData?> setFlightModel(String? name) async {
+    if (name == null) return null;
     if (csvList.isEmpty) {
       csvList.addAll(convertCsvToList(await csvString()));
     }
     FmData? fmData;
-    if (name == null) return null;
     for (var element in csvList.skip(1)) {
       final data = element.split(';');
       if (data[0] == name) {
         fmData = FmData(
           name: data[0],
           length: double.parse(data[1]),
-          wingSpan: double.parse(data[2]),
-          wingArea: double.parse(data[3]),
+          wingSpan: WingSpan.load(data[2]),
+          wingArea: WingArea.load(data[3]),
           emptyMass: double.parse(data[4]),
           maxFuelMass: double.parse(data[5]),
           critAirSpd: int.parse(data[6]),

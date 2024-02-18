@@ -47,7 +47,7 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       ref.read(provider.needPremiumProvider.notifier).state =
           prefs.getBool('needPremium') ?? false;
       final fromDisk = await OpenRGBSettings.loadFromDisc();
-      if (!mounted) return;
+      if (!context.mounted) return;
       await Future.delayed(const Duration(seconds: 1));
       ref.read(provider.rgbSettingProvider.notifier).state =
           fromDisk ?? const OpenRGBSettings();
@@ -63,7 +63,7 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         PresenceService()
             .getPremium((await deviceInfo.windowsInfo).computerName)
             .listen((event) {
-          if (!mounted) return;
+          if (!context.mounted) return;
           ref.read(provider.premiumUserProvider.notifier).state =
               event.snapshot.value as bool;
         });

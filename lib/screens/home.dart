@@ -49,7 +49,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Future<void> userRedLineGear() async {
     if (!ref.read(provider.inMatchProvider)) return;
 
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (!ref.read(provider.premiumUserProvider)) return;
     if (ias != null) {
       if (ias! >= ref.read(provider.gearLimitProvider) && gear! > 20) {
@@ -79,7 +79,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
   Future<void> vehicleStateCheck() async {
     if (!ref.read(provider.inMatchProvider)) return;
-    if (!mounted) return;
+    if (!context.mounted) return;
     final appSettings = ref.read(provider.appSettingsProvider);
     final rgbSettings = ref.read(provider.rgbSettingProvider);
     final inMatch = ref.read(provider.inMatchProvider);
@@ -227,7 +227,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   Future<void> tripleWarning(AppSettingsEnum appEnum) async {
-    if (!mounted) return;
+    if (!context.mounted) return;
     final appSetting = ref.read(provider.appSettingsProvider);
     if (appEnum == AppSettingsEnum.engineSetting) {
       if (times == 0) {
@@ -314,11 +314,12 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await receiveDiskValues();
       final fromDisk = await OpenRGBSettings.loadFromDisc();
-      if (!mounted) return;
+      if (!context.mounted) return;
 
       ref.read(provider.rgbSettingProvider.notifier).state =
           fromDisk ?? const OpenRGBSettings();
       if (ref.read(provider.rgbSettingProvider).autoStart) {
+        if (!mounted) return;
         final exePath = await AppUtil.getOpenRGBExecutablePath(context, false);
         await Process.run(exePath, ['--server', '--noautoconnect']);
         ref.read(provider.orgbClientProvider.notifier).state =
@@ -356,7 +357,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
           (await deviceInfo.windowsInfo).computerName,
           File(AppUtil.versionPath).readAsStringSync());
       await Future.delayed(const Duration(seconds: 50));
-      subscriptionForPresence = startListening();
+      if (!mounted) return;
+      subscriptionForPresence = startListening(context);
     });
     const dur = Duration(milliseconds: 800);
     Timer.periodic(dur, (Timer t) async {
@@ -431,7 +433,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     audio2.dispose();
   }
 
-  StreamSubscription? startListening() {
+  StreamSubscription? startListening(BuildContext context) {
     if (secrets.firebaseInvalid) return null;
     FirebaseDatabase db = FirebaseDatabase(
         app: app, databaseURL: secrets.firebaseData?.databaseURL);
@@ -462,7 +464,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             if (message.operation != null) {
               switch (message.operation) {
                 case 'getUserName':
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   await Message.getUserName(context, data);
                   break;
               }
@@ -746,8 +748,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 ref
                                     .read(provider.orgbClientProvider.notifier)
                                     .state = null;
-                                if (!mounted) return;
-                                Navigator.pop(context);
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                }
                               },
                             ),
                             HyperlinkButton(
@@ -780,13 +783,13 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 await Process.start(
                                     openRGBExe, ['--server', '--noautoconnect'],
                                     workingDirectory: p.dirname(openRGBExe));
-                                if (!mounted) return;
+                                if (!context.mounted) return;
                                 await showLoading(
                                     context: context,
                                     future: Future.delayed(
                                         const Duration(milliseconds: 400)),
                                     message: 'Starting...');
-                                if (!mounted) return;
+                                if (!context.mounted) return;
                                 try {
                                   ref
                                           .read(provider
@@ -805,7 +808,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                               .orgbClientProvider.notifier)
                                           .state!
                                           .getAllControllers();
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
 
                                   await showLoading(
                                       context: context,
@@ -813,7 +816,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                           const Duration(milliseconds: 600)),
                                       message: 'Receiving data...');
                                 } catch (e, st) {
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
                                   displayInfoBar(context,
                                       builder: (context, close) => InfoBar(
                                             title: const Text('Error'),
@@ -822,7 +825,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                       duration: const Duration(seconds: 5));
                                   await Future.delayed(
                                       const Duration(seconds: 5));
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
                                   showDialog(
                                     context: context,
                                     builder: (context) {
@@ -841,7 +844,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                     barrierDismissible: true,
                                   );
                                 }
-                                if (!mounted) return;
+                                if (!context.mounted) return;
                                 Navigator.pop(context);
                                 displayInfoBar(context,
                                     builder: (context, close) => const InfoBar(
