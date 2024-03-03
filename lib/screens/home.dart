@@ -621,6 +621,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                   const SizedBox(
                     width: 5,
                   ),
+                  if(secrets.firebaseValid)
                   fireBaseVersion.when(data: (data) {
                     bool isNew = false;
                     if (data.hasValue &&
@@ -654,6 +655,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                   }),
                 ],
               ),
+              if(secrets.firebaseValid)
               developerMessage.when(data: (data) {
                 if (data != null) {
                   return Text(

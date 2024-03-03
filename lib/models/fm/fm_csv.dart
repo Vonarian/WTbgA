@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 
 import '../../main.dart';
 import 'aoa.dart';
+import 'critairspeed.dart';
 import 'flap.dart';
 import 'rpm.dart';
 import 'wing_area.dart';
@@ -26,7 +27,7 @@ class FmData {
   final WingArea wingArea;
   final double emptyMass;
   final double maxFuelMass;
-  final int critAirSpd;
+  final CritAirSpeed critAirSpd;
   final double critAirSpdMach;
   final double critGearSpd;
   final Flap flap;
@@ -72,7 +73,7 @@ class FmData {
           wingArea: WingArea.load(data[3]),
           emptyMass: double.parse(data[4]),
           maxFuelMass: double.parse(data[5]),
-          critAirSpd: int.parse(data[6]),
+          critAirSpd: CritAirSpeed.load(data[6]),
           critAirSpdMach: double.parse(data[7]),
           critGearSpd: double.parse(data[8]),
           flap: Flap.load(data[9], data[10], data[11]),

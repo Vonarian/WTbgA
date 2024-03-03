@@ -1,6 +1,6 @@
 class WingOverload {
-  final int positive;
-  final int negative;
+  final double positive;
+  final double negative;
 
   const WingOverload({
     required this.positive,
@@ -12,8 +12,8 @@ class WingOverload {
     final negative = split[0];
     final positive = split[1];
     return WingOverload(
-      positive: int.parse(positive),
-      negative: int.parse(negative),
+      positive: double.parse(positive),
+      negative: double.parse(negative),
     );
   }
 

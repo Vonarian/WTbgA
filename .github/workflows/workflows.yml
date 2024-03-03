@@ -30,4 +30,4 @@ jobs:
           name: windows-build
           path: .\build\windows\x64\runner\Release\
           if-no-files-found: error
-          compression-level: 8
+          compression-level: 9
