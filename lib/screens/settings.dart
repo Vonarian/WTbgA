@@ -244,6 +244,10 @@ class SettingsState extends ConsumerState<Settings> {
                     await Message.getUserNameCustom(context, null);
                   },
                 ),
+              Text(
+                'About',
+                style: theme.typography.bodyStrong,
+              ),
               Card(
                 borderRadius: const BorderRadius.all(Radius.circular(4.0)),
                 padding: const EdgeInsets.only(bottom: 5, top: 5),

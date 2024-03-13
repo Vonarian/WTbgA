@@ -16,7 +16,6 @@ class Damage {
           : const Damage(id: 0, msg: '');
       return damage;
     } catch (e) {
-      // log('Encountered error: $e', stackTrace: stackTrace);
       rethrow;
     }
   }

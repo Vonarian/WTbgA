@@ -40,8 +40,6 @@ class MyProvider {
   final appSettingsProvider =
       StateNotifierProvider<SettingsNotifier, AppSettings>(
           (ref) => SettingsNotifier());
-  final premiumUserProvider = StateProvider<bool>((ref) => false);
-  final needPremiumProvider = StateProvider<bool>((ref) => false);
   final developerMessageProvider = StreamProvider<String?>(
     (ref) async* {
       await for (Event e in PresenceService().getDeveloperMessage()) {

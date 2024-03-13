@@ -57,7 +57,7 @@ class FmData {
     required this.critAoA,
   });
 
-  static Future<FmData?> setFlightModel(String? name) async {
+  static Future<FmData?> getFlightModel(String? name) async {
     if (name == null) return null;
     if (csvList.isEmpty) {
       csvList.addAll(convertCsvToList(await csvString()));

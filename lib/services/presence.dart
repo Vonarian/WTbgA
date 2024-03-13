@@ -62,16 +62,4 @@ class PresenceService {
     database.goOffline();
   }
 
-  Stream<Event> getPremium(String uid) {
-    final uidRef = database.reference().child('presence').child(uid);
-    final premiumRef = uidRef.child('premium');
-    final sub = premiumRef.onValue;
-    return sub.asBroadcastStream();
-  }
-
-  Future<void> needPremium(String uid, bool needsPremium) async {
-    final uidRef = database.reference().child('presence').child(uid);
-    final premiumRef = uidRef.child('needPremium');
-    premiumRef.set(needsPremium);
-  }
 }

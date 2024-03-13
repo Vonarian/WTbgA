@@ -44,8 +44,6 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ref.read(provider.needPremiumProvider.notifier).state =
-          prefs.getBool('needPremium') ?? false;
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!context.mounted) return;
       await Future.delayed(const Duration(seconds: 1));
@@ -58,15 +56,6 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
           ref.read(provider.orgbControllersProvider.notifier).state =
               await ref.read(provider.orgbClientProvider)!.getAllControllers();
         }
-      }
-      if (secrets.firebaseValid) {
-        PresenceService()
-            .getPremium((await deviceInfo.windowsInfo).computerName)
-            .listen((event) {
-          if (!context.mounted) return;
-          ref.read(provider.premiumUserProvider.notifier).state =
-              event.snapshot.value as bool;
-        });
       }
     });
 

@@ -6,7 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
   dynamic_color
   flutter_acrylic
-  hotkey_manager
+  hotkey_manager_windows
   local_notifier
   screen_retriever
   tray_manager

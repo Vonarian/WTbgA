@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -50,7 +49,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     if (!ref.read(provider.inMatchProvider)) return;
 
     if (!context.mounted) return;
-    if (!ref.read(provider.premiumUserProvider)) return;
     if (ias != null) {
       if (ias! >= ref.read(provider.gearLimitProvider) && gear! > 20) {
         await audio.play(AssetSource('sounds/beep.wav'),
@@ -200,7 +198,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Future<void> flapChecker() async {
     if (!ref.read(provider.inMatchProvider)) return;
     if (damage == defaultDamage) return;
-    if (!ref.read(provider.premiumUserProvider)) return;
     if (damage.msg == 'Asymmetric flap extension') {
       await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
     }
@@ -290,7 +287,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   Future<void> pullUp() async {
-    if (!ref.read(provider.inMatchProvider)) return;
+    if (!ref.read(provider.inMatchProvider) ||
+        !ref.read(provider.appSettingsProvider).pullUpSetting.enabled) return;
     if (aoa == null ||
         gear == null ||
         vertical == null ||
@@ -397,7 +395,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (!appSettings.fullNotif) return;
       userRedLineGear();
       pullUp();
-      if (!ref.read(provider.premiumUserProvider)) return;
       if (loadChecker()) {
         final settings = ref.read(provider.appSettingsProvider).overGWarning;
         await audio.play(DeviceFileSource(settings.path),
@@ -411,9 +408,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         namesMap = convertNamesToMap(csvNames);
       }
       if (ref.read(provider.vehicleNameProvider) != null) {
-        fmData = await FmData.setFlightModel(
-            namesMap[ref.read(provider.vehicleNameProvider)!] ?? '');
-        log(fmData.toString());
+        fmData = await FmData.getFlightModel(
+            namesMap[ref.read(provider.vehicleNameProvider)!]);
       }
     });
   }
@@ -504,7 +500,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Future<void> startListeners() async {
     ref.listen<String?>(provider.vehicleNameProvider, (previous, next) async {
       if (next.notNull && next != '' && namesMap.isNotEmpty) {
-        fmData = await FmData.setFlightModel(namesMap[next] ?? '');
+        fmData = await FmData.getFlightModel(namesMap[next]);
         if (fmData != null) {
           ref.read(provider.gearLimitProvider.notifier).state =
               fmData!.critGearSpd;
@@ -595,7 +591,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     final fireBaseVersion =
         ref.watch(provider.versionFBProvider(secrets.firebaseValid));
     final developerMessage = ref.watch(provider.developerMessageProvider);
-    final isPremium = ref.watch(provider.premiumUserProvider);
     return NavigationView(
       appBar: NavigationAppBar(
           title: Column(
@@ -605,10 +600,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: [
-                      if (isPremium)
-                        Icon(FluentIcons.starburst,
-                            color: Colors.yellow, size: 20),
-                      if (isPremium) const SizedBox(width: 5),
                       Text(
                         'War Thunder background Assistant',
                         style: TextStyle(
@@ -621,56 +612,56 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                   const SizedBox(
                     width: 5,
                   ),
-                  if(secrets.firebaseValid)
-                  fireBaseVersion.when(data: (data) {
-                    bool isNew = false;
-                    if (data.hasValue &&
-                        int.parse(data!.replaceAll('.', '')) >
-                            int.parse(appVersion.replaceAll('.', ''))) {
-                      isNew = true;
-                    }
-                    if (isNew) {
-                      return HoverButton(
-                        builder: (context, set) => Text(
-                          '$data available',
+                  if (secrets.firebaseValid)
+                    fireBaseVersion.when(data: (data) {
+                      bool isNew = false;
+                      if (data.hasValue &&
+                          int.parse(data!.replaceAll('.', '')) >
+                              int.parse(appVersion.replaceAll('.', ''))) {
+                        isNew = true;
+                      }
+                      if (isNew) {
+                        return HoverButton(
+                          builder: (context, set) => Text(
+                            '$data available',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: theme.accentColor.lighter),
+                          ),
+                        );
+                      } else {
+                        return Text(
+                          'v$data',
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: theme.accentColor.lighter),
-                        ),
-                      );
-                    } else {
-                      return Text(
-                        'v$data',
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: theme.accentColor.lighter),
-                      );
-                    }
-                  }, error: (e, st) {
-                    return const SizedBox();
-                  }, loading: () {
-                    return const SizedBox();
-                  }),
+                        );
+                      }
+                    }, error: (e, st) {
+                      return const SizedBox();
+                    }, loading: () {
+                      return const SizedBox();
+                    }),
                 ],
               ),
-              if(secrets.firebaseValid)
-              developerMessage.when(data: (data) {
-                if (data != null) {
-                  return Text(
-                    'Developer\'s message: $data',
-                    style: TextStyle(
-                        color: Colors.red, fontWeight: FontWeight.bold),
-                  );
-                } else {
+              if (secrets.firebaseValid)
+                developerMessage.when(data: (data) {
+                  if (data != null) {
+                    return Text(
+                      'Developer\'s message: $data',
+                      style: TextStyle(
+                          color: Colors.red, fontWeight: FontWeight.bold),
+                    );
+                  } else {
+                    return const SizedBox();
+                  }
+                }, error: (e, st) {
                   return const SizedBox();
-                }
-              }, error: (e, st) {
-                return const SizedBox();
-              }, loading: () {
-                return const SizedBox();
-              }),
+                }, loading: () {
+                  return const SizedBox();
+                }),
             ],
           ),
           automaticallyImplyLeading: false,
