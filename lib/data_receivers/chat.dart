@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import '../main.dart';
 
 class GameChat {
@@ -20,7 +22,8 @@ class GameChat {
       final response =
           await dio.get('http://localhost:8111/gamechat?lastId=$lastId');
       return GameChat.fromMap(response.data.last);
-    } catch (e) {
+    } catch (e, st) {
+      log(e.toString(), stackTrace: st);
       rethrow;
     }
   }

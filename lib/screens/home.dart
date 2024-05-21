@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:blinking_text/blinking_text.dart';
 import 'package:firebase_dart/database.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -899,18 +899,19 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 ],
                               );
                             }
-                            ias = shot.data!.ias;
-                            gear = shot.data!.gear;
-                            flap = shot.data!.flaps;
-                            altitude = shot.data!.altitude;
-                            oil = shot.data!.oilTemp1C;
-                            water = shot.data!.waterTemp1C;
-                            aoa = shot.data!.aoa;
-                            load = shot.data!.load;
-                            fuelMass = shot.data!.fuel;
-                            climb = shot.data!.climb.toInt();
-                            double fuel =
-                                shot.data!.fuel / shot.data!.maxFuel * 100;
+                            final data = shot.data!;
+                            ias = data.ias;
+                            gear = data.gear;
+                            flap = data.flaps;
+                            altitude = data.altitude;
+                            oil = data.oilTemp1C;
+                            water = data.waterTemp1C;
+                            aoa = data.aoa;
+                            load = data.load;
+                            fuelMass = data.fuel;
+                            climb = data.climb.toInt();
+                            double fuelPercents =
+                                data.fuel / data.maxFuel * 100;
                             return Flex(
                               direction: Axis.vertical,
                               children: [
@@ -926,7 +927,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 40),
                                             text:
-                                                'Throttle= ${shot.data!.throttle1} %')
+                                                'Throttle= ${data.throttle1} %')
                                       ]),
                                     ),
                                   ),
@@ -936,14 +937,16 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                     padding: const EdgeInsets.only(left: 20),
                                     alignment: Alignment.topLeft,
                                     child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 40),
-                                            text: 'IAS= ${shot.data!.ias} km/h')
-                                      ]),
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 40),
+                                              text: 'IAS= ${data.ias} km/h')
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -952,7 +955,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                     padding: const EdgeInsets.only(left: 20),
                                     alignment: Alignment.topLeft,
                                     child: Text(
-                                      'Altitude= ${shot.data!.altitude} m',
+                                      'Altitude= ${data.altitude} m',
                                       style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -965,7 +968,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                     padding: const EdgeInsets.only(left: 20),
                                     alignment: Alignment.topLeft,
                                     child: Text(
-                                      'Climb= ${shot.data!.climb} m/s',
+                                      'Climb= ${data.climb} m/s',
                                       style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -977,17 +980,27 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   child: Container(
                                       padding: const EdgeInsets.only(left: 20),
                                       alignment: Alignment.topLeft,
-                                      child: fuel <= 13
-                                          ? BlinkText(
-                                              'Fuel= ${fuel.toStringAsFixed(1)} % (LOW)',
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 40),
-                                              endColor: Colors.red,
+                                      child: fuelPercents <= 13
+                                          ? AnimatedTextKit(
+                                              isRepeatingAnimation: true,
+                                              repeatForever: true,
+                                              animatedTexts: [
+                                                ColorizeAnimatedText(
+                                                  'Fuel= ${fuelPercents.toStringAsFixed(1)} %',
+                                                  textStyle: const TextStyle(
+                                                      fontSize: 40,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.white),
+                                                  colors: [
+                                                    Colors.red,
+                                                    Colors.white,
+                                                  ],
+                                                ),
+                                              ],
                                             )
                                           : Text(
-                                              'Fuel= ${fuel.toStringAsFixed(1)} %',
+                                              'Fuel= ${fuelPercents.toStringAsFixed(1)} %',
                                               style: const TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
@@ -999,15 +1012,17 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                     alignment: Alignment.topLeft,
                                     padding: const EdgeInsets.only(left: 20),
                                     child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 40),
-                                            text:
-                                                'Oil Temp= ${shot.data!.oilTemp1C}°c')
-                                      ]),
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 40),
+                                              text:
+                                                  'Oil Temp= ${data.oilTemp1C}°c')
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1023,7 +1038,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 40),
                                             text:
-                                                'Water Temp= ${shot.data!.waterTemp1C}°c')
+                                                'Water Temp= ${data.waterTemp1C}°c')
                                       ]),
                                     ),
                                   ),
@@ -1033,7 +1048,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                     padding: const EdgeInsets.only(left: 20),
                                     alignment: Alignment.topLeft,
                                     child: Text(
-                                      'AoA= ${shot.data!.aoa}°',
+                                      'AoA= ${data.aoa}°',
                                       style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -1045,11 +1060,22 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                             );
                           } else if (shot.hasError) {
                             return Center(
-                                child: BlinkText(
-                              'ERROR: NO DATA',
-                              endColor: Colors.red,
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 40),
+                                child: AnimatedTextKit(
+                              isRepeatingAnimation: true,
+                              repeatForever: true,
+                              animatedTexts: [
+                                ColorizeAnimatedText(
+                                  'ERROR: NO DATA',
+                                  textStyle: const TextStyle(
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                  colors: [
+                                    Colors.red,
+                                    Colors.white,
+                                  ],
+                                ),
+                              ],
                             ));
                           } else {
                             return const Center(
@@ -1066,16 +1092,17 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                         stream: indicatorStream,
                         builder: (context, AsyncSnapshot<IndicatorData?> shot) {
                           if (shot.hasData) {
+                            final data = shot.data!;
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (ref.read(provider.vehicleNameProvider) !=
-                                  shot.data!.type) {
+                                  data.type) {
                                 ref
                                     .read(provider.vehicleNameProvider.notifier)
-                                    .state = shot.data!.type;
+                                    .state = data.type;
                               }
                             });
-                            vertical = shot.data!.vertical;
-                            final double mach = shot.data?.mach ?? 0;
+                            vertical = data.vertical;
+                            final double mach = data.mach ?? 0;
                             if (!ref.watch(provider.inMatchProvider)) {
                               return Flex(
                                 direction: Axis.vertical,
@@ -1111,7 +1138,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 40),
                                             text:
-                                                'Compass= ${shot.data!.compass?.toStringAsFixed(0) ?? ''}°')
+                                                'Compass= ${data.compass?.toStringAsFixed(0) ?? ''}°')
                                       ]),
                                     ),
                                   ),
@@ -1140,17 +1167,29 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               ref
                                   .read(provider.vehicleNameProvider.notifier)
-                                  .state = '';
+                                  .state = null;
                             });
                             return Center(
                               child: Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: BlinkText(
-                                    'ERROR: NO DATA',
-                                    endColor: Colors.red,
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 40),
-                                  )),
+                                padding: const EdgeInsets.all(8.0),
+                                child: AnimatedTextKit(
+                                  isRepeatingAnimation: true,
+                                  repeatForever: true,
+                                  animatedTexts: [
+                                    ColorizeAnimatedText(
+                                      'ERROR: NO DATA',
+                                      textStyle: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                      colors: [
+                                        Colors.red,
+                                        Colors.white,
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
                             );
                           } else {
                             WidgetsBinding.instance.addPostFrameCallback((_) {

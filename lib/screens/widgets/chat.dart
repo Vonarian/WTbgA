@@ -20,15 +20,15 @@ class ChatState extends ConsumerState<Chat> {
     Timer.periodic(const Duration(milliseconds: 300), (timer) async {
       if (!mounted) timer.cancel();
       if (!ref.read(provider.inMatchProvider)) return;
-      final data = await GameChat.getChat(id.value);
-      id.value = data.id;
+      final data = await GameChat.getChat(id);
+      id = data.id;
       _list.add(data);
       _list = _list.toSet().toList();
       setState(() {});
     });
   }
 
-  final id = ValueNotifier<int>(0);
+  int id = 0;
   List<GameChat> _list = [];
 
   @override

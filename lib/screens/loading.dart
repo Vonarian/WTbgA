@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:blinking_text/blinking_text.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:version/version.dart';
 import 'package:window_manager/window_manager.dart';
@@ -121,13 +121,23 @@ class LoadingState extends State<Loading> {
           content: Center(
         child: Stack(children: [
           Center(
-            child: BlinkText(
-              '..: Loading :..',
-              style: TextStyle(
-                  color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-              endColor: Colors.purple,
-            ),
-          ),
+              child: AnimatedTextKit(
+            isRepeatingAnimation: true,
+            repeatForever: true,
+            animatedTexts: [
+              ColorizeAnimatedText(
+                '..: Loading :..',
+                textStyle: TextStyle(
+                    color: Colors.red,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold),
+                colors: [
+                  Colors.purple,
+                  Colors.white,
+                ],
+              ),
+            ],
+          )),
           const Center(
             child: SizedBox(
               height: 400,
