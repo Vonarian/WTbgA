@@ -1165,9 +1165,12 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                           }
                           if (shot.hasError) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              ref
-                                  .read(provider.vehicleNameProvider.notifier)
-                                  .state = null;
+                              if (ref.read(provider.vehicleNameProvider) ==
+                                  null) {
+                                ref
+                                    .read(provider.vehicleNameProvider.notifier)
+                                    .state = null;
+                              }
                             });
                             return Center(
                               child: Container(

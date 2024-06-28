@@ -16,9 +16,11 @@ Future<void> main() async {
 
   if (names.data != null) {
     await File('.\\assets\\fm\\fm_names_db.csv').writeAsString(names.data!);
+    print('Wrote names.');
   }
 
   if (data.data != null) {
     await File('.\\assets\\fm\\fm_data_db.csv').writeAsString(data.data!);
+    print('Wrote data.');
   }
 }

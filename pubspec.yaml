@@ -4,7 +4,7 @@ description: WTbgA
 publish_to: 'none'
 
 environment:
-  sdk: ">=3.4.0 <4.0.0"
+  sdk: ">=3.4.3 <4.0.0"
 
 dependencies:
   flutter:
@@ -12,7 +12,7 @@ dependencies:
   archive: ^3.5.1
   audioplayers: ^6.0.0
   animated_text_kit: ^4.2.2
-  collection: ^1.16.0
+  collection: ^1.18.0
   color: 3.0.0
   device_info_plus: ^10.1.0
   dio: ^5.4.3
