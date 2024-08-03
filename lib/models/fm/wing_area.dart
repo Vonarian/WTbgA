@@ -9,13 +9,14 @@ class WingArea {
     this.wingAreas = const [],
   });
 
-  factory WingArea.load(String value) {
-    final split = value.split(',');
-    if (split.length == 1) {
+  factory WingArea.load(String value, {required bool isSweptWing}) {
+    if (!isSweptWing) {
       return WingArea(
-        area: double.parse(split[0]),
+        area: double.parse(value),
       );
     } else {
+      final split = value.split(',');
+
       final states = <double>[];
       final wingAreas = <double>[];
       for (int i = 0; i < split.length; i++) {

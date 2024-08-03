@@ -11,6 +11,7 @@ import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_info2/system_info2.dart';
 import 'package:window_manager/window_manager.dart';
@@ -72,7 +73,9 @@ Future<void> main(List<String> arguments) async {
     hotKeyManager.unregisterAll();
     await windowManager.show();
   });
-  appVersion = await File(AppUtil.versionPath).readAsString();
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+  appVersion = packageInfo.buildNumber;
   prefs = await SharedPreferences.getInstance();
   bool? autoStart = prefs.get('autoStart') as bool?;
   if (autoStart ?? false) {

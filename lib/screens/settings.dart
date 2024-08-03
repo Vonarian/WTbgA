@@ -35,7 +35,7 @@ class SettingsState extends ConsumerState<Settings> {
       trailing: Button(
           style: ButtonStyle(
               backgroundColor:
-                  ButtonState.resolveWith((_) => theme.accentColor.lighter)),
+                  WidgetStateProperty.resolveWith((_) => theme.accentColor.lighter)),
           onPressed: () {
             Navigator.of(context)
                 .pushReplacement(FluentPageRoute(builder: (context) {
@@ -270,7 +270,7 @@ class SettingsState extends ConsumerState<Settings> {
                       isAntiAlias: true,
                     ),
                     headerBackgroundColor:
-                        ButtonState.resolveWith((_) => Colors.transparent),
+                        WidgetStateProperty.resolveWith((_) => Colors.transparent),
                     contentBackgroundColor: Colors.transparent,
                     header: Column(
                       mainAxisAlignment: MainAxisAlignment.center,

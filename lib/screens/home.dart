@@ -62,8 +62,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
     if (!mounted) return false;
     if (fmData != null) {
-      final double maxLoad = (fmData!.critWingOverload.positive /
-          ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
+      final double maxLoad = (!fmData!.isSweptWing
+          ? fmData!.critWingOverload.positive
+          : -fmData!.critWingOverload.positive /
+              ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
       if (load == null) return false;
       if ((load)! >= (maxLoad - (0.09 * maxLoad))) {
         return true;

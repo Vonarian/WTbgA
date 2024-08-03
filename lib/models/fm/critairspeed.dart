@@ -9,9 +9,9 @@ class CritAirSpeed {
     this.critAirSpeeds = const [],
   });
 
-  factory CritAirSpeed.load(String data) {
+  factory CritAirSpeed.load(String data, {required bool isSweptWing}) {
     final List<String> valuesSplit = data.split(',');
-    if (valuesSplit.length == 1) {
+    if (!isSweptWing) {
       return CritAirSpeed(
         critAirSpeed: int.parse(valuesSplit[0]),
       );
@@ -34,5 +34,6 @@ class CritAirSpeed {
   }
 
   bool get isVariable => critAirSpeeds.isNotEmpty && states.isNotEmpty;
+
   bool get notVariable => !isVariable;
 }

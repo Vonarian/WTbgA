@@ -11,13 +11,13 @@ class WingSpan {
 
   bool get isVariable => spans.isNotEmpty && states.isEmpty;
 
-  factory WingSpan.load(String value) {
-    final split = value.split(',');
-    if (split.length == 1) {
+  factory WingSpan.load(String value, {required bool isSweptWing}) {
+    if (!isSweptWing) {
       return WingSpan(
-        span: double.parse(split[0]),
+        span: double.parse(value),
       );
     } else {
+      final split = value.split(',');
       final states = <double>[];
       final spans = <double>[];
       for (int i = 0; i < split.length; i++) {

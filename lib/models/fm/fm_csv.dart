@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 
 import '../../main.dart';
 import 'aoa.dart';
+import 'crit_spd_mach.dart';
 import 'critairspeed.dart';
 import 'flap.dart';
 import 'rpm.dart';
@@ -28,7 +29,7 @@ class FmData {
   final double emptyMass;
   final double maxFuelMass;
   final CritAirSpeed critAirSpd;
-  final double critAirSpdMach;
+  final CritAirSpeedMach critAirSpdMach;
   final double critGearSpd;
   final Flap flap;
   final WingOverload critWingOverload;
@@ -37,6 +38,7 @@ class FmData {
   final double nitroConsume;
   final CritAoA critAoA;
   final RPM rpm;
+  final bool isSweptWing;
 
   const FmData({
     required this.name,
@@ -55,6 +57,7 @@ class FmData {
     required this.maxNitro,
     required this.nitroConsume,
     required this.critAoA,
+    required this.isSweptWing,
   });
 
   static Future<FmData?> getFlightModel(String? name) async {
@@ -66,15 +69,17 @@ class FmData {
     for (var element in csvList.skip(1)) {
       final data = element.split(';');
       if (data[0] == name) {
+        final isSweptWing = data[2].contains(',');
         fmData = FmData(
           name: data[0],
           length: double.parse(data[1]),
-          wingSpan: WingSpan.load(data[2]),
-          wingArea: WingArea.load(data[3]),
+          wingSpan: WingSpan.load(data[2], isSweptWing: isSweptWing),
+          wingArea: WingArea.load(data[3], isSweptWing: isSweptWing),
           emptyMass: double.parse(data[4]),
           maxFuelMass: double.parse(data[5]),
-          critAirSpd: CritAirSpeed.load(data[6]),
-          critAirSpdMach: double.parse(data[7]),
+          critAirSpd: CritAirSpeed.load(data[6], isSweptWing: isSweptWing),
+          critAirSpdMach:
+              CritAirSpeedMach.load(data[7], isSweptWing: isSweptWing),
           critGearSpd: double.parse(data[8]),
           flap: Flap.load(data[9], data[10], data[11]),
           critWingOverload: WingOverload.load(data[12]),
@@ -85,6 +90,7 @@ class FmData {
           critAoA: CritAoA.load(
             data[17],
           ),
+          isSweptWing: isSweptWing,
         );
       }
     }
