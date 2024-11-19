@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:fluent_ui/fluent_ui.dart';
@@ -7,7 +6,7 @@ import 'package:version/version.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../data_receivers/github.dart';
-import '../services/utility.dart';
+import '../main.dart';
 import 'downloader.dart';
 import 'home.dart';
 
@@ -22,22 +21,11 @@ class Loading extends StatefulWidget {
 }
 
 class LoadingState extends State<Loading> {
-  Future<String> checkVersion() async {
-    try {
-      final File file = File(AppUtil.versionPath);
-      final String version = await file.readAsString();
-      return version;
-    } catch (e, st) {
-      log(e.toString(), stackTrace: st);
-      rethrow;
-    }
-  }
-
-  Future<void> checkAndUpdate(String version) async {
+  Future<void> checkAndUpdate(Version version) async {
     try {
       GHData data = await GHData.getData();
       final ghVersion = Version.parse(data.tagName);
-      final currentVersion = Version.parse(version);
+      final currentVersion = version;
       if (ghVersion > currentVersion) {
         if (!mounted) return;
         displayInfoBar(
@@ -93,6 +81,7 @@ class LoadingState extends State<Loading> {
               ));
       log(e.toString(), stackTrace: st);
       Future.delayed(const Duration(seconds: 2), () async {
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           FluentPageRoute(builder: (context) => const Home()),
@@ -105,7 +94,7 @@ class LoadingState extends State<Loading> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await checkAndUpdate(await checkVersion());
+      await checkAndUpdate(appVersion);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.startup && widget.minimize) {

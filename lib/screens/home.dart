@@ -354,8 +354,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     Future.delayed(Duration.zero, () async {
       if (secrets.firebaseInvalid) return;
       await PresenceService().configureUserPresence(
-          (await deviceInfo.windowsInfo).computerName,
-          File(AppUtil.versionPath).readAsStringSync());
+          (await deviceInfo.windowsInfo).computerName, appVersion.toString());
       await Future.delayed(const Duration(seconds: 50));
       if (!mounted) return;
       subscriptionForPresence = startListening(context);
@@ -474,6 +473,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
           data['operation'] != null &&
           data['id'] != null &&
           data['title'] == null) {
+        if (!context.mounted) return;
         switch (data['operation']) {
           case 'getUserName':
             await Message.getUserName(context, data);
@@ -617,9 +617,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                   if (secrets.firebaseValid)
                     fireBaseVersion.when(data: (data) {
                       bool isNew = false;
-                      if (data.hasValue &&
-                          int.parse(data!.replaceAll('.', '')) >
-                              int.parse(appVersion.replaceAll('.', ''))) {
+                      if (data != null && data > appVersion) {
                         isNew = true;
                       }
                       if (isNew) {
@@ -1234,9 +1232,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
               infoBadge: fireBaseVersion.when(
                   data: (data) {
                     bool isNew = false;
-                    if (data.hasValue &&
-                        int.parse(data!.replaceAll('.', '')) >
-                            int.parse(appVersion.replaceAll('.', ''))) {
+                    if (data.hasValue && data! > appVersion) {
                       isNew = true;
                     }
                     return isNew ? const InfoBadge(source: Text('!')) : null;

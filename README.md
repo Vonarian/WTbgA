@@ -33,7 +33,6 @@ also see the “Notifiers” category. These notifiers will get fired in differe
 * Engine, Oil, and Water overheat
 * Your plane is at a dangerous angle and speed, so you have to “Pull Up”.
 * High G overload.
-* Enemy proximity is a premium feature of the application and is set through Firebase by myself.
 
 You may notice the OpenRGB icon at the top-right corner of the UI. This feature allows WTbgA to
 create lighting effects in different scenarios:

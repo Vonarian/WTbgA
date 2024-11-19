@@ -2,6 +2,7 @@ import 'package:firebase_dart/firebase_dart.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/openrgb.dart' as orgb;
+import 'package:version/version.dart';
 
 import 'models/app_settings.dart';
 import 'models/orgb_data_class.dart';
@@ -15,13 +16,13 @@ class MyProvider {
   final flapLimitProvider = StateProvider<int>((ref) => 800);
   final downloadCompleteProvider = StateProvider<bool>((ref) => false);
 
-  final versionFBProvider = StreamProvider.family<String?, bool>(
+  final versionFBProvider = StreamProvider.family<Version?, bool>(
     (ref, valid) async* {
       if (!valid) {
         yield null;
       }
       await for (Event e in PresenceService().getVersion()) {
-        yield e.snapshot.value as String?;
+        yield Version.parse(e.snapshot.value);
       }
     },
   );

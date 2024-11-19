@@ -34,8 +34,8 @@ class SettingsState extends ConsumerState<Settings> {
       description: Text('$version is available to download'),
       trailing: Button(
           style: ButtonStyle(
-              backgroundColor:
-                  WidgetStateProperty.resolveWith((_) => theme.accentColor.lighter)),
+              backgroundColor: WidgetStateProperty.resolveWith(
+                  (_) => theme.accentColor.lighter)),
           onPressed: () {
             Navigator.of(context)
                 .pushReplacement(FluentPageRoute(builder: (context) {
@@ -80,7 +80,7 @@ class SettingsState extends ConsumerState<Settings> {
                                 style: theme.typography.bodyStrong,
                               ),
                               const SizedBox(height: 6.0),
-                              updateWidget(data, theme: theme),
+                              updateWidget(data.toString(), theme: theme),
                             ],
                           )
                         : const SizedBox(),
@@ -269,8 +269,8 @@ class SettingsState extends ConsumerState<Settings> {
                       filterQuality: FilterQuality.high,
                       isAntiAlias: true,
                     ),
-                    headerBackgroundColor:
-                        WidgetStateProperty.resolveWith((_) => Colors.transparent),
+                    headerBackgroundColor: WidgetStateProperty.resolveWith(
+                        (_) => Colors.transparent),
                     contentBackgroundColor: Colors.transparent,
                     header: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -281,7 +281,7 @@ class SettingsState extends ConsumerState<Settings> {
                             style: theme.typography.caption),
                       ],
                     ),
-                    trailing: Text(appVersion),
+                    trailing: Text(appVersion.toString()),
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -312,7 +312,7 @@ class SettingsState extends ConsumerState<Settings> {
                         ),
                         Tooltip(
                           message:
-                              'Open https://forum.warthunder.com/u/Vonarian_aka_Ardeshir/ in browser',
+                              'Open https://forum.warthunder.com/u/Vonarian/ in browser',
                           child: ListTile(
                             leading: const Padding(
                               padding: EdgeInsets.all(8.0),
@@ -328,7 +328,7 @@ class SettingsState extends ConsumerState<Settings> {
                             ),
                             onPressed: () {
                               launchUrlString(
-                                  'https://forum.warthunder.com/u/Vonarian_aka_Ardeshir/');
+                                  'https://forum.warthunder.com/u/Vonarian/');
                             },
                           ),
                         ),

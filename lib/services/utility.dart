@@ -13,17 +13,21 @@ import 'package:window_watcher/window_watcher.dart';
 import '../main.dart';
 import '../screens/widgets/loading_widget.dart';
 
+const wt = 'War Thunder';
 final List<String> isWarThunder = [
-  'War Thunder',
-  'War Thunder - In battle',
-  'War Thunder - Waiting for game',
-  'War Thunder - Loading',
-  'War Thunder - Test Flight'
+  wt,
+  '$wt (DirectX 12, 64bit)',
+  '$wt - In battle',
+  '$wt (DirectX 12, 64bit) - In battle',
+  '$wt - Waiting for game',
+  '$wt (DirectX 12, 64bit) - Waiting for game',
+  '$wt - Loading',
+  '$wt (DirectX 12, 64bit) - Loading',
+  '$wt - Test Flight',
+  '$wt (DirectX 12, 64bit) - Test Flight',
 ];
 
 class AppUtil {
-  static final versionPath =
-      '${p.dirname(Platform.resolvedExecutable)}\\data\\flutter_assets\\assets\\version\\version.txt';
   static final defaultBeepPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data\\flutter_assets\\assets',
@@ -60,7 +64,8 @@ class AppUtil {
       }
     } else {
       final sound = TEXT(path);
-      final result = PlaySound(sound, NULL, SND_FILENAME | SND_SYNC);
+      final result =
+          PlaySound(sound, NULL, SND_FLAGS.SND_FILENAME | SND_FLAGS.SND_SYNC);
 
       if (result != TRUE) {
         if (kDebugMode) {

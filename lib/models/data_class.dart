@@ -1,11 +1,9 @@
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:fluent_ui/fluent_ui.dart';
 
 import '../main.dart';
 import '../services/presence.dart';
-import '../services/utility.dart';
 
 class Message {
   final String title;
@@ -104,7 +102,7 @@ ContentDialog dialogBuilderUserName(BuildContext context, data) {
             await prefs.setString('userName', userNameController.text);
             await PresenceService().configureUserPresence(
                 (await deviceInfo.windowsInfo).computerName,
-                await File(AppUtil.versionPath).readAsString());
+                appVersion.toString());
             if (data != null) {
               await prefs.setInt('id', data['id']);
             }

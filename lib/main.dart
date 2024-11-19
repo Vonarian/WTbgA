@@ -14,6 +14,7 @@ import 'package:local_notifier/local_notifier.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_info2/system_info2.dart';
+import 'package:version/version.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'models/secret_data.dart';
@@ -32,7 +33,7 @@ final audio2 = AudioPlayer();
 final provider = MyProvider();
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
-late final String appVersion;
+late final Version appVersion;
 final List<String> csvList = [];
 
 Future<void> main(List<String> arguments) async {
@@ -75,7 +76,7 @@ Future<void> main(List<String> arguments) async {
   });
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
 
-  appVersion = packageInfo.buildNumber;
+  appVersion = Version.parse(packageInfo.version);
   prefs = await SharedPreferences.getInstance();
   bool? autoStart = prefs.get('autoStart') as bool?;
   if (autoStart ?? false) {

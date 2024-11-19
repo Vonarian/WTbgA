@@ -6,9 +6,10 @@ list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
   dynamic_color
   flutter_acrylic
+  flutter_secure_storage_windows
   hotkey_manager_windows
   local_notifier
-  screen_retriever
+  screen_retriever_windows
   tray_manager
   uni_links_desktop
   url_launcher_windows

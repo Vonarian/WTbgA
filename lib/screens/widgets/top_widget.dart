@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:openrgb/client/client.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:version/version.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../main.dart';
@@ -61,9 +62,9 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
 
     if (secrets.firebaseValid) {
       PresenceService().getVersion().listen((event) async {
-        final version = event.snapshot.value.toString().replaceAll('.', '');
-        final currentVersion = appVersion.replaceAll('.', '');
-        if (int.parse(version) > int.parse(currentVersion)) {
+        final version = Version.parse(event.snapshot.value);
+        final currentVersion = appVersion;
+        if (version > currentVersion) {
           final localNotification = LocalNotification(
             title: 'New Version Available',
             body: 'Click to download the latest version.',
@@ -94,7 +95,9 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
   bool inMatch(String value) {
     final String name = value.toLowerCase();
     return name.trim() == 'war thunder - in battle' ||
-        name.trim() == 'war thunder - test flight';
+        name.trim() == 'war thunder - test flight' ||
+        name.trim() == 'war thunder (directx 12, 64bit) - in battle' ||
+        name.trim() == 'war thunder (directx 12, 64bit) - test flight';
   }
 
   @override
