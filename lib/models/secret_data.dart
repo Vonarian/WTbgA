@@ -7,19 +7,19 @@ import '../services/extensions.dart';
 class SecretData {
   final FirebaseOptions? firebaseData;
 
-  const SecretData({required this.firebaseData});
+  const SecretData({this.firebaseData});
 
   factory SecretData.load() {
     try {
       const firebaseData = String.fromEnvironment('firebaseData');
       return SecretData(
         firebaseData: firebaseData.isNotEmpty
-            ? FirebaseOptions.fromMap(firebaseData.decode())
+            ? FirebaseOptions.fromMap(firebaseData.decodeJson())
             : null,
       );
     } catch (e, st) {
       log(e.toString(), stackTrace: st);
-      return const SecretData(firebaseData: null);
+      return const SecretData();
     }
   }
 

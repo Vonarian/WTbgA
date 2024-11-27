@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../main.dart';
 
 import '../../data_receivers/chat.dart';
+import '../../main.dart';
 
 class Chat extends ConsumerStatefulWidget {
   const Chat({super.key});
@@ -18,7 +18,10 @@ class ChatState extends ConsumerState<Chat> {
   void initState() {
     super.initState();
     Timer.periodic(const Duration(milliseconds: 300), (timer) async {
-      if (!mounted) timer.cancel();
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       if (!ref.read(provider.inMatchProvider)) return;
       final data = await GameChat.getChat(id);
       id = data.id;

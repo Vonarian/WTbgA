@@ -317,7 +317,7 @@ class SettingsState extends ConsumerState<Settings> {
                             leading: const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Icon(
-                                FluentIcons.game,
+                                FluentIcons.office_chat,
                                 size: 20,
                               ),
                             ),

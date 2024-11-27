@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
@@ -7,14 +6,13 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:win32/win32.dart';
 import 'package:window_watcher/window_watcher.dart';
 
 import '../main.dart';
 import '../screens/widgets/loading_widget.dart';
 
 const wt = 'War Thunder';
-final List<String> isWarThunder = [
+final List<String> wtTitles = [
   wt,
   '$wt (DirectX 12, 64bit)',
   '$wt - In battle',
@@ -28,66 +26,6 @@ final List<String> isWarThunder = [
 ];
 
 class AppUtil {
-  static final defaultBeepPath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data\\flutter_assets\\assets',
-    'sounds\\beep.wav'
-  ]);
-  static final String deviceIPPath = p.joinAll([
-    p.dirname(Platform.resolvedExecutable),
-    'data\\flutter_assets\\assets',
-    'HyperlinkButton(\\deviceIP.ps1'
-  ]);
-
-  static Future<String> createFolderInAppDocDir(String path) async {
-    final Directory appDocDirFolder = Directory(path);
-
-    try {
-      if (await appDocDirFolder.exists()) {
-        return appDocDirFolder.path;
-      } else {
-        final Directory appDocDirNewFolder =
-            await appDocDirFolder.create(recursive: true);
-        return appDocDirNewFolder.path;
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  static Future<void> playSound(String path) async {
-    final file = await File(path).exists();
-
-    if (!file) {
-      if (kDebugMode) {
-        print('WAV file missing.');
-      }
-    } else {
-      final sound = TEXT(path);
-      final result =
-          PlaySound(sound, NULL, SND_FLAGS.SND_FILENAME | SND_FLAGS.SND_SYNC);
-
-      if (result != TRUE) {
-        if (kDebugMode) {
-          print('Sound playback failed.');
-        }
-      }
-      free(sound);
-    }
-  }
-
-  static Future<String> runPowerShellScript(
-      String scriptPath, List<String> argumentsToScript) async {
-    var process = await Process.start(
-        'Powershell.exe', [...argumentsToScript, '-File', scriptPath]);
-    String finalString = '';
-
-    await for (var line in process.stdout.transform(utf8.decoder)) {
-      finalString += line;
-    }
-    return finalString;
-  }
-
   static Future<String> getAppDocsPath() async {
     Directory docDir = await getApplicationDocumentsDirectory();
     String docPath = docDir.path;
@@ -109,7 +47,7 @@ class AppUtil {
 
   static Future<String> getOpenRGBExecutablePath(
       BuildContext? context, bool check) async {
-    String openRGBPath = await AppUtil.getOpenRGBFolderPath();
+    String openRGBPath = await getOpenRGBFolderPath();
     File openRGBExecutable =
         File('$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe');
     if (!(await openRGBExecutable.exists()) && check && context != null) {
@@ -118,7 +56,7 @@ class AppUtil {
           // ignore: use_build_context_synchronously
           context: context,
           future: dio.download(
-              'https://github.com/Vonarian/WTbgA/releases/download/2.6.2.0/OpenRGB.zip',
+              'https://openrgb.org/releases/release_0.9/OpenRGB_0.9_Windows_64_b5f46e3.zip',
               '$docsPath\\OpenRGB.zip'),
           message: 'Downloading OpenRGB...');
       final File filePath = File('$docsPath\\OpenRGB.zip');
@@ -139,16 +77,6 @@ class AppUtil {
     }
     String openRGBExecutablePath = openRGBExecutable.path;
     return openRGBExecutablePath;
-  }
-
-  static Future<String> saveInDocs(String filePath) async {
-    final String docPath = await AppUtil.getAppDocsPath();
-    final Directory directory = Directory('$docPath\\Settings\\');
-    if (!directory.existsSync()) {
-      await directory.create();
-    }
-    final File file = File(filePath);
-    return (await file.copy('${directory.path}\\${p.basename(filePath)}')).path;
   }
 
   static Stream<Window?> getWTWindow() async* {

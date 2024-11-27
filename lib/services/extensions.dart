@@ -65,7 +65,7 @@ extension FluentColortoRGB on fluent.Color {
 }
 
 extension StringToJson on String {
-  dynamic decode() => jsonDecode(this);
+  dynamic decodeJson() => jsonDecode(this);
 }
 
 extension EnhancedWidgetList on List<Widget> {

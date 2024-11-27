@@ -45,6 +45,8 @@ Future<void> main(List<String> arguments) async {
     await windowManager.setResizable(true);
     await windowManager.setTitle('WTbgA');
     await windowManager.setIcon('assets/app_icon.ico');
+    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    await Window.hideWindowControls();
     appDocPath = await AppUtil.getAppDocsPath();
     final buildVersion =
         int.parse(SysInfo.operatingSystemVersion.split('.').last);
@@ -83,8 +85,8 @@ Future<void> main(List<String> arguments) async {
     String exePath = await AppUtil.getOpenRGBExecutablePath(null, false);
     Process.run(exePath, ['--server', '--noautoconnect']);
   }
-  await FirebaseDartFlutter.setup();
   if (secrets.firebaseData != null) {
+    await FirebaseDartFlutter.setup();
     app = await Firebase.initializeApp(
         options: secrets.firebaseData!, name: 'wtbga-815e4');
   }

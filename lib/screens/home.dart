@@ -593,6 +593,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     final fireBaseVersion =
         ref.watch(provider.versionFBProvider(secrets.firebaseValid));
     final developerMessage = ref.watch(provider.developerMessageProvider);
+    final gameRunning = ref.watch(provider.gameRunningProvider);
+    final inMatch = ref.watch(provider.inMatchProvider);
     return NavigationView(
       appBar: NavigationAppBar(
           title: Column(
@@ -600,16 +602,12 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             children: [
               Row(
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        'War Thunder background Assistant',
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: theme.accentColor.lighter),
-                      ),
-                    ],
+                  Text(
+                    ' War Thunder background Assistant ${appVersion.isPreRelease ? '(Pre-release)' : ''}',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: theme.accentColor.lighter),
                   ),
                   const SizedBox(
                     width: 5,
@@ -878,8 +876,21 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                     child: StreamBuilder<StateData?>(
                         stream: stateStream,
                         builder: (context, AsyncSnapshot<StateData?> shot) {
+                          if (!gameRunning) {
+                            return Container(
+                              padding: const EdgeInsets.only(left: 20),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                'Not In Game',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 40),
+                              ),
+                            );
+                          }
                           if (shot.hasData) {
-                            if (!ref.watch(provider.inMatchProvider)) {
+                            if (!inMatch) {
                               return Flex(
                                 direction: Axis.vertical,
                                 children: [
@@ -1091,6 +1102,19 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                     child: StreamBuilder<IndicatorData?>(
                         stream: indicatorStream,
                         builder: (context, AsyncSnapshot<IndicatorData?> shot) {
+                          if (!gameRunning) {
+                            return Container(
+                              padding: const EdgeInsets.only(left: 20),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                'Not In Game',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 40),
+                              ),
+                            );
+                          }
                           if (shot.hasData) {
                             final data = shot.data!;
                             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1103,9 +1127,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                             });
                             vertical = data.vertical;
                             final double mach = data.mach ?? 0;
-                            if (!ref.watch(provider.inMatchProvider)) {
-                              return Flex(
-                                direction: Axis.vertical,
+                            if (!inMatch) {
+                              return Column(
                                 children: [
                                   Expanded(
                                     child: Container(
@@ -1123,8 +1146,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 ],
                               );
                             }
-                            return Flex(
-                              direction: Axis.vertical,
+                            return Column(
                               children: [
                                 Expanded(
                                   child: Container(
@@ -1217,7 +1239,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
               title: const Text('Game Map'),
               body: InteractiveViewer(
                 child: GameMap(
-                  isInMatch: ref.read(provider.inMatchProvider),
+                  isInMatch: inMatch,
                 ),
               ),
             ),

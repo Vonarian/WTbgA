@@ -113,20 +113,37 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
   Widget build(BuildContext context) {
     final systemColor = ref.watch(provider.systemColorProvider);
     return FluentApp(
-        theme: FluentThemeData(
-            brightness: ref.watch(provider.systemThemeProvider),
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-            accentColor: systemColor.toAccentColor(),
-            navigationPaneTheme: NavigationPaneThemeData(
-                animationDuration: const Duration(milliseconds: 600),
-                animationCurve: Curves.easeInOut,
-                highlightColor: systemColor,
-                iconPadding: const EdgeInsets.only(left: 6),
-                labelPadding: const EdgeInsets.only(left: 4),
-                backgroundColor: Colors.transparent)),
-        debugShowCheckedModeBanner: false,
-        title: 'WTbgA',
-        home: widget.child);
+      theme: FluentThemeData(
+          brightness: ref.watch(provider.systemThemeProvider),
+          accentColor: systemColor.toAccentColor(),
+          navigationPaneTheme: NavigationPaneThemeData(
+              animationDuration: const Duration(milliseconds: 600),
+              animationCurve: Curves.easeInOut,
+              highlightColor: systemColor,
+              iconPadding: const EdgeInsets.only(left: 6),
+              labelPadding: const EdgeInsets.only(left: 4),
+              backgroundColor: Colors.transparent)),
+      debugShowCheckedModeBanner: false,
+      title: 'WTbgA',
+      builder: (_, child) {
+        return Column(
+          children: [
+            SizedBox(
+              height: kWindowCaptionHeight,
+              child: WindowCaption(
+                title: Text('WTbgA',
+                    style: TextStyle(
+                        color: Colors.green, fontWeight: FontWeight.bold)),
+                brightness: Brightness.dark,
+                backgroundColor: Colors.transparent,
+              ),
+            ),
+            Expanded(child: child ?? const SizedBox()),
+          ],
+        );
+      },
+      home: widget.child,
+    );
   }
 
   Future<void> _handleClickRestore() async {
