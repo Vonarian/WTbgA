@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../main.dart';
 
 class MapObj {
@@ -124,6 +125,7 @@ class MapObj {
           .timeout(const Duration(milliseconds: 250));
 
       List<MapObj> mapObjList = [];
+      if (response.data == null) throw Exception('Empty response');
       if (response.data.isNotEmpty) {
         for (final Map<String, dynamic> element in response.data) {
           mapObjList.add(MapObj.fromMap((element)));

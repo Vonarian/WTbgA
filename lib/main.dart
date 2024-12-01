@@ -53,9 +53,10 @@ Future<void> main(List<String> arguments) async {
     if (buildVersion >= 22000) {
       if (buildVersion > 22523) {
         await Window.setEffect(
-            effect: WindowEffect.tabbed,
-            color: const Color(0xFF111111),
-            dark: true);
+          effect: WindowEffect.tabbed,
+          color: const Color(0xFF111111),
+          dark: true,
+        );
       } else {
         await Window.setEffect(
           effect: WindowEffect.acrylic,
@@ -65,9 +66,10 @@ Future<void> main(List<String> arguments) async {
       }
     } else {
       await Window.setEffect(
-          effect: WindowEffect.acrylic,
-          color: const Color(0xFF111111),
-          dark: true);
+        effect: WindowEffect.acrylic,
+        color: const Color(0xFF111111),
+        dark: true,
+      );
     }
     await localNotifier.setup(
       appName: 'WTbgA',
@@ -93,10 +95,11 @@ Future<void> main(List<String> arguments) async {
   runApp(
     ProviderScope(
       child: App(
-          child: Loading(
-        startup: arguments.contains('startup'),
-        minimize: arguments.contains('minimize'),
-      )),
+        child: Loading(
+          startup: arguments.contains('startup'),
+          minimize: arguments.contains('minimize'),
+        ),
+      ),
     ),
   );
 }

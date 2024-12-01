@@ -6,8 +6,8 @@ import 'package:openrgb/data/rgb_controller.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../main.dart';
-import '../models/app_settings.dart';
 import '../models/data_class.dart';
+import '../models/settings/app_settings.dart';
 import '../services/extensions.dart';
 import 'downloader.dart';
 import 'widgets/card_highlight.dart';
@@ -104,12 +104,6 @@ class SettingsState extends ConsumerState<Settings> {
                   checked: appSettings.fullNotif,
                   onChanged: (value) async {
                     appSettingsNotifier.setFullNotif(value);
-                    appSettingsNotifier.setEngineWarning(enabled: value);
-                    appSettingsNotifier.setOverHeatWarning(enabled: value);
-                    appSettingsNotifier.setOverGWarning(enabled: value);
-                    appSettingsNotifier.setPullUpSetting(enabled: value);
-                    appSettingsNotifier.setProximitySetting(enabled: value);
-                    await appSettingsNotifier.save();
                   },
                 ),
               ),
@@ -148,7 +142,6 @@ class SettingsState extends ConsumerState<Settings> {
                   checked: appSettings.engineWarning.enabled,
                   onChanged: (value) async {
                     appSettingsNotifier.setEngineWarning(enabled: value);
-                    await appSettingsNotifier.save();
                   },
                 ),
               ),
@@ -166,7 +159,6 @@ class SettingsState extends ConsumerState<Settings> {
                   checked: appSettings.overHeatWarning.enabled,
                   onChanged: (value) async {
                     appSettingsNotifier.setOverHeatWarning(enabled: value);
-                    await appSettingsNotifier.save();
                   },
                 ),
               ),
@@ -184,7 +176,6 @@ class SettingsState extends ConsumerState<Settings> {
                   checked: appSettings.overGWarning.enabled,
                   onChanged: (value) async {
                     appSettingsNotifier.setOverGWarning(enabled: value);
-                    await appSettingsNotifier.save();
                   },
                 ),
               ),
@@ -202,7 +193,6 @@ class SettingsState extends ConsumerState<Settings> {
                   checked: appSettings.pullUpSetting.enabled,
                   onChanged: (value) async {
                     appSettingsNotifier.setPullUpSetting(enabled: value);
-                    await appSettingsNotifier.save();
                   },
                 ),
               ),
@@ -220,7 +210,6 @@ class SettingsState extends ConsumerState<Settings> {
                   checked: appSettings.proximitySetting.enabled,
                   onChanged: (value) async {
                     appSettingsNotifier.setProximitySetting(enabled: value);
-                    await appSettingsNotifier.save();
                   },
                 ),
               ),
@@ -376,7 +365,6 @@ class SettingsState extends ConsumerState<Settings> {
             ref
                 .read(provider.appSettingsProvider.notifier)
                 .setEngineWarning(volume: value);
-            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -406,7 +394,6 @@ class SettingsState extends ConsumerState<Settings> {
             ref
                 .read(provider.appSettingsProvider.notifier)
                 .setOverHeatWarning(volume: value);
-            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -437,7 +424,6 @@ class SettingsState extends ConsumerState<Settings> {
             ref
                 .read(provider.appSettingsProvider.notifier)
                 .setOverGWarning(volume: value);
-            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -467,7 +453,6 @@ class SettingsState extends ConsumerState<Settings> {
             ref
                 .read(provider.appSettingsProvider.notifier)
                 .setPullUpSetting(volume: value);
-            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -497,7 +482,6 @@ class SettingsState extends ConsumerState<Settings> {
             ref
                 .read(provider.appSettingsProvider.notifier)
                 .setProximitySetting(volume: value);
-            await ref.read(provider.appSettingsProvider.notifier).save();
           },
           vertical: true,
         ),
@@ -529,7 +513,6 @@ class SettingsState extends ConsumerState<Settings> {
                               .proximitySetting
                               .distance +
                           100);
-              await ref.read(provider.appSettingsProvider.notifier).save();
             }),
         IconButton(
             icon: const Icon(FluentIcons.remove),
@@ -542,7 +525,6 @@ class SettingsState extends ConsumerState<Settings> {
                               .proximitySetting
                               .distance -
                           100);
-              await ref.read(provider.appSettingsProvider.notifier).save();
             }),
       ],
     );

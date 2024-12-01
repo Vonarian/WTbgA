@@ -17,14 +17,17 @@ class GameChat {
     required this.mode,
   });
 
-  static Future<GameChat> getChat(int lastId) async {
+  static Future<GameChat?> getChat(int lastId) async {
     try {
       final response =
           await dio.get('http://localhost:8111/gamechat?lastId=$lastId');
+      if (response.data.isEmpty) {
+        throw Exception('Empty response');
+      }
       return GameChat.fromMap(response.data.last);
     } catch (e, st) {
       log(e.toString(), stackTrace: st);
-      rethrow;
+      return null;
     }
   }
 

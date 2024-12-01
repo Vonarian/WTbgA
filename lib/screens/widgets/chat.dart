@@ -24,10 +24,12 @@ class ChatState extends ConsumerState<Chat> {
       }
       if (!ref.read(provider.inMatchProvider)) return;
       final data = await GameChat.getChat(id);
-      id = data.id;
-      _list.add(data);
-      _list = _list.toSet().toList();
-      setState(() {});
+      if (data != null) {
+        id = data.id;
+        _list.add(data);
+        _list = _list.toSet().toList();
+        setState(() {});
+      }
     });
   }
 

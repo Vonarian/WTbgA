@@ -1,7 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
-import '../main.dart';
 
-import 'app_settings.dart';
+import '../main.dart';
+import 'settings/app_settings.dart';
 
 class PullUpData {
   ///Play warning by checking if the altitude is dangerous.

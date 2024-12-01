@@ -19,11 +19,11 @@ import '../data_receivers/damage_event.dart';
 import '../data_receivers/indicator_receiver.dart';
 import '../data_receivers/state_receiver.dart';
 import '../main.dart';
-import '../models/app_settings.dart';
 import '../models/data_class.dart';
 import '../models/fm/fm_csv.dart';
 import '../models/orgb_data_class.dart';
 import '../models/pullup_data.dart';
+import '../models/settings/app_settings.dart';
 import '../services/extensions.dart';
 import '../services/presence.dart';
 import '../services/utility.dart';
@@ -191,7 +191,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Future<void> updateMsgId() async {
     if (!ref.read(provider.inMatchProvider)) return;
     final value = await Damage.getDamages((idData.value));
-    if (damage != value && damage != defaultDamage) {
+    if (damage != value && damage != defaultDamage && value != null) {
       damage = value;
     }
     idData.value = damage.id;

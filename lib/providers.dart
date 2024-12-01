@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrgb/openrgb.dart' as orgb;
 import 'package:version/version.dart';
 
-import 'models/app_settings.dart';
 import 'models/orgb_data_class.dart';
+import 'models/settings/app_settings.dart';
 import 'services/presence.dart';
 
 class MyProvider {
