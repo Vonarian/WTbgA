@@ -133,7 +133,10 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
               child: WindowCaption(
                 title: Text('WTbgA',
                     style: TextStyle(
-                        color: Colors.green, fontWeight: FontWeight.bold)),
+                        color: systemColor
+                            .toAccentColor()
+                            .harmonizeWith(Colors.red),
+                        fontWeight: FontWeight.bold)),
                 brightness: Brightness.dark,
                 backgroundColor: Colors.transparent,
               ),

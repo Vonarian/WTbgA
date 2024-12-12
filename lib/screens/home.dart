@@ -290,7 +290,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
   Future<void> pullUp() async {
     if (!ref.read(provider.inMatchProvider) ||
-        !ref.read(provider.appSettingsProvider).pullUpSetting.enabled) return;
+        !ref.read(provider.appSettingsProvider).pullUpSetting.enabled) {
+      return;
+    }
     if (aoa == null ||
         gear == null ||
         vertical == null ||
