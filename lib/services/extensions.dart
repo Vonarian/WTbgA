@@ -18,10 +18,10 @@ extension HexColor on ui.Color {
   /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `false`).
   String toHex({bool leadingHashSign = false}) =>
       '${leadingHashSign ? '#' : ''}'
-      '${alpha.toRadixString(16).padLeft(2, '0')}'
-      '${red.toRadixString(16).padLeft(2, '0')}'
-      '${green.toRadixString(16).padLeft(2, '0')}'
-      '${blue.toRadixString(16).padLeft(2, '0')}';
+      '${a.toInt().toRadixString(16).padLeft(2, '0')}'
+      '${r.toInt().toRadixString(16).padLeft(2, '0')}'
+      '${g.toInt().toRadixString(16).padLeft(2, '0')}'
+      '${b.toInt().toRadixString(16).padLeft(2, '0')}';
 }
 
 extension IsNotNull on Object? {
@@ -30,7 +30,7 @@ extension IsNotNull on Object? {
 
 extension ToRGB on ui.Color {
   color.Color toRGB() {
-    return color.Color.rgb(red, green, blue);
+    return color.Color.rgb(r, g, b);
   }
 }
 
@@ -60,7 +60,7 @@ extension ToString on color.Color {
 
 extension FluentColortoRGB on fluent.Color {
   color.Color fluentToRGB() {
-    return color.Color.rgb(red, green, blue);
+    return color.Color.rgb(r, b, b);
   }
 }
 
