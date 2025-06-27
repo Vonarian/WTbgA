@@ -89,7 +89,7 @@ class GameMapState extends ConsumerState<GameMap>
     '#f40C00',
     '#ff0D00',
     '#ff0000',
-    '#f00C00'
+    '#f00C00',
   ];
 
   FutureBuilder<ui.Image> imageBuilder(MapObj e, Future<ui.Image> future) {
@@ -106,62 +106,65 @@ class GameMapState extends ConsumerState<GameMap>
         Offset(player!.x!, player!.y!),
         mapSize: mapSize ?? 0,
       );
-      flag = enemyHexColor.contains(e.color) &&
+      flag =
+          enemyHexColor.contains(e.color) &&
           (e.icon == 'Fighter' || e.icon == 'Assault') &&
           distance < settings.proximitySetting.distance;
     }
     return FutureBuilder<ui.Image>(
-        future: future,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (flag) {
-              if (!wtFocused && shouldPlay.value) {
-                WidgetsBinding.instance.addPostFrameCallback((_) async {
-                  if (settings.proximitySetting.enabled) {
-                    await audio2.play(
-                      DeviceFileSource(settings.proximitySetting.path),
-                      volume: settings.proximitySetting.volume,
-                      mode: PlayerMode.lowLatency,
-                    );
-                    shouldPlay.value = false;
-                  }
-                });
-              }
-              if (e.type == 'aircraft') {
-                Matrix4 matrix = Matrix4.translationValues(
-                    (widgetWidth * e.x!), (widgetHeight * e.y!), 0);
-                return Transform(
-                  transform: matrix,
-                  child: const PingingPoint(),
-                );
-              } else if (e.type == 'ground_model') {
-                return CustomPaint(
-                    painter: ObjectPainter(
-                  x: e.x!,
-                  y: e.y!,
-                  height: widgetHeight,
-                  width: widgetWidth,
-                  image: snapshot.data!,
-                  colorHex: e.color,
-                ));
-              } else if (e.type == 'airfield') {
-                return CustomPaint(
-                    painter: ObjectPainter(
-                  x: e.x!,
-                  y: e.y!,
-                  height: widgetHeight,
-                  width: widgetWidth,
-                  image: snapshot.data!,
-                  colorHex: e.color,
-                ));
-              } else {
-                return const Text('NOPE');
-              }
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          if (flag) {
+            if (!wtFocused && shouldPlay.value) {
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                if (settings.proximitySetting.enabled) {
+                  await audio2.play(
+                    DeviceFileSource(settings.proximitySetting.path),
+                    volume: settings.proximitySetting.volume,
+                    mode: PlayerMode.lowLatency,
+                  );
+                  shouldPlay.value = false;
+                }
+              });
             }
-            if (e.type == 'aircraft') {
-              if (e.icon == 'Player') {
-                return CustomPaint(
-                    painter: ObjectPainter(
+            if (e.type == MapType.aircraft) {
+              Matrix4 matrix = Matrix4.translationValues(
+                (widgetWidth * e.x!),
+                (widgetHeight * e.y!),
+                0,
+              );
+              return Transform(transform: matrix, child: const PingingPoint());
+            } else if (e.type == MapType.groundModel) {
+              return CustomPaint(
+                painter: ObjectPainter(
+                  x: e.x!,
+                  y: e.y!,
+                  height: widgetHeight,
+                  width: widgetWidth,
+                  image: snapshot.data!,
+                  colorHex: e.color,
+                ),
+              );
+            } else if (e.type == MapType.airfield) {
+              return CustomPaint(
+                painter: ObjectPainter(
+                  x: e.x!,
+                  y: e.y!,
+                  height: widgetHeight,
+                  width: widgetWidth,
+                  image: snapshot.data!,
+                  colorHex: e.color,
+                ),
+              );
+            } else {
+              return const Text('NOPE');
+            }
+          }
+          if (e.type == MapType.aircraft) {
+            if (e.icon == 'Player') {
+              return CustomPaint(
+                painter: ObjectPainter(
                   x: e.x!,
                   y: e.y!,
                   height: widgetHeight,
@@ -169,30 +172,33 @@ class GameMapState extends ConsumerState<GameMap>
                   image: snapshot.data!,
                   colorHex: '#FFFFFF',
                   compass: compass,
-                ));
-              }
-              return CustomPaint(
-                  painter: ObjectPainter(
+                ),
+              );
+            }
+            return CustomPaint(
+              painter: ObjectPainter(
                 x: e.x!,
                 y: e.y!,
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
                 colorHex: e.color,
-              ));
-            } else if (e.type == 'ground_model') {
-              return CustomPaint(
-                  painter: ObjectPainter(
+              ),
+            );
+          } else if (e.type == MapType.groundModel) {
+            return CustomPaint(
+              painter: ObjectPainter(
                 x: e.x!,
                 y: e.y!,
                 height: widgetHeight,
                 width: widgetWidth,
                 image: snapshot.data!,
                 colorHex: e.color,
-              ));
-            } else if (e.type == 'airfield') {
-              return CustomPaint(
-                  painter: ObjectPainter(
+              ),
+            );
+          } else if (e.type == MapType.airfield) {
+            return CustomPaint(
+              painter: ObjectPainter(
                 x: e.sx!,
                 y: e.sy!,
                 height: widgetHeight,
@@ -202,17 +208,19 @@ class GameMapState extends ConsumerState<GameMap>
                 airfield: true,
                 startOffset: Offset(widgetWidth * e.sx!, widgetHeight * e.sy!),
                 endOffset: Offset(widgetWidth * e.ex!, widgetHeight * e.ey!),
-              ));
-            } else {
-              return const Text('NOPE');
-            }
-          }
-          if (snapshot.hasError) {
-            return const Text('');
+              ),
+            );
           } else {
-            return const Text('');
+            return const Text('NOPE');
           }
-        });
+        }
+        if (snapshot.hasError) {
+          return const Text('');
+        } else {
+          return const Text('');
+        }
+      },
+    );
   }
 
   String assetIcon = '';
@@ -232,72 +240,71 @@ class GameMapState extends ConsumerState<GameMap>
                 },
               ),
               FutureBuilder<List<MapObj>>(
-                  future: future,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      player = getPlayer(snapshot.data!);
-                      List<Widget> columnChildren = snapshot.data!.map((e) {
-                        switch (e.icon.toLowerCase()) {
-                          case 'airdefence':
-                            assetIcon = 'airdefence';
-                            break;
-                          case 'lighttank':
-                            assetIcon = 'light';
-                            break;
-                          case 'mediumtank':
-                            assetIcon = 'medium';
-                            break;
-                          case 'spaa':
-                            assetIcon = 'spaa';
-                            break;
-                          case 'player':
-                            assetIcon = 'player';
-                            break;
-                          case 'heavytank':
-                            assetIcon = 'heavytank';
-                            break;
-                          case 'fighter':
-                            assetIcon = 'fighter';
-                            break;
-                        }
-                        if (e.type == 'aircraft') {
-                          final future = ObjectPainter.getUiImage(
-                              'assets/icons/$assetIcon.png');
-                          return imageBuilder(e, future);
-                        } else if (e.type == 'ground_model') {
-                          final future = ObjectPainter.getUiImage(
-                              'assets/icons/$assetIcon.png');
-                          return imageBuilder(e, future);
-                        } else if (e.type == 'airfield') {
-                          final future = ObjectPainter.getUiImage(
-                              'assets/icons/$assetIcon.png');
-                          return imageBuilder(e, future);
-                        } else {
-                          return const SizedBox();
-                        }
-                      }).toList();
-                      return Stack(
-                        children: columnChildren,
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      if (kDebugMode) {
-                        print(snapshot.error);
+                future: future,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    player = getPlayer(snapshot.data!);
+                    List<Widget> columnChildren = snapshot.data!.map((e) {
+                      switch (e.icon.toLowerCase()) {
+                        case 'airdefence':
+                          assetIcon = 'airdefence';
+                          break;
+                        case 'lighttank':
+                          assetIcon = 'light';
+                          break;
+                        case 'mediumtank':
+                          assetIcon = 'medium';
+                          break;
+                        case 'spaa':
+                          assetIcon = 'spaa';
+                          break;
+                        case 'player':
+                          assetIcon = 'player';
+                          break;
+                        case 'heavytank':
+                          assetIcon = 'heavytank';
+                          break;
+                        case 'fighter':
+                          assetIcon = 'fighter';
+                          break;
                       }
-                      return const SizedBox();
-                    } else {
-                      return const SizedBox();
+                      if (e.type == MapType.aircraft) {
+                        final future = ObjectPainter.getUiImage(
+                          'assets/icons/$assetIcon.png',
+                        );
+                        return imageBuilder(e, future);
+                      } else if (e.type == MapType.groundModel) {
+                        final future = ObjectPainter.getUiImage(
+                          'assets/icons/$assetIcon.png',
+                        );
+                        return imageBuilder(e, future);
+                      } else if (e.type == MapType.airfield) {
+                        final future = ObjectPainter.getUiImage(
+                          'assets/icons/$assetIcon.png',
+                        );
+                        return imageBuilder(e, future);
+                      } else {
+                        return const SizedBox();
+                      }
+                    }).toList();
+                    return Stack(children: columnChildren);
+                  }
+                  if (snapshot.hasError) {
+                    if (kDebugMode) {
+                      print(snapshot.error);
                     }
-                  }),
+                    return const SizedBox();
+                  } else {
+                    return const SizedBox();
+                  }
+                },
+              ),
             ],
           )
         : const Center(
             child: Text(
               'No Data',
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
           );
   }
@@ -338,8 +345,10 @@ class ObjectPainter extends CustomPainter {
     var paintAirfieldLine = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.9;
-    paintAirfieldLine.colorFilter =
-        ColorFilter.mode(HexColor.fromHex(colorHex), BlendMode.srcATop);
+    paintAirfieldLine.colorFilter = ColorFilter.mode(
+      HexColor.fromHex(colorHex),
+      BlendMode.srcATop,
+    );
 
     if (height != null && width != null && !airfield) {
       canvas.drawImage(image, Offset((width! * x), height! * y), paint1);

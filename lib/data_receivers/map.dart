@@ -2,6 +2,35 @@ import 'package:dio/dio.dart';
 
 import '../main.dart';
 
+enum MapType {
+  aircraft,
+  groundModel,
+  respawnBaseFighter,
+  captureZone,
+  respawnBaseTank,
+  airfield,
+  bombingPoint,
+  other;
+
+  String get name => switch (this) {
+    aircraft => 'aircraft',
+    groundModel => 'ground_model',
+    respawnBaseFighter => 'respawn_base_fighter',
+    captureZone => 'capture_zone',
+    respawnBaseTank => 'respawn_base_tank',
+    airfield => 'airfield',
+    bombingPoint => 'bombing_point',
+    other => 'other',
+  };
+
+  static MapType fromString(String type) {
+    return MapType.values.firstWhere(
+      (e) => e.name == type.toLowerCase(),
+      orElse: () => MapType.other,
+    );
+  }
+}
+
 class MapObj {
   const MapObj({
     required this.type,
@@ -20,7 +49,7 @@ class MapObj {
     required this.dy,
   });
 
-  final String type;
+  final MapType type;
   final String color;
   final List<int>? colors;
   final int blink;
@@ -57,7 +86,7 @@ class MapObj {
   factory MapObj.fromMap(Map<String, dynamic> map) {
     if (map['type'] == 'aircraft') {
       return MapObj(
-        type: map['type'] as String,
+        type: MapType.fromString(map['type'] as String),
         color: map['color'] as String,
         colors: map['color[]'] != null
             ? map['color[]'].cast<int>() as List<int>
@@ -79,7 +108,7 @@ class MapObj {
         map['type'] == 'capture_zone' ||
         map['type'] == 'respawn_base_tank') {
       return MapObj(
-        type: map['type'] as String,
+        type: MapType.fromString(map['type'] as String),
         color: map['color'] as String,
         colors: map['color[]'] != null
             ? map['color[]'].cast<int>() as List<int>
@@ -98,7 +127,7 @@ class MapObj {
       );
     } else {
       return MapObj(
-        type: map['type'] as String,
+        type: MapType.fromString(map['type'] as String),
         color: map['color'] as String,
         colors: map['color[]'] != null
             ? map['color[]'].cast<int>() as List<int>
@@ -122,7 +151,7 @@ class MapObj {
     try {
       Response response = await dio
           .get('http://localhost:8111/map_obj.json')
-          .timeout(const Duration(milliseconds: 250));
+          .timeout(const Duration(milliseconds: 350));
 
       List<MapObj> mapObjList = [];
       if (response.data == null) throw Exception('Empty response');

@@ -8,25 +8,25 @@ class Damage {
 
   static Future<Damage?> getDamages(int lastDmg) async {
     try {
-      final response = await dio
-          .get('http://localhost:8111/hudmsg?lastEvt=0&lastDmg=$lastDmg');
-      final damageEvents = response.data['damage']
-          .map<Damage>((model) => Damage.fromMap(model))
-          .toList() as List<Damage>;
+      final response = await dio.get(
+        'http://localhost:8111/hudmsg?lastEvt=0&lastDmg=$lastDmg',
+      );
+      final damageEvents =
+          response.data['damage']
+                  .map<Damage>((model) => Damage.fromMap(model))
+                  .toList()
+              as List<Damage>;
       if (damageEvents.isEmpty) {
         throw Exception('Empty response');
       }
       return damageEvents.last;
-    } catch (e) {
-      log(e.toString());
+    } catch (e, st) {
+      log(e.toString(), stackTrace: st);
       return null;
     }
   }
 
-  const Damage({
-    required this.id,
-    required this.msg,
-  });
+  const Damage({required this.id, required this.msg});
 
   @override
   bool operator ==(Object other) =>
@@ -44,27 +44,15 @@ class Damage {
     return 'Damage{id: $id, msg: $msg}';
   }
 
-  Damage copyWith({
-    int? id,
-    String? msg,
-  }) {
-    return Damage(
-      id: id ?? this.id,
-      msg: msg ?? this.msg,
-    );
+  Damage copyWith({int? id, String? msg}) {
+    return Damage(id: id ?? this.id, msg: msg ?? this.msg);
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'msg': msg,
-    };
+    return {'id': id, 'msg': msg};
   }
 
   factory Damage.fromMap(Map<String, dynamic> map) {
-    return Damage(
-      id: map['id'],
-      msg: map['msg'],
-    );
+    return Damage(id: map['id'], msg: map['msg']);
   }
 }

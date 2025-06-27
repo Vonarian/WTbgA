@@ -54,8 +54,9 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
         ref.read(provider.orgbClientProvider.notifier).state =
             await OpenRGBClient.connect();
         if (ref.read(provider.orgbClientProvider.notifier).state != null) {
-          ref.read(provider.orgbControllersProvider.notifier).state =
-              await ref.read(provider.orgbClientProvider)!.getAllControllers();
+          ref.read(provider.orgbControllersProvider.notifier).state = await ref
+              .read(provider.orgbClientProvider)!
+              .getAllControllers();
         }
       }
     });
@@ -71,7 +72,8 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
           );
           localNotification.onClick = () {
             Navigator.of(context).pushReplacement(
-                FluentPageRoute(builder: (context) => const Downloader()));
+              FluentPageRoute(builder: (context) => const Downloader()),
+            );
           };
         }
       });
@@ -85,19 +87,17 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
           ref.read(provider.wtFocusedProvider.notifier).state = event.isActive;
         }
         if (ref.read(provider.inMatchProvider) != inMatch(event.title)) {
-          ref.read(provider.inMatchProvider.notifier).state =
-              inMatch(event.title);
+          ref.read(provider.inMatchProvider.notifier).state = inMatch(
+            event.title,
+          );
         }
       }
     });
   }
 
   bool inMatch(String value) {
-    final String name = value.toLowerCase();
-    return name.trim() == 'war thunder - in battle' ||
-        name.trim() == 'war thunder - test flight' ||
-        name.trim() == 'war thunder (directx 12, 64bit) - in battle' ||
-        name.trim() == 'war thunder (directx 12, 64bit) - test flight';
+    final String name = value;
+    return wtTitleRegex.hasMatch(name.trim());
   }
 
   @override
@@ -114,15 +114,17 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
     final systemColor = ref.watch(provider.systemColorProvider);
     return FluentApp(
       theme: FluentThemeData(
-          brightness: ref.watch(provider.systemThemeProvider),
-          accentColor: systemColor.toAccentColor(),
-          navigationPaneTheme: NavigationPaneThemeData(
-              animationDuration: const Duration(milliseconds: 600),
-              animationCurve: Curves.easeInOut,
-              highlightColor: systemColor,
-              iconPadding: const EdgeInsets.only(left: 6),
-              labelPadding: const EdgeInsets.only(left: 4),
-              backgroundColor: Colors.transparent)),
+        brightness: ref.watch(provider.systemThemeProvider),
+        accentColor: systemColor.toAccentColor(),
+        navigationPaneTheme: NavigationPaneThemeData(
+          animationDuration: const Duration(milliseconds: 600),
+          animationCurve: Curves.easeInOut,
+          highlightColor: systemColor,
+          iconPadding: const EdgeInsets.only(left: 6),
+          labelPadding: const EdgeInsets.only(left: 4),
+          backgroundColor: Colors.transparent,
+        ),
+      ),
       debugShowCheckedModeBanner: false,
       title: 'WTbgA',
       builder: (_, child) {
@@ -131,12 +133,15 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
             SizedBox(
               height: kWindowCaptionHeight,
               child: WindowCaption(
-                title: Text('WTbgA',
-                    style: TextStyle(
-                        color: systemColor
-                            .toAccentColor()
-                            .harmonizeWith(Colors.red),
-                        fontWeight: FontWeight.bold)),
+                title: Text(
+                  'WTbgA',
+                  style: TextStyle(
+                    color: systemColor.toAccentColor().harmonizeWith(
+                      Colors.red,
+                    ),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 brightness: Brightness.dark,
                 backgroundColor: Colors.transparent,
               ),
@@ -156,14 +161,14 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
   }
 
   Future<void> _trayInit() async {
-    await trayManager.setIcon(
-      'assets/app_icon.ico',
+    await trayManager.setIcon('assets/app_icon.ico');
+    Menu menu = Menu(
+      items: [
+        MenuItem(key: 'show-app', label: 'Show'),
+        MenuItem.separator(),
+        MenuItem(key: 'close-app', label: 'Exit'),
+      ],
     );
-    Menu menu = Menu(items: [
-      MenuItem(key: 'show-app', label: 'Show'),
-      MenuItem.separator(),
-      MenuItem(key: 'close-app', label: 'Exit'),
-    ]);
     await trayManager.setContextMenu(menu);
   }
 

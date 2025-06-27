@@ -11,19 +11,10 @@ import 'package:window_watcher/window_watcher.dart';
 import '../main.dart';
 import '../screens/widgets/loading_widget.dart';
 
-const wt = 'War Thunder';
-final List<String> wtTitles = [
-  wt,
-  '$wt (DirectX 12, 64bit)',
-  '$wt - In battle',
-  '$wt (DirectX 12, 64bit) - In battle',
-  '$wt - Waiting for game',
-  '$wt (DirectX 12, 64bit) - Waiting for game',
-  '$wt - Loading',
-  '$wt (DirectX 12, 64bit) - Loading',
-  '$wt - Test Flight',
-  '$wt (DirectX 12, 64bit) - Test Flight',
-];
+final RegExp wtTitleRegex = RegExp(
+  r'^War Thunder(?: \(DirectX 12, 64bit\))?(?: - (?:In battle|Waiting for game|Loading|Test Flight))?$',
+  caseSensitive: false,
+);
 
 class AppUtil {
   static Future<String> getAppDocsPath() async {
@@ -39,26 +30,32 @@ class AppUtil {
 
   static Future<String> getOpenRGBFolderPath() async {
     String appDocsPath = await AppUtil.getAppDocsPath();
-    Directory openRGBDir =
-        await Directory('$appDocsPath\\OpenRGB').create(recursive: true);
+    Directory openRGBDir = await Directory(
+      '$appDocsPath\\OpenRGB',
+    ).create(recursive: true);
     String openRGBPath = openRGBDir.path;
     return openRGBPath;
   }
 
   static Future<String> getOpenRGBExecutablePath(
-      BuildContext? context, bool check) async {
+    BuildContext? context,
+    bool check,
+  ) async {
     String openRGBPath = await getOpenRGBFolderPath();
-    File openRGBExecutable =
-        File('$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe');
+    File openRGBExecutable = File(
+      '$openRGBPath\\OpenRGB Windows 64-bit\\OpenRGB.exe',
+    );
     if (!(await openRGBExecutable.exists()) && check && context != null) {
       String docsPath = await AppUtil.getAppDocsPath();
       await showLoading(
-          // ignore: use_build_context_synchronously
-          context: context,
-          future: dio.download(
-              'https://openrgb.org/releases/release_0.9/OpenRGB_0.9_Windows_64_b5f46e3.zip',
-              '$docsPath\\OpenRGB.zip'),
-          message: 'Downloading OpenRGB...');
+        // ignore: use_build_context_synchronously
+        context: context,
+        future: dio.download(
+          'https://openrgb.org/releases/release_0.9/OpenRGB_0.9_Windows_64_b5f46e3.zip',
+          '$docsPath\\OpenRGB.zip',
+        ),
+        message: 'Downloading OpenRGB...',
+      );
       final File filePath = File('$docsPath\\OpenRGB.zip');
       final Uint8List bytes = await filePath.readAsBytes();
       final archive = ZipDecoder().decodeBytes(bytes);
@@ -70,8 +67,9 @@ class AppUtil {
             ..createSync(recursive: true)
             ..writeAsBytesSync(data);
         } else {
-          Directory('${p.dirname(filePath.path)}\\OpenRGB\\$filename')
-              .create(recursive: true);
+          Directory(
+            '${p.dirname(filePath.path)}\\OpenRGB\\$filename',
+          ).create(recursive: true);
         }
       }
     }
@@ -80,8 +78,9 @@ class AppUtil {
   }
 
   static Stream<Window?> getWTWindow() async* {
-    final stream =
-        Stream.periodic(const Duration(milliseconds: 1500), (_) async {
+    final stream = Stream.periodic(const Duration(milliseconds: 1500), (
+      _,
+    ) async {
       try {
         final list = await WindowWatcher.getWindows(getExe: true);
         final wtWindow = list.firstWhereOrNull((e) {

@@ -84,7 +84,7 @@ class SettingsState extends ConsumerState<Settings> {
                             ],
                           )
                         : const SizedBox(),
-                    error: (_, __) => const SizedBox(),
+                    error: (_, _) => const SizedBox(),
                     loading: () => const SizedBox()),
               Text(
                 'Main',
@@ -266,7 +266,7 @@ class SettingsState extends ConsumerState<Settings> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('WTbgA', style: theme.typography.body),
-                        Text('2024 Vonarian 😎',
+                        Text('2025 Vonarian 😎',
                             style: theme.typography.caption),
                       ],
                     ),
