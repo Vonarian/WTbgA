@@ -51,8 +51,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     if (!context.mounted) return;
     if (ias != null) {
       if (ias! >= ref.read(provider.gearLimitProvider) && gear! > 20) {
-        await audio.play(AssetSource('sounds/beep.wav'),
-            volume: 0.22, mode: PlayerMode.lowLatency);
+        await audio.play(
+          AssetSource('sounds/beep.wav'),
+          volume: 0.22,
+          mode: PlayerMode.lowLatency,
+        );
       }
     }
   }
@@ -65,7 +68,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       final double maxLoad = (!fmData!.isSweptWing
           ? fmData!.critWingOverload.positive
           : -fmData!.critWingOverload.positive /
-              ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
+                ((fmData!.emptyMass + fuelMass) * 9.81 / 2));
       if (load == null) return false;
       if ((load)! >= (maxLoad - (0.09 * maxLoad))) {
         return true;
@@ -85,7 +88,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     final inMatch = ref.read(provider.inMatchProvider);
     final client = ref.read(provider.orgbClientProvider);
     if (!appSettings.fullNotif) return;
-    if (damage == defaultDamage) return;
+    if (damage == Damage.base) return;
     if (appSettings.engineWarning.enabled &&
         inMatch &&
         damage.msg == 'Engine died: no fuel') {
@@ -98,7 +101,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (client.hasValue) {
         final controllersProvider = ref.read(provider.orgbControllersProvider);
         await flashNTimes(
-            client!, controllersProvider, Modes.overHeat, rgbSettings);
+          client!,
+          controllersProvider,
+          Modes.overHeat,
+          rgbSettings,
+        );
       }
     }
     if (appSettings.overHeatWarning.enabled &&
@@ -108,7 +115,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (client.hasValue) {
         final controllersProvider = ref.read(provider.orgbControllersProvider);
         await flashNTimes(
-            client!, controllersProvider, Modes.overHeat, rgbSettings);
+          client!,
+          controllersProvider,
+          Modes.overHeat,
+          rgbSettings,
+        );
       }
     }
     if (appSettings.overHeatWarning.enabled &&
@@ -118,7 +129,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (client.hasValue) {
         final controllersProvider = ref.read(provider.orgbControllersProvider);
         await flashNTimes(
-            client!, controllersProvider, Modes.overHeat, rgbSettings);
+          client!,
+          controllersProvider,
+          Modes.overHeat,
+          rgbSettings,
+        );
       }
     }
     if (appSettings.engineWarning.enabled &&
@@ -136,10 +151,15 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
-          final controllersProvider =
-              ref.read(provider.orgbControllersProvider);
+          final controllersProvider = ref.read(
+            provider.orgbControllersProvider,
+          );
           await flashNTimes(
-              client!, controllersProvider, Modes.overHeat, rgbSettings);
+            client!,
+            controllersProvider,
+            Modes.overHeat,
+            rgbSettings,
+          );
         }
       }
     } else if (inMatch && damage.msg.contains('shot down')) {
@@ -163,13 +183,18 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> flashNTimes(OpenRGBClient client, List<RGBController> data,
-      Modes mode, OpenRGBSettings settings) async {
+  Future<void> flashNTimes(
+    OpenRGBClient client,
+    List<RGBController> data,
+    Modes mode,
+    OpenRGBSettings settings,
+  ) async {
     if (mode == Modes.fire) {
       for (int i = 0; i < settings.flashTimes; i++) {
         await settings.setAllFire(client, data);
         await Future.delayed(
-            Duration(milliseconds: settings.delayBetweenFlashes));
+          Duration(milliseconds: settings.delayBetweenFlashes),
+        );
         await OpenRGBSettings.setAllOff(client, data);
         await Future.delayed(const Duration(milliseconds: 200));
       }
@@ -178,7 +203,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       for (int i = 0; i < settings.flashTimes; i++) {
         await settings.setAllOverHeat(client, data);
         await Future.delayed(
-            Duration(milliseconds: settings.delayBetweenFlashes));
+          Duration(milliseconds: settings.delayBetweenFlashes),
+        );
         await OpenRGBSettings.setAllOff(client, data);
         await Future.delayed(const Duration(milliseconds: 200));
       }
@@ -186,12 +212,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   final ValueNotifier<int> idData = ValueNotifier<int>(0);
-  final defaultDamage = const Damage(id: 0, msg: '');
 
   Future<void> updateMsgId() async {
     if (!ref.read(provider.inMatchProvider)) return;
     final value = await Damage.getDamages((idData.value));
-    if (damage != value && damage != defaultDamage && value != null) {
+    if (damage != value && damage != Damage.base && value != null) {
       damage = value;
     }
     idData.value = damage.id;
@@ -199,7 +224,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
   Future<void> flapChecker() async {
     if (!ref.read(provider.inMatchProvider)) return;
-    if (damage == defaultDamage) return;
+    if (damage == Damage.base) return;
     if (damage.msg == 'Asymmetric flap extension') {
       await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
     }
@@ -230,55 +255,73 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     final appSetting = ref.read(provider.appSettingsProvider);
     if (appEnum == AppSettingsEnum.engineSetting) {
       if (times == 0) {
-        await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.engineWarning.path),
+          volume: appSetting.engineWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times++;
       } else if (times == 1) {
-        await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.engineWarning.path),
+          volume: appSetting.engineWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times++;
       } else if (times == 2) {
-        await audio.play(DeviceFileSource(appSetting.engineWarning.path),
-            volume: appSetting.engineWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.engineWarning.path),
+          volume: appSetting.engineWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times = 0;
       }
     }
     if (appEnum == AppSettingsEnum.overHeatSetting) {
       if (times == 0) {
-        await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.overHeatWarning.path),
+          volume: appSetting.overHeatWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times++;
       } else if (times == 1) {
-        await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.overHeatWarning.path),
+          volume: appSetting.overHeatWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times++;
       } else if (times == 2) {
-        await audio.play(DeviceFileSource(appSetting.overHeatWarning.path),
-            volume: appSetting.overHeatWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.overHeatWarning.path),
+          volume: appSetting.overHeatWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times = 0;
       }
     }
     if (appEnum == AppSettingsEnum.overGSetting) {
       if (times == 0) {
-        await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.overGWarning.path),
+          volume: appSetting.overGWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times++;
       } else if (times == 1) {
-        await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.overGWarning.path),
+          volume: appSetting.overGWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times++;
       } else if (times == 2) {
-        await audio.play(DeviceFileSource(appSetting.overGWarning.path),
-            volume: appSetting.overGWarning.volume / 100,
-            mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(appSetting.overGWarning.path),
+          volume: appSetting.overGWarning.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
         times = 0;
       }
     }
@@ -302,7 +345,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     }
     if (climb.isNegative && (vertical! * -1) <= -15) {
       await PullUpData.checkAndPlayWarning(
-          altitude!, climb.toDouble(), ref.read(provider.appSettingsProvider));
+        altitude!,
+        climb.toDouble(),
+        ref.read(provider.appSettingsProvider),
+      );
     }
     return;
   }
@@ -327,8 +373,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         ref.read(provider.orgbClientProvider.notifier).state =
             await OpenRGBClient.connect();
         if (ref.read(provider.orgbClientProvider.notifier).state != null) {
-          ref.read(provider.orgbControllersProvider.notifier).state =
-              await ref.read(provider.orgbClientProvider)!.getAllControllers();
+          ref.read(provider.orgbControllersProvider.notifier).state = await ref
+              .read(provider.orgbClientProvider)!
+              .getAllControllers();
         }
       }
     });
@@ -356,7 +403,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     Future.delayed(Duration.zero, () async {
       if (secrets.firebaseInvalid) return;
       await PresenceService().configureUserPresence(
-          (await deviceInfo.windowsInfo).computerName, appVersion.toString());
+        (await deviceInfo.windowsInfo).computerName,
+        appVersion.toString(),
+      );
       await Future.delayed(const Duration(seconds: 50));
       if (!mounted) return;
       subscriptionForPresence = startListening(context);
@@ -400,8 +449,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       pullUp();
       if (loadChecker()) {
         final settings = ref.read(provider.appSettingsProvider).overGWarning;
-        await audio.play(DeviceFileSource(settings.path),
-            volume: settings.volume / 100, mode: PlayerMode.lowLatency);
+        await audio.play(
+          DeviceFileSource(settings.path),
+          volume: settings.volume / 100,
+          mode: PlayerMode.lowLatency,
+        );
       }
     });
     Future.delayed(Duration.zero, () async {
@@ -412,7 +464,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       }
       if (ref.read(provider.vehicleNameProvider) != null) {
         fmData = await FmData.getFlightModel(
-            namesMap[ref.read(provider.vehicleNameProvider)!]);
+          namesMap[ref.read(provider.vehicleNameProvider)!],
+        );
       }
     });
   }
@@ -435,11 +488,14 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   StreamSubscription? startListening(BuildContext context) {
     if (secrets.firebaseInvalid) return null;
     FirebaseDatabase db = FirebaseDatabase(
-        app: app, databaseURL: secrets.firebaseData?.databaseURL);
+      app: app,
+      databaseURL: secrets.firebaseData?.databaseURL,
+    );
     db.goOnline();
     return db.reference().onValue.listen((event) async {
       final data = event.snapshot.value;
-      final bool valid = data != null &&
+      final bool valid =
+          data != null &&
           data['title'] != null &&
           data['subtitle'] != null &&
           data['id'] != null &&
@@ -519,7 +575,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
           if (data != null) {
             await OpenRGBSettings.setJoinBattleEffect(
-                client!, data, settings.loadingColor);
+              client!,
+              data,
+              settings.loadingColor,
+            );
             await OpenRGBSettings.setAllOff(client, data);
           }
         } else {
@@ -528,7 +587,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
           OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
           if (client != null && data != null) {
             await OpenRGBSettings.setLoadingEffect(
-                client, data, settings.loadingColor);
+              client,
+              data,
+              settings.loadingColor,
+            );
           }
         }
       }
@@ -540,9 +602,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Map<String, String> convertNamesToMap(String csvStringNames) {
     Map<String, String> map = {};
 
-    for (final rows in LineSplitter.split(csvStringNames)
-        .skip(1)
-        .map((line) => line.split(';'))) {
+    for (final rows in LineSplitter.split(
+      csvStringNames,
+    ).skip(1).map((line) => line.split(';'))) {
       map[rows.first] = rows[1];
     }
 
@@ -564,19 +626,14 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   int? oil;
   int? water;
   FmData? fmData;
-  Damage damage = const Damage(
-    id: 0,
-    msg: '',
-  );
+  Damage damage = Damage.base;
   String namesPath = p.joinAll([
     p.dirname(Platform.resolvedExecutable),
     'data/flutter_assets/assets',
     'fm/'
-        'fm_names_db.csv'
+        'fm_names_db.csv',
   ]);
 
-  ValueNotifier<int?> chatIdSecond = ValueNotifier(null);
-  ValueNotifier<int?> chatIdFirst = ValueNotifier(null);
   bool isStopped = false;
   bool isUserIasFlapNew = false;
   bool isUserIasGearNew = false;
@@ -592,30 +649,31 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     startListeners();
     final theme = FluentTheme.of(context);
-    final fireBaseVersion =
-        ref.watch(provider.versionFBProvider(secrets.firebaseValid));
+    final fireBaseVersion = ref.watch(
+      provider.versionFBProvider(secrets.firebaseValid),
+    );
     final developerMessage = ref.watch(provider.developerMessageProvider);
     final gameRunning = ref.watch(provider.gameRunningProvider);
     final inMatch = ref.watch(provider.inMatchProvider);
     return NavigationView(
       appBar: NavigationAppBar(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    ' War Thunder background Assistant ${appVersion.isPreRelease ? '(Pre-release)' : ''}',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: theme.accentColor.lighter),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  ' War Thunder background Assistant ${appVersion.isPreRelease ? '(Pre-release)' : ''}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: theme.accentColor.lighter,
                   ),
-                  const SizedBox(
-                    width: 5,
-                  ),
-                  if (secrets.firebaseValid)
-                    fireBaseVersion.when(data: (data) {
+                ),
+                const SizedBox(width: 5),
+                if (secrets.firebaseValid)
+                  fireBaseVersion.when(
+                    data: (data) {
                       bool isNew = false;
                       if (data != null && data > appVersion) {
                         isNew = true;
@@ -625,106 +683,126 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                           builder: (context, set) => Text(
                             '$data available',
                             style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: theme.accentColor.lighter),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: theme.accentColor.lighter,
+                            ),
                           ),
                         );
                       } else {
                         return Text(
                           'v$data',
                           style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: theme.accentColor.lighter),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: theme.accentColor.lighter,
+                          ),
                         );
                       }
-                    }, error: (e, st) {
+                    },
+                    error: (e, st) {
                       return const SizedBox();
-                    }, loading: () {
+                    },
+                    loading: () {
                       return const SizedBox();
-                    }),
-                ],
-              ),
-              if (secrets.firebaseValid)
-                developerMessage.when(data: (data) {
+                    },
+                  ),
+              ],
+            ),
+            if (secrets.firebaseValid)
+              developerMessage.when(
+                data: (data) {
                   if (data != null) {
                     return Text(
                       'Developer\'s message: $data',
                       style: TextStyle(
-                          color: Colors.red, fontWeight: FontWeight.bold),
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
                     );
                   } else {
                     return const SizedBox();
                   }
-                }, error: (e, st) {
+                },
+                error: (e, st) {
                   return const SizedBox();
-                }, loading: () {
+                },
+                loading: () {
                   return const SizedBox();
-                }),
-            ],
-          ),
-          automaticallyImplyLeading: false,
-          actions: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (ref.watch(provider.orgbClientProvider).hasValue)
-                IconButton(
-                    icon: const Icon(
-                      FluentIcons.test_add,
-                      color: Color.fromRGBO(255, 222, 111, 1.0),
-                    ),
-                    onPressed: () async {
-                      var client = ref.read(provider.orgbClientProvider);
-                      if (client != null) {
-                        final data =
-                            ref.watch(provider.orgbControllersProvider);
-                        if (data.isNotEmpty) {
-                          displayInfoBar(context,
-                              builder: (context, close) => const InfoBar(
-                                    title: Text('Running Tests'),
-                                  ),
-                              duration: const Duration(seconds: 5));
-                          OpenRGBSettings settings = ref
-                              .read(provider.rgbSettingProvider.notifier)
-                              .state;
-                          await OpenRGBSettings.setDeathEffect(
-                              client, data, [255, 255]);
-                          await settings.setAllOverHeat(client, data);
-                          await Future.delayed(const Duration(seconds: 1));
-                          await settings.setAllFire(client, data);
-                          await Future.delayed(const Duration(seconds: 1));
-                          await OpenRGBSettings.setLoadingEffect(
-                              client, data, settings.loadingColor);
-                          await Future.delayed(const Duration(seconds: 3));
-                          await OpenRGBSettings.setJoinBattleEffect(
-                              client, data, settings.loadingColor,
-                              times: 6);
-                        } else {
-                          displayInfoBar(context,
-                              builder: (context, close) => const InfoBar(
-                                    severity: InfoBarSeverity.error,
-                                    title: Text('Unable to connect'),
-                                    content:
-                                        Text('No data found, please try again'),
-                                  ),
-                              duration: const Duration(seconds: 5));
-                        }
-                      }
-                    }),
+                },
+              ),
+          ],
+        ),
+        automaticallyImplyLeading: false,
+        actions: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (ref.watch(provider.orgbClientProvider).hasValue)
               IconButton(
-                icon: Image.asset(
-                  'assets/OpenRGB.png',
-                  height: 38,
+                icon: const Icon(
+                  FluentIcons.test_add,
+                  color: Color.fromRGBO(255, 222, 111, 1.0),
                 ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return StatefulBuilder(builder: (context, setState) {
+                onPressed: () async {
+                  var client = ref.read(provider.orgbClientProvider);
+                  if (client != null) {
+                    final data = ref.watch(provider.orgbControllersProvider);
+                    if (data.isNotEmpty) {
+                      displayInfoBar(
+                        context,
+                        builder: (context, close) =>
+                            const InfoBar(title: Text('Running Tests')),
+                        duration: const Duration(seconds: 5),
+                      );
+                      OpenRGBSettings settings = ref
+                          .read(provider.rgbSettingProvider.notifier)
+                          .state;
+                      await OpenRGBSettings.setDeathEffect(client, data, [
+                        255,
+                        255,
+                      ]);
+                      await settings.setAllOverHeat(client, data);
+                      await Future.delayed(const Duration(seconds: 1));
+                      await settings.setAllFire(client, data);
+                      await Future.delayed(const Duration(seconds: 1));
+                      await OpenRGBSettings.setLoadingEffect(
+                        client,
+                        data,
+                        settings.loadingColor,
+                      );
+                      await Future.delayed(const Duration(seconds: 3));
+                      await OpenRGBSettings.setJoinBattleEffect(
+                        client,
+                        data,
+                        settings.loadingColor,
+                        times: 6,
+                      );
+                    } else {
+                      displayInfoBar(
+                        context,
+                        builder: (context, close) => const InfoBar(
+                          severity: InfoBarSeverity.error,
+                          title: Text('Unable to connect'),
+                          content: Text('No data found, please try again'),
+                        ),
+                        duration: const Duration(seconds: 5),
+                      );
+                    }
+                  }
+                },
+              ),
+            IconButton(
+              icon: Image.asset('assets/OpenRGB.png', height: 38),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return StatefulBuilder(
+                      builder: (context, setState) {
                         return ContentDialog(
                           content: const Text(
-                              'OpenRGB is a free software that allows WTbgA to control the RGB LED lights of your machine depending on in-game events'),
+                            'OpenRGB is a free software that allows WTbgA to control the RGB LED lights of your machine depending on in-game events',
+                          ),
                           actions: [
                             HyperlinkButton(
                               child: const Text('Cancel'),
@@ -736,11 +814,16 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 await ref
                                     .read(provider.orgbClientProvider)
                                     ?.disconnect();
-                                await Process.run(
-                                    'taskkill', ['/IM', 'OpenRGB.exe']);
+                                await Process.run('taskkill', [
+                                  '/IM',
+                                  'OpenRGB.exe',
+                                ]);
                                 ref
-                                    .read(provider.orgbClientProvider.notifier)
-                                    .state = null;
+                                        .read(
+                                          provider.orgbClientProvider.notifier,
+                                        )
+                                        .state =
+                                    null;
                                 if (context.mounted) {
                                   Navigator.pop(context);
                                 }
@@ -748,18 +831,18 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                             ),
                             HyperlinkButton(
                               child: Text(
-                                  'Auto start: ${ref.watch(provider.rgbSettingProvider).autoStart ? 'On' : 'Off'}'),
+                                'Auto start: ${ref.watch(provider.rgbSettingProvider).autoStart ? 'On' : 'Off'}',
+                              ),
                               onPressed: () async {
                                 ref
-                                        .read(provider.rgbSettingProvider.notifier)
-                                        .state =
-                                    ref
-                                        .read(provider.rgbSettingProvider)
-                                        .copyWith(
-                                            autoStart: !ref
-                                                .read(
-                                                    provider.rgbSettingProvider)
-                                                .autoStart);
+                                    .read(provider.rgbSettingProvider.notifier)
+                                    .state = ref
+                                    .read(provider.rgbSettingProvider)
+                                    .copyWith(
+                                      autoStart: !ref
+                                          .read(provider.rgbSettingProvider)
+                                          .autoStart,
+                                    );
                                 setState(() {});
                                 await ref
                                     .read(provider.rgbSettingProvider.notifier)
@@ -772,52 +855,67 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                               onPressed: () async {
                                 String openRGBExe =
                                     await AppUtil.getOpenRGBExecutablePath(
-                                        context, true);
+                                      context,
+                                      true,
+                                    );
                                 await Process.start(
-                                    openRGBExe, ['--server', '--noautoconnect'],
-                                    workingDirectory: p.dirname(openRGBExe));
+                                  openRGBExe,
+                                  ['--server', '--noautoconnect'],
+                                  workingDirectory: p.dirname(openRGBExe),
+                                );
                                 if (!context.mounted) return;
                                 await showLoading(
-                                    context: context,
-                                    future: Future.delayed(
-                                        const Duration(milliseconds: 400)),
-                                    message: 'Starting...');
+                                  context: context,
+                                  future: Future.delayed(
+                                    const Duration(milliseconds: 400),
+                                  ),
+                                  message: 'Starting...',
+                                );
                                 if (!context.mounted) return;
                                 try {
                                   ref
-                                          .read(provider
-                                              .orgbClientProvider.notifier)
-                                          .state =
-                                      await showLoading(
-                                          context: context,
-                                          future: OpenRGBClient.connect(),
-                                          message: 'Connecting...');
+                                      .read(
+                                        provider.orgbClientProvider.notifier,
+                                      )
+                                      .state = await showLoading(
+                                    context: context,
+                                    future: OpenRGBClient.connect(),
+                                    message: 'Connecting...',
+                                  );
                                   ref
-                                          .read(provider
-                                              .orgbControllersProvider.notifier)
-                                          .state =
-                                      await ref
-                                          .read(provider
-                                              .orgbClientProvider.notifier)
-                                          .state!
-                                          .getAllControllers();
+                                      .read(
+                                        provider
+                                            .orgbControllersProvider
+                                            .notifier,
+                                      )
+                                      .state = await ref
+                                      .read(
+                                        provider.orgbClientProvider.notifier,
+                                      )
+                                      .state!
+                                      .getAllControllers();
                                   if (!context.mounted) return;
 
                                   await showLoading(
-                                      context: context,
-                                      future: Future.delayed(
-                                          const Duration(milliseconds: 600)),
-                                      message: 'Receiving data...');
+                                    context: context,
+                                    future: Future.delayed(
+                                      const Duration(milliseconds: 600),
+                                    ),
+                                    message: 'Receiving data...',
+                                  );
                                 } catch (e, st) {
                                   if (!context.mounted) return;
-                                  displayInfoBar(context,
-                                      builder: (context, close) => InfoBar(
-                                            title: const Text('Error'),
-                                            content: Text(e.toString()),
-                                          ),
-                                      duration: const Duration(seconds: 5));
+                                  displayInfoBar(
+                                    context,
+                                    builder: (context, close) => InfoBar(
+                                      title: const Text('Error'),
+                                      content: Text(e.toString()),
+                                    ),
+                                    duration: const Duration(seconds: 5),
+                                  );
                                   await Future.delayed(
-                                      const Duration(seconds: 5));
+                                    const Duration(seconds: 5),
+                                  );
                                   if (!context.mounted) return;
                                   showDialog(
                                     context: context,
@@ -839,444 +937,480 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 }
                                 if (!context.mounted) return;
                                 Navigator.pop(context);
-                                displayInfoBar(context,
-                                    builder: (context, close) => const InfoBar(
-                                          title: Text('Connected!'),
-                                          content: Text(
-                                              'Connection to OpenRGB server succeeded'),
-                                        ));
+                                displayInfoBar(
+                                  context,
+                                  builder: (context, close) => const InfoBar(
+                                    title: Text('Connected!'),
+                                    content: Text(
+                                      'Connection to OpenRGB server succeeded',
+                                    ),
+                                  ),
+                                );
                                 setState(() {});
                               },
                             ),
                           ],
                         );
-                      });
-                    },
-                    barrierDismissible: true,
-                  );
-                },
-              ),
-            ],
-          )),
+                      },
+                    );
+                  },
+                  barrierDismissible: true,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
       pane: NavigationPane(
-          selected: index,
-          displayMode: PaneDisplayMode.auto,
-          onChanged: (newIndex) {
-            setState(() {
-              index = newIndex;
-            });
-          },
-          items: [
-            PaneItem(
-              icon: const Icon(FluentIcons.home),
-              title: const Text('Home'),
-              body: ScaffoldPage(
-                  content: Flex(
+        selected: index,
+        displayMode: PaneDisplayMode.auto,
+        onChanged: (newIndex) {
+          setState(() {
+            index = newIndex;
+          });
+        },
+        items: [
+          PaneItem(
+            icon: const Icon(FluentIcons.home),
+            title: const Text('Home'),
+            body: ScaffoldPage(
+              content: Flex(
                 direction: Axis.horizontal,
                 children: [
                   Expanded(
                     child: StreamBuilder<StateData?>(
-                        stream: stateStream,
-                        builder: (context, AsyncSnapshot<StateData?> shot) {
-                          if (!gameRunning) {
-                            return Container(
-                              padding: const EdgeInsets.only(left: 20),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Not In Game',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 40),
+                      stream: stateStream,
+                      builder: (context, AsyncSnapshot<StateData?> shot) {
+                        if (!gameRunning) {
+                          return Container(
+                            padding: const EdgeInsets.only(left: 20),
+                            alignment: Alignment.center,
+                            child: const Text(
+                              'Not In Game',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 40,
                               ),
-                            );
-                          }
-                          if (shot.hasData) {
-                            if (!inMatch) {
-                              return Flex(
-                                direction: Axis.vertical,
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.only(left: 20),
-                                      alignment: Alignment.center,
-                                      child: const Text(
-                                        'Not In Match',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }
-                            final data = shot.data!;
-                            ias = data.ias;
-                            gear = data.gear;
-                            flap = data.flaps;
-                            altitude = data.altitude;
-                            oil = data.oilTemp1C;
-                            water = data.waterTemp1C;
-                            aoa = data.aoa;
-                            load = data.load;
-                            fuelMass = data.fuel;
-                            climb = data.climb.toInt();
-                            double fuelPercents =
-                                data.fuel / data.maxFuel * 100;
+                            ),
+                          );
+                        }
+                        if (shot.hasData) {
+                          if (!inMatch) {
                             return Flex(
                               direction: Axis.vertical,
                               children: [
                                 Expanded(
                                   child: Container(
                                     padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 40),
-                                            text:
-                                                'Throttle= ${data.throttle1} %')
-                                      ]),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 40),
-                                              text: 'IAS= ${data.ias} km/h')
-                                        ],
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      'Not In Match',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40,
                                       ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      'Altitude= ${data.altitude} m',
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 40),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      'Climb= ${data.climb} m/s',
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 40),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                      padding: const EdgeInsets.only(left: 20),
-                                      alignment: Alignment.topLeft,
-                                      child: fuelPercents <= 13
-                                          ? AnimatedTextKit(
-                                              isRepeatingAnimation: true,
-                                              repeatForever: true,
-                                              animatedTexts: [
-                                                ColorizeAnimatedText(
-                                                  'Fuel= ${fuelPercents.toStringAsFixed(1)} %',
-                                                  textStyle: const TextStyle(
-                                                      fontSize: 40,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.white),
-                                                  colors: [
-                                                    Colors.red,
-                                                    Colors.white,
-                                                  ],
-                                                ),
-                                              ],
-                                            )
-                                          : Text(
-                                              'Fuel= ${fuelPercents.toStringAsFixed(1)} %',
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 40),
-                                            )),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    alignment: Alignment.topLeft,
-                                    padding: const EdgeInsets.only(left: 20),
-                                    child: RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 40),
-                                              text:
-                                                  'Oil Temp= ${data.oilTemp1C}°c')
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 40),
-                                            text:
-                                                'Water Temp= ${data.waterTemp1C}°c')
-                                      ]),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      'AoA= ${data.aoa}°',
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 40),
                                     ),
                                   ),
                                 ),
                               ],
                             );
-                          } else if (shot.hasError) {
-                            return Center(
-                                child: AnimatedTextKit(
+                          }
+                          final data = shot.data!;
+                          ias = data.ias;
+                          gear = data.gear;
+                          flap = data.flaps;
+                          altitude = data.altitude;
+                          oil = data.oilTemp1C;
+                          water = data.waterTemp1C;
+                          aoa = data.aoa;
+                          load = data.load;
+                          fuelMass = data.fuel;
+                          climb = data.climb.toInt();
+                          double fuelPercents = data.fuel / data.maxFuel * 100;
+                          return Flex(
+                            direction: Axis.vertical,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40,
+                                          ),
+                                          text: 'Throttle= ${data.throttle1} %',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40,
+                                          ),
+                                          text: 'IAS= ${data.ias} km/h',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    'Altitude= ${data.altitude} m',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    'Climb= ${data.climb} m/s',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: fuelPercents <= 13
+                                      ? AnimatedTextKit(
+                                          isRepeatingAnimation: true,
+                                          repeatForever: true,
+                                          animatedTexts: [
+                                            ColorizeAnimatedText(
+                                              'Fuel= ${fuelPercents.toStringAsFixed(1)} %',
+                                              textStyle: const TextStyle(
+                                                fontSize: 40,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                              colors: [
+                                                Colors.red,
+                                                Colors.white,
+                                              ],
+                                            ),
+                                          ],
+                                        )
+                                      : Text(
+                                          'Fuel= ${fuelPercents.toStringAsFixed(1)} %',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  alignment: Alignment.topLeft,
+                                  padding: const EdgeInsets.only(left: 20),
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40,
+                                          ),
+                                          text: 'Oil Temp= ${data.oilTemp1C}°c',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40,
+                                          ),
+                                          text:
+                                              'Water Temp= ${data.waterTemp1C}°c',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    'AoA= ${data.aoa}°',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        } else if (shot.hasError) {
+                          return Center(
+                            child: AnimatedTextKit(
                               isRepeatingAnimation: true,
                               repeatForever: true,
                               animatedTexts: [
                                 ColorizeAnimatedText(
                                   'ERROR: NO DATA',
                                   textStyle: const TextStyle(
-                                      fontSize: 40,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white),
-                                  colors: [
-                                    Colors.red,
-                                    Colors.white,
-                                  ],
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  colors: [Colors.red, Colors.white],
                                 ),
                               ],
-                            ));
-                          } else {
-                            return const Center(
-                                child: SizedBox(
+                            ),
+                          );
+                        } else {
+                          return const Center(
+                            child: SizedBox(
                               height: 100,
                               width: 100,
                               child: ProgressRing(),
-                            ));
-                          }
-                        }),
+                            ),
+                          );
+                        }
+                      },
+                    ),
                   ),
                   Expanded(
                     child: StreamBuilder<IndicatorData?>(
-                        stream: indicatorStream,
-                        builder: (context, AsyncSnapshot<IndicatorData?> shot) {
-                          if (!gameRunning) {
-                            return Container(
-                              padding: const EdgeInsets.only(left: 20),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Not In Game',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 40),
+                      stream: indicatorStream,
+                      builder: (context, AsyncSnapshot<IndicatorData?> shot) {
+                        if (!gameRunning) {
+                          return Container(
+                            padding: const EdgeInsets.only(left: 20),
+                            alignment: Alignment.center,
+                            child: const Text(
+                              'Not In Game',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 40,
                               ),
-                            );
-                          }
-                          if (shot.hasData) {
-                            final data = shot.data!;
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (ref.read(provider.vehicleNameProvider) !=
-                                  data.type) {
-                                ref
-                                    .read(provider.vehicleNameProvider.notifier)
-                                    .state = data.type;
-                              }
-                            });
-                            vertical = data.vertical;
-                            final double mach = data.mach ?? 0;
-                            if (!inMatch) {
-                              return Column(
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.only(left: 20),
-                                      alignment: Alignment.center,
-                                      child: const Text(
-                                        'Not In Match',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 40),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
+                            ),
+                          );
+                        }
+                        if (shot.hasData) {
+                          final data = shot.data!;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (ref.read(provider.vehicleNameProvider) !=
+                                data.type) {
+                              ref
+                                  .read(provider.vehicleNameProvider.notifier)
+                                  .state = data
+                                  .type;
                             }
+                          });
+                          vertical = data.vertical;
+                          final double mach = data.mach ?? 0;
+                          if (!inMatch) {
                             return Column(
                               children: [
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.only(right: 20),
+                                    padding: const EdgeInsets.only(left: 20),
                                     alignment: Alignment.center,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 40),
-                                            text:
-                                                'Compass= ${data.compass?.toStringAsFixed(0) ?? ''}°')
-                                      ]),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(right: 20),
-                                    alignment: Alignment.center,
-                                    child: RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 40),
-                                            text:
-                                                'Mach= ${mach.toStringAsFixed(1)} M')
-                                      ]),
+                                    child: const Text(
+                                      'Not In Match',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ],
                             );
                           }
-                          if (shot.hasError) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (ref.read(provider.vehicleNameProvider) ==
-                                  null) {
-                                ref
-                                    .read(provider.vehicleNameProvider.notifier)
-                                    .state = null;
-                              }
-                            });
-                            return Center(
-                              child: Container(
-                                padding: const EdgeInsets.all(8.0),
-                                child: AnimatedTextKit(
-                                  isRepeatingAnimation: true,
-                                  repeatForever: true,
-                                  animatedTexts: [
-                                    ColorizeAnimatedText(
-                                      'ERROR: NO DATA',
-                                      textStyle: const TextStyle(
-                                          fontSize: 40,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                      colors: [
-                                        Colors.red,
-                                        Colors.white,
+                          return Column(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(right: 20),
+                                  alignment: Alignment.center,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40,
+                                          ),
+                                          text:
+                                              'Compass= ${data.compass?.toStringAsFixed(0) ?? ''}°',
+                                        ),
                                       ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            );
-                          } else {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(right: 20),
+                                  alignment: Alignment.center,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 40,
+                                          ),
+                                          text:
+                                              'Mach= ${mach.toStringAsFixed(1)} M',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                        if (shot.hasError) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (ref.read(provider.vehicleNameProvider) ==
+                                null) {
                               ref
-                                  .read(provider.vehicleNameProvider.notifier)
-                                  .state = '';
-                            });
-                            return const Center(
-                                child: SizedBox(
+                                      .read(
+                                        provider.vehicleNameProvider.notifier,
+                                      )
+                                      .state =
+                                  null;
+                            }
+                          });
+                          return Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(8.0),
+                              child: AnimatedTextKit(
+                                isRepeatingAnimation: true,
+                                repeatForever: true,
+                                animatedTexts: [
+                                  ColorizeAnimatedText(
+                                    'ERROR: NO DATA',
+                                    textStyle: const TextStyle(
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    colors: [Colors.red, Colors.white],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        } else {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            ref
+                                    .read(provider.vehicleNameProvider.notifier)
+                                    .state =
+                                '';
+                          });
+                          return const Center(
+                            child: SizedBox(
                               height: 100,
                               width: 100,
                               child: ProgressRing(),
-                            ));
-                          }
-                        }),
-                  )
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
                 ],
-              )),
-            ),
-            PaneItem(
-              icon: const Icon(FluentIcons.nav2_d_map_view),
-              title: const Text('Game Map'),
-              body: InteractiveViewer(
-                child: GameMap(
-                  isInMatch: inMatch,
-                ),
               ),
             ),
-            PaneItem(
-              icon: const Icon(FluentIcons.chat),
-              title: const Text('Game Chat'),
-              body: const Chat(),
+          ),
+          PaneItem(
+            icon: const Icon(FluentIcons.nav2_d_map_view),
+            title: const Text('Game Map'),
+            body: InteractiveViewer(child: GameMap(isInMatch: inMatch)),
+          ),
+          PaneItem(
+            icon: const Icon(FluentIcons.chat),
+            title: const Text('Game Chat'),
+            body: const Chat(),
+          ),
+          PaneItem(
+            icon: const Icon(FluentIcons.settings),
+            title: const Text('Settings'),
+            infoBadge: fireBaseVersion.when(
+              data: (data) {
+                bool isNew = false;
+                if (data.hasValue && data! > appVersion) {
+                  isNew = true;
+                }
+                return isNew ? const InfoBadge(source: Text('!')) : null;
+              },
+              error: (e, st) => null,
+              loading: () => null,
             ),
-            PaneItem(
-              icon: const Icon(FluentIcons.settings),
-              title: const Text('Settings'),
-              infoBadge: fireBaseVersion.when(
-                  data: (data) {
-                    bool isNew = false;
-                    if (data.hasValue && data! > appVersion) {
-                      isNew = true;
-                    }
-                    return isNew ? const InfoBadge(source: Text('!')) : null;
-                  },
-                  error: (e, st) => null,
-                  loading: () => null),
-              body: const Settings(),
-            ),
-            // if (ref.watch(provider.orgbClientProvider).notNull &&
-            //     ref.watch(provider.orgbControllersProvider).notNull &&
-            //     ref.watch(provider.orgbControllersProvider).isNotEmpty)
-            //   PaneItem(
-            //     icon: Icon(
-            //       FluentIcons.settings,
-            //       color: Colors.red,
-            //     ),
-            //     title: const Text('OpenRGB Settings'),
-            //     body: const RGBSettings(),
-            //   ),
-          ]),
+            body: const Settings(),
+          ),
+          // if (ref.watch(provider.orgbClientProvider).notNull &&
+          //     ref.watch(provider.orgbControllersProvider).notNull &&
+          //     ref.watch(provider.orgbControllersProvider).isNotEmpty)
+          //   PaneItem(
+          //     icon: Icon(
+          //       FluentIcons.settings,
+          //       color: Colors.red,
+          //     ),
+          //     title: const Text('OpenRGB Settings'),
+          //     body: const RGBSettings(),
+          //   ),
+        ],
+      ),
     );
   }
 }

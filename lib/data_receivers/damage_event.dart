@@ -6,6 +6,8 @@ class Damage {
   final int id;
   final String msg;
 
+  static const base = Damage(id: 0, msg: '');
+
   static Future<Damage?> getDamages(int lastDmg) async {
     try {
       final response = await dio.get(
@@ -17,7 +19,7 @@ class Damage {
                   .toList()
               as List<Damage>;
       if (damageEvents.isEmpty) {
-        throw Exception('Empty response');
+        return null;
       }
       return damageEvents.last;
     } catch (e, st) {
