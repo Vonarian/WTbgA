@@ -1398,17 +1398,6 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             ),
             body: const Settings(),
           ),
-          // if (ref.watch(provider.orgbClientProvider).notNull &&
-          //     ref.watch(provider.orgbControllersProvider).notNull &&
-          //     ref.watch(provider.orgbControllersProvider).isNotEmpty)
-          //   PaneItem(
-          //     icon: Icon(
-          //       FluentIcons.settings,
-          //       color: Colors.red,
-          //     ),
-          //     title: const Text('OpenRGB Settings'),
-          //     body: const RGBSettings(),
-          //   ),
         ],
       ),
     );

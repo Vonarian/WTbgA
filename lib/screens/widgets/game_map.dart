@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
@@ -291,7 +292,10 @@ class GameMapState extends ConsumerState<GameMap>
                   }
                   if (snapshot.hasError) {
                     if (kDebugMode) {
-                      print(snapshot.error);
+                      log(
+                        snapshot.error.toString(),
+                        stackTrace: snapshot.stackTrace,
+                      );
                     }
                     return const SizedBox();
                   } else {

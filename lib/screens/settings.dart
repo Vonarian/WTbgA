@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher_string.dart';
 
 import '../main.dart';
 import '../models/data_class.dart';
-import '../models/settings/app_settings.dart';
 import '../services/extensions.dart';
 import 'downloader.dart';
 import 'widgets/card_highlight.dart';
@@ -129,74 +128,443 @@ class SettingsState extends ConsumerState<Settings> {
                 ),
               ),
               Text('Notifiers', style: theme.typography.bodyStrong),
-              CardHighlight(
-                leading: const Icon(FluentIcons.alert_settings, size: 20),
-                title: Text('Engine Warnings', style: theme.typography.body),
-                description: Text(
-                  'Enables/Disables engine warnings',
-                  style: theme.typography.caption,
-                ),
-                trailing: ToggleSwitch(
-                  checked: appSettings.engineWarning.enabled,
-                  onChanged: (value) async {
-                    appSettingsNotifier.setEngineWarning(enabled: value);
-                  },
+              // Engine Warning Card
+              Card(
+                backgroundColor: Colors.transparent,
+                borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+                margin: const EdgeInsets.only(right: 30, bottom: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(FluentIcons.alert_settings, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Engine Warnings',
+                                  style: theme.typography.body,
+                                ),
+                                Text(
+                                  'Enables/Disables engine warnings',
+                                  style: theme.typography.caption,
+                                ),
+                                const Gap(10),
+                              ],
+                            ),
+                          ),
+                          ToggleSwitch(
+                            checked: appSettings.engineWarning.enabled,
+                            onChanged: (value) async {
+                              appSettingsNotifier.setEngineWarning(
+                                enabled: value,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      Expander(
+                        header: const Text('Adjust volume'),
+                        content: Row(
+                          children: [
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 500,
+                                ),
+                                child: Slider(
+                                  value: appSettings.engineWarning.volume,
+                                  min: 0,
+                                  max: 100,
+                                  divisions: 100,
+                                  label:
+                                      '${appSettings.engineWarning.volume.toInt()} %',
+                                  onChanged: (value) async {
+                                    ref
+                                        .read(
+                                          provider.appSettingsProvider.notifier,
+                                        )
+                                        .setEngineWarning(volume: value);
+                                  },
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(FluentIcons.play),
+                              onPressed: () async {
+                                await audio1.play(
+                                  DeviceFileSource(
+                                    appSettings.engineWarning.path,
+                                  ),
+                                  volume:
+                                      appSettings.engineWarning.volume / 100,
+                                  mode: PlayerMode.lowLatency,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        initiallyExpanded: false,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              CardHighlight(
-                leading: const Icon(FluentIcons.alert_settings, size: 20),
-                title: Text('Overheat Warnings', style: theme.typography.body),
-                description: Text(
-                  'Enables/Disables engine warnings',
-                  style: theme.typography.caption,
-                ),
-                trailing: ToggleSwitch(
-                  checked: appSettings.overHeatWarning.enabled,
-                  onChanged: (value) async {
-                    appSettingsNotifier.setOverHeatWarning(enabled: value);
-                  },
+              // Overheat Warning Card
+              Card(
+                backgroundColor: Colors.transparent,
+                borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+                margin: const EdgeInsets.only(right: 30, bottom: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(FluentIcons.alert_settings, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Overheat Warnings',
+                                  style: theme.typography.body,
+                                ),
+                                Text(
+                                  'Enables/Disables engine warnings',
+                                  style: theme.typography.caption,
+                                ),
+                                const Gap(10),
+                              ],
+                            ),
+                          ),
+                          ToggleSwitch(
+                            checked: appSettings.overHeatWarning.enabled,
+                            onChanged: (value) async {
+                              appSettingsNotifier.setOverHeatWarning(
+                                enabled: value,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      Expander(
+                        header: const Text('Adjust volume'),
+                        content: Row(
+                          children: [
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 500,
+                                ),
+                                child: Slider(
+                                  value: appSettings.overHeatWarning.volume,
+                                  min: 0,
+                                  max: 100,
+                                  divisions: 100,
+                                  label:
+                                      '${appSettings.overHeatWarning.volume.toInt()} %',
+                                  onChanged: (value) async {
+                                    ref
+                                        .read(
+                                          provider.appSettingsProvider.notifier,
+                                        )
+                                        .setOverHeatWarning(volume: value);
+                                  },
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(FluentIcons.play),
+                              onPressed: () async {
+                                await audio1.play(
+                                  DeviceFileSource(
+                                    appSettings.overHeatWarning.path,
+                                  ),
+                                  volume:
+                                      appSettings.overHeatWarning.volume / 100,
+                                  mode: PlayerMode.lowLatency,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        initiallyExpanded: false,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              CardHighlight(
-                leading: const Icon(FluentIcons.alert_settings, size: 20),
-                title: Text('OverG Warnings', style: theme.typography.body),
-                description: Text(
-                  'Enables/Disables OverG warnings',
-                  style: theme.typography.caption,
-                ),
-                trailing: ToggleSwitch(
-                  checked: appSettings.overGWarning.enabled,
-                  onChanged: (value) async {
-                    appSettingsNotifier.setOverGWarning(enabled: value);
-                  },
+              // OverG Warning Card
+              Card(
+                backgroundColor: Colors.transparent,
+                borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+                margin: const EdgeInsets.only(right: 30, bottom: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(FluentIcons.alert_settings, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'OverG Warnings',
+                                  style: theme.typography.body,
+                                ),
+                                Text(
+                                  'Enables/Disables OverG warnings',
+                                  style: theme.typography.caption,
+                                ),
+                                const Gap(10),
+                              ],
+                            ),
+                          ),
+                          ToggleSwitch(
+                            checked: appSettings.overGWarning.enabled,
+                            onChanged: (value) async {
+                              appSettingsNotifier.setOverGWarning(
+                                enabled: value,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      Expander(
+                        header: const Text('Adjust volume'),
+                        content: Row(
+                          children: [
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 500,
+                                ),
+                                child: Slider(
+                                  value: appSettings.overGWarning.volume,
+                                  min: 0,
+                                  max: 100,
+                                  divisions: 100,
+                                  label:
+                                      '${appSettings.overGWarning.volume.toInt()} %',
+                                  onChanged: (value) async {
+                                    ref
+                                        .read(
+                                          provider.appSettingsProvider.notifier,
+                                        )
+                                        .setOverGWarning(volume: value);
+                                  },
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(FluentIcons.play),
+                              onPressed: () async {
+                                await audio1.play(
+                                  DeviceFileSource(
+                                    appSettings.overGWarning.path,
+                                  ),
+                                  volume: appSettings.overGWarning.volume / 100,
+                                  mode: PlayerMode.lowLatency,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        initiallyExpanded: false,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              CardHighlight(
-                leading: const Icon(FluentIcons.alert_settings, size: 20),
-                title: Text('Pull up Warnings', style: theme.typography.body),
-                description: Text(
-                  'Enables/Disables Pull up warnings',
-                  style: theme.typography.caption,
-                ),
-                trailing: ToggleSwitch(
-                  checked: appSettings.pullUpSetting.enabled,
-                  onChanged: (value) async {
-                    appSettingsNotifier.setPullUpSetting(enabled: value);
-                  },
+              // Pull Up Warning Card
+              Card(
+                backgroundColor: Colors.transparent,
+                borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+                margin: const EdgeInsets.only(right: 30, bottom: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(FluentIcons.alert_settings, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Pull up Warnings',
+                                  style: theme.typography.body,
+                                ),
+                                Text(
+                                  'Enables/Disables Pull up warnings',
+                                  style: theme.typography.caption,
+                                ),
+                                const Gap(10),
+                              ],
+                            ),
+                          ),
+                          ToggleSwitch(
+                            checked: appSettings.pullUpSetting.enabled,
+                            onChanged: (value) async {
+                              appSettingsNotifier.setPullUpSetting(
+                                enabled: value,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      Expander(
+                        header: const Text('Adjust volume'),
+                        content: Row(
+                          children: [
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 500,
+                                ),
+                                child: Slider(
+                                  value: appSettings.pullUpSetting.volume,
+                                  min: 0,
+                                  max: 100,
+                                  divisions: 100,
+                                  label:
+                                      '${appSettings.pullUpSetting.volume.toInt()} %',
+                                  onChanged: (value) async {
+                                    ref
+                                        .read(
+                                          provider.appSettingsProvider.notifier,
+                                        )
+                                        .setPullUpSetting(volume: value);
+                                  },
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(FluentIcons.play),
+                              onPressed: () async {
+                                await audio1.play(
+                                  DeviceFileSource(
+                                    appSettings.pullUpSetting.path,
+                                  ),
+                                  volume:
+                                      appSettings.pullUpSetting.volume / 100,
+                                  mode: PlayerMode.lowLatency,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        initiallyExpanded: false,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              CardHighlight(
-                leading: const Icon(FluentIcons.close_pane_mirrored, size: 20),
-                title: Text('Proximity Warnings', style: theme.typography.body),
-                description: Text(
-                  'Enables/Disables Proximity warnings',
-                  style: theme.typography.caption,
-                ),
-                trailing: ToggleSwitch(
-                  checked: appSettings.proximitySetting.enabled,
-                  onChanged: (value) async {
-                    appSettingsNotifier.setProximitySetting(enabled: value);
-                  },
+              // Proximity Warning Card
+              Card(
+                backgroundColor: Colors.transparent,
+                borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+                margin: const EdgeInsets.only(right: 30, bottom: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(FluentIcons.close_pane_mirrored, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Proximity Warnings',
+                                  style: theme.typography.body,
+                                ),
+                                Text(
+                                  'Enables/Disables Proximity warnings',
+                                  style: theme.typography.caption,
+                                ),
+                                const Gap(10),
+                              ],
+                            ),
+                          ),
+                          ToggleSwitch(
+                            checked: appSettings.proximitySetting.enabled,
+                            onChanged: (value) async {
+                              appSettingsNotifier.setProximitySetting(
+                                enabled: value,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      Expander(
+                        header: const Text('Adjust volume'),
+                        content: Row(
+                          children: [
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 500,
+                                ),
+                                child: Slider(
+                                  value: appSettings.proximitySetting.volume,
+                                  min: 0,
+                                  max: 100,
+                                  divisions: 100,
+                                  label:
+                                      '${appSettings.proximitySetting.volume.toInt()} %',
+                                  onChanged: (value) async {
+                                    ref
+                                        .read(
+                                          provider.appSettingsProvider.notifier,
+                                        )
+                                        .setProximitySetting(volume: value);
+                                  },
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(FluentIcons.play),
+                              onPressed: () async {
+                                await audio1.play(
+                                  DeviceFileSource(
+                                    appSettings.proximitySetting.path,
+                                  ),
+                                  volume:
+                                      appSettings.proximitySetting.volume / 100,
+                                  mode: PlayerMode.lowLatency,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        initiallyExpanded: false,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               if (secrets.firebaseValid)
@@ -322,198 +690,6 @@ class SettingsState extends ConsumerState<Settings> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSliderEngine(AppSettings appSettings) {
-    return Row(
-      children: [
-        Slider(
-          value: appSettings.engineWarning.volume,
-          min: 0,
-          max: 100,
-          divisions: 100,
-          label: '${appSettings.engineWarning.volume.toInt()} %',
-          onChanged: (value) async {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .setEngineWarning(volume: value);
-          },
-          vertical: true,
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(FluentIcons.play),
-          onPressed: () async {
-            await audio1.play(
-              DeviceFileSource(appSettings.engineWarning.path),
-              volume: appSettings.engineWarning.volume / 100,
-              mode: PlayerMode.lowLatency,
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSliderOverHeat(AppSettings appSettings) {
-    return Row(
-      children: [
-        Slider(
-          value: appSettings.overHeatWarning.volume,
-          min: 0,
-          max: 100,
-          divisions: 100,
-          label: '${appSettings.overHeatWarning.volume.toInt()} %',
-          onChanged: (value) async {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .setOverHeatWarning(volume: value);
-          },
-          vertical: true,
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(FluentIcons.play),
-          onPressed: () async {
-            await audio1.play(
-              DeviceFileSource(appSettings.overHeatWarning.path),
-              volume: appSettings.overHeatWarning.volume / 100,
-              mode: PlayerMode.lowLatency,
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSliderOverG(AppSettings appSettings) {
-    return Row(
-      children: [
-        Slider(
-          value: appSettings.overGWarning.volume,
-          min: 0,
-          max: 100,
-          divisions: 100,
-          label: '${appSettings.overGWarning.volume.toInt()} %',
-          onChanged: (value) async {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .setOverGWarning(volume: value);
-          },
-          vertical: true,
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(FluentIcons.play),
-          onPressed: () async {
-            await audio1.play(
-              DeviceFileSource(appSettings.overGWarning.path),
-              volume: appSettings.overGWarning.volume / 100,
-              mode: PlayerMode.lowLatency,
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSliderPullUP(AppSettings appSettings) {
-    return Row(
-      children: [
-        Slider(
-          value: appSettings.pullUpSetting.volume,
-          min: 0,
-          max: 100,
-          divisions: 100,
-          label: '${appSettings.pullUpSetting.volume.toInt()} %',
-          onChanged: (value) async {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .setPullUpSetting(volume: value);
-          },
-          vertical: true,
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(FluentIcons.play),
-          onPressed: () async {
-            await audio1.play(
-              DeviceFileSource(appSettings.pullUpSetting.path),
-              volume: appSettings.pullUpSetting.volume / 100,
-              mode: PlayerMode.lowLatency,
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSliderProxy(AppSettings appSettings) {
-    return Row(
-      children: [
-        Slider(
-          value: appSettings.proximitySetting.volume,
-          min: 0,
-          max: 100,
-          divisions: 100,
-          label: '${appSettings.proximitySetting.volume.toInt()} %',
-          onChanged: (value) async {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .setProximitySetting(volume: value);
-          },
-          vertical: true,
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(FluentIcons.play),
-          onPressed: () async {
-            await audio1.play(
-              DeviceFileSource(appSettings.proximitySetting.path),
-              volume: appSettings.proximitySetting.volume / 100,
-              mode: PlayerMode.lowLatency,
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _distance(BuildContext context, AppSettings appSettings) {
-    return Column(
-      children: [
-        IconButton(
-          icon: const Icon(FluentIcons.add),
-          onPressed: () async {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .setProximitySetting(
-                  distance:
-                      ref
-                          .read(provider.appSettingsProvider)
-                          .proximitySetting
-                          .distance +
-                      100,
-                );
-          },
-        ),
-        IconButton(
-          icon: const Icon(FluentIcons.remove),
-          onPressed: () async {
-            ref
-                .read(provider.appSettingsProvider.notifier)
-                .setProximitySetting(
-                  distance:
-                      ref
-                          .read(provider.appSettingsProvider)
-                          .proximitySetting
-                          .distance -
-                      100,
-                );
-          },
-        ),
-      ],
     );
   }
 
