@@ -23,7 +23,7 @@ dependencies:
   shared_preferences: ^2.0.15
   hotkey_manager: ^0.1.7
   percent_indicator: 4.2.2
-  dio: 5.0.0
+  dio: ^5.0.0
   flutter_riverpod: ^2.1.1
   csv: ^5.0.1
   archive: ^3.3.0
