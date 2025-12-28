@@ -18,7 +18,6 @@ import 'package:version/version.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'models/secret_data.dart';
-import 'providers.dart';
 import 'screens/loading.dart';
 import 'screens/widgets/top_widget.dart';
 import 'services/utility.dart';
@@ -30,7 +29,7 @@ final dio = Dio();
 final audio = AudioPlayer();
 final audio1 = AudioPlayer();
 final audio2 = AudioPlayer();
-final provider = MyProvider();
+
 final deviceInfo = DeviceInfoPlugin();
 late String appDocPath;
 late final Version appVersion;
@@ -48,8 +47,9 @@ Future<void> main(List<String> arguments) async {
     await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     await Window.hideWindowControls();
     appDocPath = await AppUtil.getAppDocsPath();
-    final buildVersion =
-        int.parse(SysInfo.operatingSystemVersion.split('.').last);
+    final buildVersion = int.parse(
+      SysInfo.operatingSystemVersion.split('.').last,
+    );
     if (buildVersion >= 22000) {
       if (buildVersion > 22523) {
         await Window.setEffect(
@@ -90,7 +90,9 @@ Future<void> main(List<String> arguments) async {
   if (secrets.firebaseData != null) {
     await FirebaseDartFlutter.setup();
     app = await Firebase.initializeApp(
-        options: secrets.firebaseData!, name: 'wtbga-815e4');
+      options: secrets.firebaseData!,
+      name: 'wtbga-815e4',
+    );
   }
   runApp(
     ProviderScope(

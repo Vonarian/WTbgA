@@ -4,7 +4,8 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data_receivers/chat.dart';
-import '../../main.dart';
+
+import '../../providers.dart';
 
 class Chat extends ConsumerStatefulWidget {
   const Chat({super.key});
@@ -22,7 +23,7 @@ class ChatState extends ConsumerState<Chat> {
         timer.cancel();
         return;
       }
-      if (!ref.read(provider.inMatchProvider)) return;
+      if (!ref.read(inMatchProvider)) return;
       final data = await GameChat.getChat(id);
       if (data != null) {
         id = data.id;
@@ -45,23 +46,17 @@ class ChatState extends ConsumerState<Chat> {
               final data = _list[i];
               Color color = data.enemy ? Colors.red : Colors.blue;
               return ListTile(
-                subtitle: Text(_list[i].message,
-                    style: TextStyle(
-                      color: color,
-                    )),
+                subtitle: Text(
+                  _list[i].message,
+                  style: TextStyle(color: color),
+                ),
                 title: Text(
                   _list[i].sender,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
                 ),
               );
-            })
-        : const Center(
-            child: Text(
-              'No Chat to Show!',
-            ),
-          );
+            },
+          )
+        : const Center(child: Text('No Chat to Show!'));
   }
 }

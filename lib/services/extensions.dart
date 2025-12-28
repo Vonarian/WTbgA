@@ -43,11 +43,7 @@ extension ColorFromMap on color.Color {
 extension ColorToMap on color.Color {
   Map<String, num> toJson() {
     final color = toRgbColor();
-    return {
-      'r': color.r,
-      'g': color.g,
-      'b': color.b,
-    };
+    return {'r': color.r, 'g': color.g, 'b': color.b};
   }
 }
 
@@ -70,22 +66,21 @@ extension StringToJson on String {
 
 extension EnhancedWidgetList on List<Widget> {
   List<Widget> withDividerBetween(BuildContext context) => [
-        if (isNotEmpty) this[0],
-        for (int i = 1; i < length; i++) ...[
-          this[i],
-          Divider(
-              style: DividerThemeData(
-            decoration: BoxDecoration(
-                color: FluentTheme.of(context).scaffoldBackgroundColor),
-          )),
-        ],
-      ];
+    if (isNotEmpty) this[0],
+    for (int i = 1; i < length; i++) ...[
+      this[i],
+      Divider(
+        style: DividerThemeData(
+          decoration: BoxDecoration(
+            color: FluentTheme.of(context).scaffoldBackgroundColor,
+          ),
+        ),
+      ),
+    ],
+  ];
 
   List<Widget> withSpaceBetween(double space) => [
-        if (isNotEmpty) this[0],
-        for (int i = 1; i < length; i++) ...[
-          Gap(space),
-          this[i],
-        ],
-      ];
+    if (isNotEmpty) this[0],
+    for (int i = 1; i < length; i++) ...[Gap(space), this[i]],
+  ];
 }

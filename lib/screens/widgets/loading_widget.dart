@@ -12,11 +12,8 @@ Future<T> showLoading<T>({
 
   showDialog(
     context: context,
-    builder: (context) => _LoadingDialog(
-      future: future,
-      completer: completer,
-      message: message,
-    ),
+    builder: (context) =>
+        _LoadingDialog(future: future, completer: completer, message: message),
   ).then((value) {
     if (!completer.isCompleted) {
       // Dialog popped by something else
@@ -24,9 +21,7 @@ Future<T> showLoading<T>({
         completer.complete(value);
       } else {
         completer.completeError(
-          Exception(
-            'Loading Dialog popped with incompatible value',
-          ),
+          Exception('Loading Dialog popped with incompatible value'),
         );
       }
     }
@@ -55,15 +50,17 @@ class __LoadingDialogState extends State<_LoadingDialog> {
   @override
   void initState() {
     super.initState();
-    widget.future.then((value) {
-      widget.completer.complete(value);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    }).onError<Object>((error, stackTrace) {
-      widget.completer.completeError(error, stackTrace);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    });
+    widget.future
+        .then((value) {
+          widget.completer.complete(value);
+          if (!mounted) return;
+          Navigator.of(context).pop();
+        })
+        .onError<Object>((error, stackTrace) {
+          widget.completer.completeError(error, stackTrace);
+          if (!mounted) return;
+          Navigator.of(context).pop();
+        });
   }
 
   @override

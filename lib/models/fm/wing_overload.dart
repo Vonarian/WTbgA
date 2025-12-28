@@ -2,10 +2,7 @@ class WingOverload {
   final double positive;
   final double negative;
 
-  const WingOverload({
-    required this.positive,
-    required this.negative,
-  });
+  const WingOverload({required this.positive, required this.negative});
 
   factory WingOverload.load(String values) {
     final split = values.split(',');

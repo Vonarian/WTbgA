@@ -82,10 +82,7 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
             Visibility(
               visible: _animationController.value <= 0.9,
               child: Transform.translate(
-                offset: Tween<Offset>(
-                  begin: Offset(0, -size),
-                  end: Offset.zero,
-                )
+                offset: Tween<Offset>(begin: Offset(0, -size), end: Offset.zero)
                     .animate(
                       CurvedAnimation(
                         parent: _animationController,
@@ -103,30 +100,25 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
                   color: color,
                   startAngle: -3 * math.pi / 2,
                   colors: colors,
-                  endAngle: Tween<double>(
-                    begin: math.pi / (size * size),
-                    end: math.pi / 1.13,
-                  )
-                      .animate(
-                        CurvedAnimation(
-                          parent: _animationController,
-                          curve: const Interval(
-                            0.38,
-                            0.9,
-                          ),
-                        ),
-                      )
-                      .value,
+                  endAngle:
+                      Tween<double>(
+                            begin: math.pi / (size * size),
+                            end: math.pi / 1.13,
+                          )
+                          .animate(
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: const Interval(0.38, 0.9),
+                            ),
+                          )
+                          .value,
                 ),
               ),
             ),
             Visibility(
               visible: _animationController.value <= 0.9,
               child: Transform.translate(
-                offset: Tween<Offset>(
-                  begin: Offset(0, -size),
-                  end: Offset.zero,
-                )
+                offset: Tween<Offset>(begin: Offset(0, -size), end: Offset.zero)
                     .animate(
                       CurvedAnimation(
                         parent: _animationController,
@@ -144,20 +136,18 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
                   color: color,
                   colors: colors,
                   startAngle: -3 * math.pi / 2,
-                  endAngle: Tween<double>(
-                    begin: math.pi / (size * size),
-                    end: -math.pi / 1.13,
-                  )
-                      .animate(
-                        CurvedAnimation(
-                          parent: _animationController,
-                          curve: const Interval(
-                            0.38,
-                            0.9,
-                          ),
-                        ),
-                      )
-                      .value,
+                  endAngle:
+                      Tween<double>(
+                            begin: math.pi / (size * size),
+                            end: -math.pi / 1.13,
+                          )
+                          .animate(
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: const Interval(0.38, 0.9),
+                            ),
+                          )
+                          .value,
                 ),
               ),
             ),
@@ -171,20 +161,15 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
                 color: color,
                 colors: colors,
                 startAngle: -math.pi / 4,
-                endAngle: Tween<double>(
-                  begin: -math.pi / 7.4,
-                  end: -math.pi / 4,
-                )
-                    .animate(
-                      CurvedAnimation(
-                        parent: _animationController,
-                        curve: const Interval(
-                          0.9,
-                          0.96,
-                        ),
-                      ),
-                    )
-                    .value,
+                endAngle:
+                    Tween<double>(begin: -math.pi / 7.4, end: -math.pi / 4)
+                        .animate(
+                          CurvedAnimation(
+                            parent: _animationController,
+                            curve: const Interval(0.9, 0.96),
+                          ),
+                        )
+                        .value,
               ),
             ),
             // Left
@@ -198,17 +183,11 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
                 startAngle: -3 * math.pi / 4,
                 // endAngle: math.pi / 4
                 // endAngle: math.pi / 7.4
-                endAngle: Tween<double>(
-                  begin: math.pi / 7.4,
-                  end: math.pi / 4,
-                )
+                endAngle: Tween<double>(begin: math.pi / 7.4, end: math.pi / 4)
                     .animate(
                       CurvedAnimation(
                         parent: _animationController,
-                        curve: const Interval(
-                          0.9,
-                          0.96,
-                        ),
+                        curve: const Interval(0.9, 0.96),
                       ),
                     )
                     .value,
@@ -225,20 +204,15 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
                 colors: colors,
                 startAngle: -math.pi / 3.5,
                 // endAngle: math.pi / 28,
-                endAngle: Tween<double>(
-                  begin: math.pi / 1.273,
-                  end: math.pi / 28,
-                )
-                    .animate(
-                      CurvedAnimation(
-                        parent: _animationController,
-                        curve: const Interval(
-                          0.9,
-                          1.0,
-                        ),
-                      ),
-                    )
-                    .value,
+                endAngle:
+                    Tween<double>(begin: math.pi / 1.273, end: math.pi / 28)
+                        .animate(
+                          CurvedAnimation(
+                            parent: _animationController,
+                            curve: const Interval(0.9, 1.0),
+                          ),
+                        )
+                        .value,
               ),
             ),
 
@@ -251,20 +225,15 @@ class InkDropState extends State<InkDrop> with SingleTickerProviderStateMixin {
                 color: color,
                 startAngle: math.pi / 0.778,
                 colors: colors,
-                endAngle: Tween<double>(
-                  begin: -math.pi / 1.273,
-                  end: -math.pi / 27,
-                )
-                    .animate(
-                      CurvedAnimation(
-                        parent: _animationController,
-                        curve: const Interval(
-                          0.9,
-                          1.0,
-                        ),
-                      ),
-                    )
-                    .value,
+                endAngle:
+                    Tween<double>(begin: -math.pi / 1.273, end: -math.pi / 27)
+                        .animate(
+                          CurvedAnimation(
+                            parent: _animationController,
+                            curve: const Interval(0.9, 1.0),
+                          ),
+                        )
+                        .value,
               ),
             ),
           ],
@@ -287,8 +256,13 @@ class Arc extends CustomPainter {
   final double _startAngle;
   final List<Color> _colors;
 
-  Arc._(this._color, this._strokeWidth, this._startAngle, this._sweepAngle,
-      this._colors);
+  Arc._(
+    this._color,
+    this._strokeWidth,
+    this._startAngle,
+    this._sweepAngle,
+    this._colors,
+  );
 
   static Widget draw({
     required Color color,
@@ -297,14 +271,13 @@ class Arc extends CustomPainter {
     required double startAngle,
     required double endAngle,
     required List<Color> colors,
-  }) =>
-      SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(
-          painter: Arc._(color, strokeWidth, startAngle, endAngle, colors),
-        ),
-      );
+  }) => SizedBox(
+    width: size,
+    height: size,
+    child: CustomPaint(
+      painter: Arc._(color, strokeWidth, startAngle, endAngle, colors),
+    ),
+  );
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -319,9 +292,7 @@ class Arc extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = _strokeWidth
-      ..shader = LinearGradient(
-        colors: _colors,
-      ).createShader(rect);
+      ..shader = LinearGradient(colors: _colors).createShader(rect);
 
     canvas.drawArc(rect, _startAngle, _sweepAngle, useCenter, paint);
   }

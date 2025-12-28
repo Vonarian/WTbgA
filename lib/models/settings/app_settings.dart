@@ -74,51 +74,68 @@ class AppSettings {
 final defaultBeepPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
   'data\\flutter_assets\\assets',
-  'sounds\\beep.wav'
+  'sounds\\beep.wav',
 ]);
 final defaultPullUpPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
   'data\\flutter_assets\\assets',
-  'sounds\\pullup.mp3'
+  'sounds\\pullup.mp3',
 ]);
 final defaultProxyPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
   'data\\flutter_assets\\assets',
-  'sounds\\proxy.wav'
+  'sounds\\proxy.wav',
 ]);
 
 final defaultOverGPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
   'data\\flutter_assets\\assets',
-  'sounds\\overg.wav'
+  'sounds\\overg.wav',
 ]);
 final defaultPingPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
   'data\\flutter_assets\\assets',
-  'sounds\\ping.mp3'
+  'sounds\\ping.mp3',
 ]);
 
-class SettingsNotifier extends StateNotifier<AppSettings> {
-  bool pauseSave = false;
-
-  SettingsNotifier()
-      : super(AppSettings(
-          overHeatWarning:
-              OverHeatSetting(enabled: true, path: defaultBeepPath, volume: 22),
-          engineWarning:
-              EngineSetting(enabled: true, path: defaultBeepPath, volume: 22),
-          overGWarning:
-              OverGSetting(path: defaultOverGPath, enabled: true, volume: 22),
-          pullUpSetting:
-              PullUpSetting(enabled: true, path: defaultPullUpPath, volume: 22),
-          proximitySetting: ProximitySetting(
-              enabled: true, path: defaultProxyPath, volume: 22, distance: 850),
-          fullNotif: true,
-          startup: false,
-        ));
+class SettingsNotifier extends Notifier<AppSettings> {
+  @override
+  AppSettings build() {
+    return AppSettings(
+      overHeatWarning: OverHeatSetting(
+        enabled: true,
+        path: defaultBeepPath,
+        volume: 22,
+      ),
+      engineWarning: EngineSetting(
+        enabled: true,
+        path: defaultBeepPath,
+        volume: 22,
+      ),
+      overGWarning: OverGSetting(
+        path: defaultOverGPath,
+        enabled: true,
+        volume: 22,
+      ),
+      pullUpSetting: PullUpSetting(
+        enabled: true,
+        path: defaultPullUpPath,
+        volume: 22,
+      ),
+      proximitySetting: ProximitySetting(
+        enabled: true,
+        path: defaultProxyPath,
+        volume: 22,
+        distance: 850,
+      ),
+      fullNotif: true,
+      startup: false,
+    );
+  }
 
   void update(AppSettings settings) {
     state = settings;
+    save();
   }
 
   Future<void> save() async {
@@ -138,71 +155,82 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     }
   }
 
-  void setStartup(bool? value) => state = state.copyWith(startup: value);
-
-  void setFullNotif(bool? value) {
-    pauseSave = true;
-    setEngineWarning(enabled: value);
-    setOverHeatWarning(enabled: value);
-    setOverGWarning(enabled: value);
-    setPullUpSetting(enabled: value);
-    setProximitySetting(enabled: value);
-    pauseSave = false;
-    state = state.copyWith(fullNotif: value);
+  void setStartup(bool? value) {
+    state = state.copyWith(startup: value);
+    save();
   }
 
-  void setOverHeatWarning({String? path, bool? enabled, double? volume}) =>
-      state = state.copyWith(
-          overHeatWarning: state.overHeatWarning.copyWith(
+  void setFullNotif(bool? value) {
+    state = state.copyWith(
+      fullNotif: value,
+      engineWarning: state.engineWarning.copyWith(enabled: value),
+      overHeatWarning: state.overHeatWarning.copyWith(enabled: value),
+      overGWarning: state.overGWarning.copyWith(enabled: value),
+      pullUpSetting: state.pullUpSetting.copyWith(enabled: value),
+      proximitySetting: state.proximitySetting.copyWith(enabled: value),
+    );
+    save();
+  }
+
+  void setOverHeatWarning({String? path, bool? enabled, double? volume}) {
+    state = state.copyWith(
+      overHeatWarning: state.overHeatWarning.copyWith(
         volume: volume,
         enabled: enabled,
         path: path,
-      ));
+      ),
+    );
+    save();
+  }
 
   void setEngineWarning({String? path, bool? enabled, double? volume}) {
     state = state.copyWith(
-        engineWarning: state.engineWarning.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-    ));
+      engineWarning: state.engineWarning.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+      ),
+    );
+    save();
   }
 
   void setOverGWarning({String? path, bool? enabled, double? volume}) {
     state = state.copyWith(
-        overGWarning: state.overGWarning.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-    ));
+      overGWarning: state.overGWarning.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+      ),
+    );
+    save();
   }
 
   void setPullUpSetting({String? path, bool? enabled, double? volume}) {
     state = state.copyWith(
-        pullUpSetting: state.pullUpSetting.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-    ));
+      pullUpSetting: state.pullUpSetting.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+      ),
+    );
+    save();
   }
 
-  void setProximitySetting(
-      {String? path, bool? enabled, double? volume, int? distance}) {
+  void setProximitySetting({
+    String? path,
+    bool? enabled,
+    double? volume,
+    int? distance,
+  }) {
     state = state.copyWith(
-        proximitySetting: state.proximitySetting.copyWith(
-      volume: volume,
-      enabled: enabled,
-      path: path,
-      distance: distance,
-    ));
-  }
-
-  @override
-  set state(AppSettings value) {
-    super.state = value;
-    if (!pauseSave) {
-      save();
-    }
+      proximitySetting: state.proximitySetting.copyWith(
+        volume: volume,
+        enabled: enabled,
+        path: path,
+        distance: distance,
+      ),
+    );
+    save();
   }
 }
 

@@ -12,9 +12,7 @@ class CritAirSpeed {
   factory CritAirSpeed.load(String data, {required bool isSweptWing}) {
     final List<String> valuesSplit = data.split(',');
     if (!isSweptWing) {
-      return CritAirSpeed(
-        critAirSpeed: int.parse(valuesSplit[0]),
-      );
+      return CritAirSpeed(critAirSpeed: int.parse(valuesSplit[0]));
     }
     final List<double> states = [];
     final List<int> critAirSpeeds = [];

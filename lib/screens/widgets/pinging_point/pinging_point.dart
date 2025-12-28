@@ -42,17 +42,16 @@ class _PingingPointState extends State<PingingPoint> {
           duration: const Duration(milliseconds: 600),
           decoration: BoxDecoration(
             color: Colors.transparent,
-            border: Border.all(
-              width: 1,
-              color: Colors.red,
-            ),
+            border: Border.all(width: 1, color: Colors.red),
             shape: BoxShape.circle,
           ),
           child: Container(
             alignment: Alignment.center,
             height: 2,
-            decoration:
-                BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
           ),
         ),
       ],

@@ -17,7 +17,7 @@ String fmPath = p.joinAll([
   p.dirname(Platform.resolvedExecutable),
   'data/flutter_assets/assets',
   'fm',
-  'fm_data_db.csv'
+  'fm_data_db.csv',
 ]);
 
 // Name;Length;WingSpan;WingArea;EmptyMass;MaxFuelMass;CritAirSpd;CritAirSpdMach;CritGearSpd;CombatFlaps;TakeoffFlaps;CritFlapsSpd;CritWingOverload;NumEngines;RPM;MaxNitro;NitroConsum;CritAoA
@@ -78,8 +78,10 @@ class FmData {
           emptyMass: double.parse(data[4]),
           maxFuelMass: double.parse(data[5]),
           critAirSpd: CritAirSpeed.load(data[6], isSweptWing: isSweptWing),
-          critAirSpdMach:
-              CritAirSpeedMach.load(data[7], isSweptWing: isSweptWing),
+          critAirSpdMach: CritAirSpeedMach.load(
+            data[7],
+            isSweptWing: isSweptWing,
+          ),
           critGearSpd: double.parse(data[8]),
           flap: Flap.load(data[9], data[10], data[11]),
           critWingOverload: WingOverload.load(data[12]),
@@ -87,9 +89,7 @@ class FmData {
           rpm: RPM.load(data[14]),
           maxNitro: double.parse(data[15]),
           nitroConsume: double.parse(data[16]),
-          critAoA: CritAoA.load(
-            data[17],
-          ),
+          critAoA: CritAoA.load(data[17]),
           isSweptWing: isSweptWing,
         );
       }

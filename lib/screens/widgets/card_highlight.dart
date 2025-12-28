@@ -1,14 +1,15 @@
 import 'package:fluent_ui/fluent_ui.dart';
 
 class CardHighlight extends StatelessWidget {
-  const CardHighlight(
-      {super.key,
-      this.backgroundColor,
-      required this.title,
-      required this.description,
-      this.leading,
-      this.trailing,
-      this.onPressed});
+  const CardHighlight({
+    super.key,
+    this.backgroundColor,
+    required this.title,
+    required this.description,
+    this.leading,
+    this.trailing,
+    this.onPressed,
+  });
 
   final Widget title;
   final Widget description;

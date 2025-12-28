@@ -12,11 +12,7 @@ class OverHeatSetting {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'path': path,
-      'enabled': enabled,
-      'volume': volume,
-    };
+    return {'path': path, 'enabled': enabled, 'volume': volume};
   }
 
   factory OverHeatSetting.fromMap(Map<String, dynamic>? map) {
@@ -27,11 +23,7 @@ class OverHeatSetting {
     );
   }
 
-  OverHeatSetting copyWith({
-    String? path,
-    bool? enabled,
-    double? volume,
-  }) {
+  OverHeatSetting copyWith({String? path, bool? enabled, double? volume}) {
     return OverHeatSetting(
       path: path ?? this.path,
       enabled: enabled ?? this.enabled,
@@ -52,11 +44,7 @@ class OverGSetting {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'path': path,
-      'enabled': enabled,
-      'volume': volume,
-    };
+    return {'path': path, 'enabled': enabled, 'volume': volume};
   }
 
   factory OverGSetting.fromMap(Map<String, dynamic>? map) {
@@ -67,11 +55,7 @@ class OverGSetting {
     );
   }
 
-  OverGSetting copyWith({
-    String? path,
-    bool? enabled,
-    double? volume,
-  }) {
+  OverGSetting copyWith({String? path, bool? enabled, double? volume}) {
     return OverGSetting(
       path: path ?? this.path,
       enabled: enabled ?? this.enabled,
@@ -92,11 +76,7 @@ class EngineSetting {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'path': path,
-      'enabled': enabled,
-      'volume': volume,
-    };
+    return {'path': path, 'enabled': enabled, 'volume': volume};
   }
 
   factory EngineSetting.fromMap(Map<String, dynamic>? map) {
@@ -107,11 +87,7 @@ class EngineSetting {
     );
   }
 
-  EngineSetting copyWith({
-    String? path,
-    bool? enabled,
-    double? volume,
-  }) {
+  EngineSetting copyWith({String? path, bool? enabled, double? volume}) {
     return EngineSetting(
       path: path ?? this.path,
       enabled: enabled ?? this.enabled,
@@ -132,11 +108,7 @@ class PullUpSetting {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'volume': volume,
-      'path': path,
-    };
+    return {'enabled': enabled, 'volume': volume, 'path': path};
   }
 
   factory PullUpSetting.fromMap(Map<String, dynamic>? map) {
@@ -147,11 +119,7 @@ class PullUpSetting {
     );
   }
 
-  PullUpSetting copyWith({
-    bool? enabled,
-    double? volume,
-    String? path,
-  }) {
+  PullUpSetting copyWith({bool? enabled, double? volume, String? path}) {
     return PullUpSetting(
       enabled: enabled ?? this.enabled,
       volume: volume ?? this.volume,

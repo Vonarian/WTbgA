@@ -15,26 +15,29 @@ class IndicatorData {
   final double? vertical;
   final bool valid;
 
-  const IndicatorData(
-      {required this.type,
-      required this.throttle,
-      required this.mach,
-      required this.compass,
-      required this.engine,
-      required this.flap1,
-      required this.flap2,
-      required this.vertical,
-      required this.valid});
+  const IndicatorData({
+    required this.type,
+    required this.throttle,
+    required this.mach,
+    required this.compass,
+    required this.engine,
+    required this.flap1,
+    required this.flap2,
+    required this.vertical,
+    required this.valid,
+  });
 
   static Stream<IndicatorData?> getIndicator() async* {
-    final stream =
-        Stream.periodic(const Duration(milliseconds: 200), (_) async {
+    final stream = Stream.periodic(const Duration(milliseconds: 200), (
+      _,
+    ) async {
       try {
         final Response response = await dio
             .get('http://localhost:8111/indicators')
             .timeout(const Duration(milliseconds: 200));
-        final IndicatorData toolDataState =
-            IndicatorData.fromMap(response.data);
+        final IndicatorData toolDataState = IndicatorData.fromMap(
+          response.data,
+        );
         return toolDataState;
       } catch (e) {
         return null;

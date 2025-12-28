@@ -19,8 +19,9 @@ class GameChat {
 
   static Future<GameChat?> getChat(int lastId) async {
     try {
-      final response =
-          await dio.get('http://localhost:8111/gamechat?lastId=$lastId');
+      final response = await dio.get(
+        'http://localhost:8111/gamechat?lastId=$lastId',
+      );
       if (response.data.isEmpty) {
         throw Exception('Empty response');
       }

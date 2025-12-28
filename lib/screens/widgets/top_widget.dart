@@ -10,6 +10,7 @@ import 'package:version/version.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../main.dart';
+import '../../providers.dart';
 import '../../models/orgb_data_class.dart';
 import '../../services/presence.dart';
 import '../../services/utility.dart';
@@ -35,28 +36,28 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
       Color? systemColor = await DynamicColorPlugin.getAccentColor();
       Brightness brightness =
           WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      if (ref.read(provider.systemColorProvider.notifier).state !=
-              systemColor &&
-          systemColor != null) {
-        ref.read(provider.systemColorProvider.notifier).state = systemColor;
+      if (ref.read(systemColorProvider) != systemColor && systemColor != null) {
+        ref.read(systemColorProvider.notifier).set(systemColor);
       }
-      if (brightness != ref.read(provider.systemThemeProvider.notifier).state) {
-        ref.read(provider.systemThemeProvider.notifier).state = brightness;
+      if (brightness != ref.read(systemThemeProvider)) {
+        ref.read(systemThemeProvider.notifier).set(brightness);
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!context.mounted) return;
       await Future.delayed(const Duration(seconds: 1));
-      ref.read(provider.rgbSettingProvider.notifier).state =
-          fromDisk ?? const OpenRGBSettings();
-      if (ref.read(provider.rgbSettingProvider.notifier).state.autoStart) {
-        ref.read(provider.orgbClientProvider.notifier).state =
-            await OpenRGBClient.connect();
-        if (ref.read(provider.orgbClientProvider.notifier).state != null) {
-          ref.read(provider.orgbControllersProvider.notifier).state = await ref
-              .read(provider.orgbClientProvider)!
-              .getAllControllers();
+      ref
+          .read(rgbSettingProvider.notifier)
+          .set(fromDisk ?? const OpenRGBSettings());
+      if (ref.read(rgbSettingProvider).autoStart) {
+        ref
+            .read(orgbClientProvider.notifier)
+            .set(await OpenRGBClient.connect());
+        if (ref.read(orgbClientProvider) != null) {
+          ref
+              .read(orgbControllersProvider.notifier)
+              .set(await ref.read(orgbClientProvider)!.getAllControllers());
         }
       }
     });
@@ -80,16 +81,14 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
     }
     AppUtil.getWTWindow().listen((event) {
       if (event == null) {
-        ref.read(provider.gameRunningProvider.notifier).state = false;
+        ref.read(gameRunningProvider.notifier).set(false);
       } else {
-        ref.read(provider.gameRunningProvider.notifier).state = true;
-        if (ref.read(provider.wtFocusedProvider) != event.isActive) {
-          ref.read(provider.wtFocusedProvider.notifier).state = event.isActive;
+        ref.read(gameRunningProvider.notifier).set(true);
+        if (ref.read(wtFocusedProvider) != event.isActive) {
+          ref.read(wtFocusedProvider.notifier).set(event.isActive);
         }
-        if (ref.read(provider.inMatchProvider) != inMatch(event.title)) {
-          ref.read(provider.inMatchProvider.notifier).state = inMatch(
-            event.title,
-          );
+        if (ref.read(inMatchProvider) != inMatch(event.title)) {
+          ref.read(inMatchProvider.notifier).set(inMatch(event.title));
         }
       }
     });
@@ -111,10 +110,10 @@ class AppState extends ConsumerState<App> with TrayListener, WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    final systemColor = ref.watch(provider.systemColorProvider);
+    final systemColor = ref.watch(systemColorProvider);
     return FluentApp(
       theme: FluentThemeData(
-        brightness: ref.watch(provider.systemThemeProvider),
+        brightness: ref.watch(systemThemeProvider),
         accentColor: systemColor.toAccentColor(),
         navigationPaneTheme: NavigationPaneThemeData(
           animationDuration: const Duration(milliseconds: 600),

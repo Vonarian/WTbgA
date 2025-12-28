@@ -13,6 +13,7 @@ import '../../data_receivers/indicator_receiver.dart';
 import '../../data_receivers/map.dart';
 import '../../data_receivers/map_info.dart';
 import '../../main.dart';
+import '../../providers.dart';
 import '../../services/extensions.dart';
 import '../../services/helpers.dart';
 import 'pinging_point/pinging_point.dart';
@@ -46,7 +47,7 @@ class GameMapState extends ConsumerState<GameMap>
     });
     Timer.periodic(const Duration(milliseconds: 500), (timer) async {
       if (mounted) {
-        if (!ref.read(provider.inMatchProvider)) return;
+        if (!ref.read(inMatchProvider)) return;
         _getSizes();
         future = MapObj.mapObj();
         mapSize = (await MapInfo.getMapInfo()).mapMax * 2;
@@ -94,8 +95,8 @@ class GameMapState extends ConsumerState<GameMap>
   ];
 
   FutureBuilder<ui.Image> imageBuilder(MapObj e, Future<ui.Image> future) {
-    final settings = ref.watch(provider.appSettingsProvider);
-    final wtFocused = ref.watch(provider.wtFocusedProvider);
+    final settings = ref.watch(appSettingsProvider);
+    final wtFocused = ref.watch(wtFocusedProvider);
     double? distance;
     bool flag = false;
     if (player != null &&

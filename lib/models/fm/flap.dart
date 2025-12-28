@@ -27,10 +27,11 @@ class Flap {
     }
 
     return Flap(
-        combatFlaps: combatFlaps,
-        takeoffFlaps: takeoffFlaps,
-        criticalSpeeds: speeds,
-        states: states);
+      combatFlaps: combatFlaps,
+      takeoffFlaps: takeoffFlaps,
+      criticalSpeeds: speeds,
+      states: states,
+    );
   }
 
   @override

@@ -13,9 +13,7 @@ class WingSpan {
 
   factory WingSpan.load(String value, {required bool isSweptWing}) {
     if (!isSweptWing) {
-      return WingSpan(
-        span: double.parse(value),
-      );
+      return WingSpan(span: double.parse(value));
     } else {
       final split = value.split(',');
       final states = <double>[];
@@ -27,11 +25,7 @@ class WingSpan {
           spans.add(double.parse(split[i]));
         }
       }
-      return WingSpan(
-        span: 0,
-        states: states,
-        spans: spans,
-      );
+      return WingSpan(span: 0, states: states, spans: spans);
     }
   }
 

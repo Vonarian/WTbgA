@@ -7,7 +7,9 @@ import '../main.dart';
 
 class PresenceService {
   FirebaseDatabase database = FirebaseDatabase(
-      app: app, databaseURL: secrets.firebaseData?.databaseURL);
+    app: app,
+    databaseURL: secrets.firebaseData?.databaseURL,
+  );
   StreamSubscription? subscription;
   DatabaseReference? con;
 
@@ -23,20 +25,18 @@ class PresenceService {
       userNameRef.set(userName);
     }
     versionRef.set(version);
-    subscription = database
-        .reference()
-        .child('.info/connected')
-        .onValue
-        .listen((event) async {
-      if (event.snapshot.value) {
-        con = myConnectionsRef;
-        con?.onDisconnect().set(false);
-        con?.set(true);
-        DateFormat f = DateFormat('E, d MMM yyyy HH:mm:ss');
-        String date = '${f.format(DateTime.now().toUtc())} GMT';
-        lastOnlineRef.onDisconnect().set(date);
-      }
-    });
+    subscription = database.reference().child('.info/connected').onValue.listen(
+      (event) async {
+        if (event.snapshot.value) {
+          con = myConnectionsRef;
+          con?.onDisconnect().set(false);
+          con?.set(true);
+          DateFormat f = DateFormat('E, d MMM yyyy HH:mm:ss');
+          String date = '${f.format(DateTime.now().toUtc())} GMT';
+          lastOnlineRef.onDisconnect().set(date);
+        }
+      },
+    );
   }
 
   Stream<Event> getVersion() {
@@ -61,5 +61,4 @@ class PresenceService {
     }
     database.goOffline();
   }
-
 }

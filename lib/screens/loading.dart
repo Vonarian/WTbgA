@@ -35,27 +35,31 @@ class LoadingState extends State<Loading> {
             title: Text('Version: $version.'),
             content: const Text('Proceeding to update in 4 seconds!'),
             action: HyperlinkButton(
-                child: const Text('Cancel update'),
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (c, a1, a2) => const Home(),
-                      transitionsBuilder: (c, anim, a2, child) =>
-                          FadeTransition(opacity: anim, child: child),
-                      transitionDuration: const Duration(milliseconds: 1000),
-                    ),
-                  );
-                }),
+              child: const Text('Cancel update'),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (c, a1, a2) => const Home(),
+                    transitionsBuilder: (c, anim, a2, child) =>
+                        FadeTransition(opacity: anim, child: child),
+                    transitionDuration: const Duration(milliseconds: 1000),
+                  ),
+                );
+              },
+            ),
           ),
         );
 
         await Future.delayed(const Duration(seconds: 4), () async {});
         if (!mounted) return;
-        Navigator.of(context)
-            .pushReplacement(FluentPageRoute(builder: (context) {
-          return const Downloader();
-        }));
+        Navigator.of(context).pushReplacement(
+          FluentPageRoute(
+            builder: (context) {
+              return const Downloader();
+            },
+          ),
+        );
       } else {
         if (!mounted) return;
 
@@ -73,12 +77,14 @@ class LoadingState extends State<Loading> {
         );
       }
     } catch (e, st) {
-      displayInfoBar(context,
-          builder: (context, close) => const InfoBar(
-                title: Text('Error!'),
-                severity: InfoBarSeverity.error,
-                content: Text('Error checking for update!'),
-              ));
+      displayInfoBar(
+        context,
+        builder: (context, close) => const InfoBar(
+          title: Text('Error!'),
+          severity: InfoBarSeverity.error,
+          content: Text('Error checking for update!'),
+        ),
+      );
       log(e.toString(), stackTrace: st);
       Future.delayed(const Duration(seconds: 2), () async {
         if (!mounted) return;
@@ -105,37 +111,41 @@ class LoadingState extends State<Loading> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: [
-      ScaffoldPage(
+    return Stack(
+      children: [
+        ScaffoldPage(
           content: Center(
-        child: Stack(children: [
-          Center(
-              child: AnimatedTextKit(
-            isRepeatingAnimation: true,
-            repeatForever: true,
-            animatedTexts: [
-              ColorizeAnimatedText(
-                '..: Loading :..',
-                textStyle: TextStyle(
-                    color: Colors.red,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
-                colors: [
-                  Colors.purple,
-                  Colors.white,
-                ],
-              ),
-            ],
-          )),
-          const Center(
-            child: SizedBox(
-              height: 400,
-              width: 400,
-              child: ProgressRing(),
+            child: Stack(
+              children: [
+                Center(
+                  child: AnimatedTextKit(
+                    isRepeatingAnimation: true,
+                    repeatForever: true,
+                    animatedTexts: [
+                      ColorizeAnimatedText(
+                        '..: Loading :..',
+                        textStyle: TextStyle(
+                          color: Colors.red,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        colors: [Colors.purple, Colors.white],
+                      ),
+                    ],
+                  ),
+                ),
+                const Center(
+                  child: SizedBox(
+                    height: 400,
+                    width: 400,
+                    child: ProgressRing(),
+                  ),
+                ),
+              ],
             ),
           ),
-        ]),
-      )),
-    ]);
+        ),
+      ],
+    );
   }
 }

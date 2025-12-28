@@ -11,9 +11,7 @@ class CritAirSpeedMach {
 
   factory CritAirSpeedMach.load(String data, {required bool isSweptWing}) {
     if (!isSweptWing) {
-      return CritAirSpeedMach(
-        critMach: double.parse(data),
-      );
+      return CritAirSpeedMach(critMach: double.parse(data));
     }
     final List<String> valuesSplit = data.split(',');
 

@@ -8,6 +8,7 @@ import 'package:openrgb/data/rgb_controller.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../main.dart';
+import '../providers.dart';
 import '../models/data_class.dart';
 import '../services/extensions.dart';
 import 'downloader.dart';
@@ -55,11 +56,9 @@ class SettingsState extends ConsumerState<Settings> {
   }
 
   Widget settings(BuildContext context) {
-    final appSettings = ref.watch(provider.appSettingsProvider);
-    final appSettingsNotifier = ref.read(provider.appSettingsProvider.notifier);
-    final firebaseVersion = ref.watch(
-      provider.versionFBProvider(secrets.firebaseValid),
-    );
+    final appSettings = ref.watch(appSettingsProvider);
+    final appSettingsNotifier = ref.read(appSettingsProvider.notifier);
+    final firebaseVersion = ref.watch(versionFBProvider(secrets.firebaseValid));
     final theme = FluentTheme.of(context);
     return ScaffoldPage(
       header: Padding(
@@ -187,9 +186,7 @@ class SettingsState extends ConsumerState<Settings> {
                                       '${appSettings.engineWarning.volume.toInt()} %',
                                   onChanged: (value) async {
                                     ref
-                                        .read(
-                                          provider.appSettingsProvider.notifier,
-                                        )
+                                        .read(appSettingsProvider.notifier)
                                         .setEngineWarning(volume: value);
                                   },
                                 ),
@@ -275,9 +272,7 @@ class SettingsState extends ConsumerState<Settings> {
                                       '${appSettings.overHeatWarning.volume.toInt()} %',
                                   onChanged: (value) async {
                                     ref
-                                        .read(
-                                          provider.appSettingsProvider.notifier,
-                                        )
+                                        .read(appSettingsProvider.notifier)
                                         .setOverHeatWarning(volume: value);
                                   },
                                 ),
@@ -363,9 +358,7 @@ class SettingsState extends ConsumerState<Settings> {
                                       '${appSettings.overGWarning.volume.toInt()} %',
                                   onChanged: (value) async {
                                     ref
-                                        .read(
-                                          provider.appSettingsProvider.notifier,
-                                        )
+                                        .read(appSettingsProvider.notifier)
                                         .setOverGWarning(volume: value);
                                   },
                                 ),
@@ -450,9 +443,7 @@ class SettingsState extends ConsumerState<Settings> {
                                       '${appSettings.pullUpSetting.volume.toInt()} %',
                                   onChanged: (value) async {
                                     ref
-                                        .read(
-                                          provider.appSettingsProvider.notifier,
-                                        )
+                                        .read(appSettingsProvider.notifier)
                                         .setPullUpSetting(volume: value);
                                   },
                                 ),
@@ -538,9 +529,7 @@ class SettingsState extends ConsumerState<Settings> {
                                       '${appSettings.proximitySetting.volume.toInt()} %',
                                   onChanged: (value) async {
                                     ref
-                                        .read(
-                                          provider.appSettingsProvider.notifier,
-                                        )
+                                        .read(appSettingsProvider.notifier)
                                         .setProximitySetting(volume: value);
                                   },
                                 ),

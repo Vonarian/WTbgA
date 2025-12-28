@@ -11,9 +11,7 @@ class WingArea {
 
   factory WingArea.load(String value, {required bool isSweptWing}) {
     if (!isSweptWing) {
-      return WingArea(
-        area: double.parse(value),
-      );
+      return WingArea(area: double.parse(value));
     } else {
       final split = value.split(',');
 

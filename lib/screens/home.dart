@@ -19,6 +19,7 @@ import '../data_receivers/damage_event.dart';
 import '../data_receivers/indicator_receiver.dart';
 import '../data_receivers/state_receiver.dart';
 import '../main.dart';
+import '../providers.dart';
 import '../models/data_class.dart';
 import '../models/fm/fm_csv.dart';
 import '../models/orgb_data_class.dart';
@@ -46,11 +47,11 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   int times = 0;
 
   Future<void> userRedLineGear() async {
-    if (!ref.read(provider.inMatchProvider)) return;
+    if (!ref.read(inMatchProvider)) return;
 
     if (!context.mounted) return;
     if (ias != null) {
-      if (ias! >= ref.read(provider.gearLimitProvider) && gear! > 20) {
+      if (ias! >= ref.read(gearLimitProvider) && gear! > 20) {
         await audio.play(
           AssetSource('sounds/beep.wav'),
           volume: 0.22,
@@ -61,7 +62,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   bool loadChecker() {
-    if (!ref.read(provider.inMatchProvider)) return false;
+    if (!ref.read(inMatchProvider)) return false;
 
     if (!mounted) return false;
     if (fmData != null) {
@@ -81,12 +82,12 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   Future<void> vehicleStateCheck() async {
-    if (!ref.read(provider.inMatchProvider)) return;
+    if (!ref.read(inMatchProvider)) return;
     if (!context.mounted) return;
-    final appSettings = ref.read(provider.appSettingsProvider);
-    final rgbSettings = ref.read(provider.rgbSettingProvider);
-    final inMatch = ref.read(provider.inMatchProvider);
-    final client = ref.read(provider.orgbClientProvider);
+    final appSettings = ref.read(appSettingsProvider);
+    final rgbSettings = ref.read(rgbSettingProvider);
+    final inMatch = ref.read(inMatchProvider);
+    final client = ref.read(orgbClientProvider);
     if (!appSettings.fullNotif) return;
     if (damage == Damage.base) return;
     if (appSettings.engineWarning.enabled &&
@@ -99,7 +100,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         damage.msg == 'Engine overheated') {
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
-        final controllersProvider = ref.read(provider.orgbControllersProvider);
+        final controllersProvider = ref.read(orgbControllersProvider);
         await flashNTimes(
           client!,
           controllersProvider,
@@ -113,7 +114,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         damage.msg == 'Oil overheated') {
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
-        final controllersProvider = ref.read(provider.orgbControllersProvider);
+        final controllersProvider = ref.read(orgbControllersProvider);
         await flashNTimes(
           client!,
           controllersProvider,
@@ -127,7 +128,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         damage.msg == 'Water overheated') {
       tripleWarning(AppSettingsEnum.overHeatSetting);
       if (client.hasValue) {
-        final controllersProvider = ref.read(provider.orgbControllersProvider);
+        final controllersProvider = ref.read(orgbControllersProvider);
         await flashNTimes(
           client!,
           controllersProvider,
@@ -151,9 +152,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
-          final controllersProvider = ref.read(
-            provider.orgbControllersProvider,
-          );
+          final controllersProvider = ref.read(orgbControllersProvider);
           await flashNTimes(
             client!,
             controllersProvider,
@@ -167,7 +166,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
-          final data = ref.read(provider.orgbControllersProvider);
+          final data = ref.read(orgbControllersProvider);
           await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
         }
       }
@@ -176,7 +175,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (split[1].contains(prefs.getString('userName') ?? 'Unknown')) {
         tripleWarning(AppSettingsEnum.defaultSetting);
         if (client.hasValue) {
-          final data = ref.read(provider.orgbControllersProvider);
+          final data = ref.read(orgbControllersProvider);
           await OpenRGBSettings.setDeathEffect(client!, data, [255, 255]);
         }
       }
@@ -214,7 +213,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   final ValueNotifier<int> idData = ValueNotifier<int>(0);
 
   Future<void> updateMsgId() async {
-    if (!ref.read(provider.inMatchProvider)) return;
+    if (!ref.read(inMatchProvider)) return;
     final value = await Damage.getDamages((idData.value));
     if (damage != value && damage != Damage.base && value != null) {
       damage = value;
@@ -223,7 +222,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   Future<void> flapChecker() async {
-    if (!ref.read(provider.inMatchProvider)) return;
+    if (!ref.read(inMatchProvider)) return;
     if (damage == Damage.base) return;
     if (damage.msg == 'Asymmetric flap extension') {
       await audio.play(AssetSource('sounds/beep.wav'), volume: 0.22);
@@ -231,7 +230,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   bool critAoaChecker() {
-    if (!ref.read(provider.inMatchProvider)) return false;
+    if (!ref.read(inMatchProvider)) return false;
     if (aoa == null || gear == null || vertical == null || flap == null) {
       return false;
     }
@@ -252,7 +251,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
 
   Future<void> tripleWarning(AppSettingsEnum appEnum) async {
     if (!context.mounted) return;
-    final appSetting = ref.read(provider.appSettingsProvider);
+    final appSetting = ref.read(appSettingsProvider);
     if (appEnum == AppSettingsEnum.engineSetting) {
       if (times == 0) {
         await audio.play(
@@ -328,12 +327,12 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   }
 
   Future<void> receiveDiskValues() async {
-    await ref.read(provider.appSettingsProvider.notifier).load();
+    await ref.read(appSettingsProvider.notifier).load();
   }
 
   Future<void> pullUp() async {
-    if (!ref.read(provider.inMatchProvider) ||
-        !ref.read(provider.appSettingsProvider).pullUpSetting.enabled) {
+    if (!ref.read(inMatchProvider) ||
+        !ref.read(appSettingsProvider).pullUpSetting.enabled) {
       return;
     }
     if (aoa == null ||
@@ -347,7 +346,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       await PullUpData.checkAndPlayWarning(
         altitude!,
         climb.toDouble(),
-        ref.read(provider.appSettingsProvider),
+        ref.read(appSettingsProvider),
       );
     }
     return;
@@ -364,26 +363,28 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       final fromDisk = await OpenRGBSettings.loadFromDisc();
       if (!context.mounted) return;
 
-      ref.read(provider.rgbSettingProvider.notifier).state =
-          fromDisk ?? const OpenRGBSettings();
-      if (ref.read(provider.rgbSettingProvider).autoStart) {
+      ref
+          .read(rgbSettingProvider.notifier)
+          .set(fromDisk ?? const OpenRGBSettings());
+      if (ref.read(rgbSettingProvider).autoStart) {
         if (!mounted) return;
         final exePath = await AppUtil.getOpenRGBExecutablePath(context, false);
         await Process.run(exePath, ['--server', '--noautoconnect']);
-        ref.read(provider.orgbClientProvider.notifier).state =
-            await OpenRGBClient.connect();
-        if (ref.read(provider.orgbClientProvider.notifier).state != null) {
-          ref.read(provider.orgbControllersProvider.notifier).state = await ref
-              .read(provider.orgbClientProvider)!
-              .getAllControllers();
+        ref
+            .read(orgbClientProvider.notifier)
+            .set(await OpenRGBClient.connect());
+        if (ref.read(orgbClientProvider) != null) {
+          ref
+              .read(orgbControllersProvider.notifier)
+              .set(await ref.read(orgbClientProvider)!.getAllControllers());
         }
       }
     });
 
     subscriptionForIndicators = indicatorStream.listen((event) {
       if (event == null) return;
-      if (ref.read(provider.vehicleNameProvider) != event.type) {
-        ref.read(provider.vehicleNameProvider.notifier).state = event.type;
+      if (ref.read(vehicleNameProvider) != event.type) {
+        ref.read(vehicleNameProvider.notifier).set(event.type);
       }
       vertical = event.vertical;
     });
@@ -440,7 +441,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       }
       lastId = idData.value;
     });
-    var appSettings = ref.read(provider.appSettingsProvider);
+    var appSettings = ref.read(appSettingsProvider);
     const redLineTimer = Duration(milliseconds: 200);
     Timer.periodic(redLineTimer, (Timer t) async {
       if (!mounted || isStopped) t.cancel();
@@ -448,7 +449,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       userRedLineGear();
       pullUp();
       if (loadChecker()) {
-        final settings = ref.read(provider.appSettingsProvider).overGWarning;
+        final settings = ref.read(appSettingsProvider).overGWarning;
         await audio.play(
           DeviceFileSource(settings.path),
           volume: settings.volume / 100,
@@ -462,9 +463,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
       if (namesMap.isEmpty) {
         namesMap = convertNamesToMap(csvNames);
       }
-      if (ref.read(provider.vehicleNameProvider) != null) {
+      if (ref.read(vehicleNameProvider) != null) {
         fmData = await FmData.getFlightModel(
-          namesMap[ref.read(provider.vehicleNameProvider)!],
+          namesMap[ref.read(vehicleNameProvider)!],
         );
       }
     });
@@ -558,21 +559,20 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   int number = 0;
 
   Future<void> startListeners() async {
-    ref.listen<String?>(provider.vehicleNameProvider, (previous, next) async {
+    ref.listen<String?>(vehicleNameProvider, (previous, next) async {
       if (next.notNull && next != '' && namesMap.isNotEmpty) {
         fmData = await FmData.getFlightModel(namesMap[next]);
         if (fmData != null) {
-          ref.read(provider.gearLimitProvider.notifier).state =
-              fmData!.critGearSpd;
+          ref.read(gearLimitProvider.notifier).set(fmData!.critGearSpd);
         }
       }
     });
-    ref.listen<bool>(provider.inMatchProvider, (previous, next) async {
+    ref.listen<bool>(inMatchProvider, (previous, next) async {
       if (previous != next) {
         if (next) {
-          final client = ref.watch(provider.orgbClientProvider);
+          final client = ref.watch(orgbClientProvider);
           final data = await client?.getAllControllers();
-          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
+          OpenRGBSettings settings = ref.read(rgbSettingProvider);
           if (data != null) {
             await OpenRGBSettings.setJoinBattleEffect(
               client!,
@@ -582,9 +582,9 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
             await OpenRGBSettings.setAllOff(client, data);
           }
         } else {
-          final client = ref.watch(provider.orgbClientProvider);
+          final client = ref.watch(orgbClientProvider);
           final data = await client?.getAllControllers();
-          OpenRGBSettings settings = ref.read(provider.rgbSettingProvider);
+          OpenRGBSettings settings = ref.read(rgbSettingProvider);
           if (client != null && data != null) {
             await OpenRGBSettings.setLoadingEffect(
               client,
@@ -649,12 +649,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     startListeners();
     final theme = FluentTheme.of(context);
-    final fireBaseVersion = ref.watch(
-      provider.versionFBProvider(secrets.firebaseValid),
-    );
-    final developerMessage = ref.watch(provider.developerMessageProvider);
-    final gameRunning = ref.watch(provider.gameRunningProvider);
-    final inMatch = ref.watch(provider.inMatchProvider);
+    final fireBaseVersion = ref.watch(versionFBProvider(secrets.firebaseValid));
+    final developerMessage = ref.watch(developerMessageProvider);
+    final gameRunning = ref.watch(gameRunningProvider);
+    final inMatch = ref.watch(inMatchProvider);
     return NavigationView(
       appBar: NavigationAppBar(
         title: Column(
@@ -737,16 +735,16 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
         actions: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (ref.watch(provider.orgbClientProvider).hasValue)
+            if (ref.watch(orgbClientProvider).hasValue)
               IconButton(
                 icon: const Icon(
                   FluentIcons.test_add,
                   color: Color.fromRGBO(255, 222, 111, 1.0),
                 ),
                 onPressed: () async {
-                  var client = ref.read(provider.orgbClientProvider);
+                  var client = ref.read(orgbClientProvider);
                   if (client != null) {
-                    final data = ref.watch(provider.orgbControllersProvider);
+                    final data = ref.watch(orgbControllersProvider);
                     if (data.isNotEmpty) {
                       displayInfoBar(
                         context,
@@ -754,9 +752,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                             const InfoBar(title: Text('Running Tests')),
                         duration: const Duration(seconds: 5),
                       );
-                      OpenRGBSettings settings = ref
-                          .read(provider.rgbSettingProvider.notifier)
-                          .state;
+                      OpenRGBSettings settings = ref.read(rgbSettingProvider);
                       await OpenRGBSettings.setDeathEffect(client, data, [
                         255,
                         255,
@@ -812,18 +808,13 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                               child: const Text('Stop'),
                               onPressed: () async {
                                 await ref
-                                    .read(provider.orgbClientProvider)
+                                    .read(orgbClientProvider)
                                     ?.disconnect();
                                 await Process.run('taskkill', [
                                   '/IM',
                                   'OpenRGB.exe',
                                 ]);
-                                ref
-                                        .read(
-                                          provider.orgbClientProvider.notifier,
-                                        )
-                                        .state =
-                                    null;
+                                ref.read(orgbClientProvider.notifier).set(null);
                                 if (context.mounted) {
                                   Navigator.pop(context);
                                 }
@@ -831,23 +822,22 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                             ),
                             HyperlinkButton(
                               child: Text(
-                                'Auto start: ${ref.watch(provider.rgbSettingProvider).autoStart ? 'On' : 'Off'}',
+                                'Auto start: ${ref.watch(rgbSettingProvider).autoStart ? 'On' : 'Off'}',
                               ),
                               onPressed: () async {
                                 ref
-                                    .read(provider.rgbSettingProvider.notifier)
-                                    .state = ref
-                                    .read(provider.rgbSettingProvider)
-                                    .copyWith(
-                                      autoStart: !ref
-                                          .read(provider.rgbSettingProvider)
-                                          .autoStart,
+                                    .read(rgbSettingProvider.notifier)
+                                    .set(
+                                      ref
+                                          .read(rgbSettingProvider)
+                                          .copyWith(
+                                            autoStart: !ref
+                                                .read(rgbSettingProvider)
+                                                .autoStart,
+                                          ),
                                     );
                                 setState(() {});
-                                await ref
-                                    .read(provider.rgbSettingProvider.notifier)
-                                    .state
-                                    .save();
+                                await ref.read(rgbSettingProvider).save();
                               },
                             ),
                             HyperlinkButton(
@@ -874,26 +864,21 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                 if (!context.mounted) return;
                                 try {
                                   ref
-                                      .read(
-                                        provider.orgbClientProvider.notifier,
-                                      )
-                                      .state = await showLoading(
-                                    context: context,
-                                    future: OpenRGBClient.connect(),
-                                    message: 'Connecting...',
-                                  );
+                                      .read(orgbClientProvider.notifier)
+                                      .set(
+                                        await showLoading(
+                                          context: context,
+                                          future: OpenRGBClient.connect(),
+                                          message: 'Connecting...',
+                                        ),
+                                      );
                                   ref
-                                      .read(
-                                        provider
-                                            .orgbControllersProvider
-                                            .notifier,
-                                      )
-                                      .state = await ref
-                                      .read(
-                                        provider.orgbClientProvider.notifier,
-                                      )
-                                      .state!
-                                      .getAllControllers();
+                                      .read(orgbControllersProvider.notifier)
+                                      .set(
+                                        await ref
+                                            .read(orgbClientProvider)!
+                                            .getAllControllers(),
+                                      );
                                   if (!context.mounted) return;
 
                                   await showLoading(
@@ -1241,12 +1226,10 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                         if (shot.hasData) {
                           final data = shot.data!;
                           WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (ref.read(provider.vehicleNameProvider) !=
-                                data.type) {
+                            if (ref.read(vehicleNameProvider) != data.type) {
                               ref
-                                  .read(provider.vehicleNameProvider.notifier)
-                                  .state = data
-                                  .type;
+                                  .read(vehicleNameProvider.notifier)
+                                  .set(data.type);
                             }
                           });
                           vertical = data.vertical;
@@ -1320,14 +1303,8 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                         }
                         if (shot.hasError) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (ref.read(provider.vehicleNameProvider) ==
-                                null) {
-                              ref
-                                      .read(
-                                        provider.vehicleNameProvider.notifier,
-                                      )
-                                      .state =
-                                  null;
+                            if (ref.read(vehicleNameProvider) == null) {
+                              ref.read(vehicleNameProvider.notifier).set(null);
                             }
                           });
                           return Center(
@@ -1352,10 +1329,7 @@ class HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                           );
                         } else {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
-                            ref
-                                    .read(provider.vehicleNameProvider.notifier)
-                                    .state =
-                                '';
+                            ref.read(vehicleNameProvider.notifier).set('');
                           });
                           return const Center(
                             child: SizedBox(
