@@ -1,6 +1,6 @@
 name: wtbgassistant
 description: WTbgA
-version: 3.0.14-pre
+version: 3.1.0-pre
 
 publish_to: "none"
 
@@ -51,7 +51,6 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.2
   riverpod_generator: ^4.0.0
   build_runner: ^2.10.4
-
   flutter_lints: ^6.0.0
 
 # The following section is specific to Flutter.
